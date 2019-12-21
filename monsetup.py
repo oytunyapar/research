@@ -27,12 +27,9 @@ def monsetup(dimension):
 
     return D_Matrix
     
-def q_matrix_generator(number,dimension):
+def q_matrix_generator(function,dimension):
     Q_Matrix = \
         numpy.matmul( numpy.diag( boolean_function_generator.\
-                      boolean_function_generator( number, dimension ) ), \
+                      boolean_function_generator( function, dimension ) ), \
                       monsetup( dimension ) )
-    
     return Q_Matrix
-
-q_matrix_generator(3,4)

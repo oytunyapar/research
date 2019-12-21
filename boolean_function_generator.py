@@ -3,8 +3,8 @@ import numpy
 def decimalToBinary(number):  
     return bin(number).replace("0b", "")
 
-def boolean_function_generator(number,dimension):
-    binary_number = decimalToBinary(number)
+def boolean_function_generator(function,dimension):
+    binary_number = decimalToBinary(function)
     vector_size = 2**dimension
     binary_size = len(binary_number)
 
@@ -16,7 +16,5 @@ def boolean_function_generator(number,dimension):
     for iterator in range (binary_size):
         if ( binary_number[binary_size - iterator - 1] == '1' ):
             sign_vector[iterator] = -1
-    
-    print(sign_vector)
+
     return sign_vector
-    
