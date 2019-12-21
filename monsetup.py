@@ -1,5 +1,6 @@
 import numpy
 import math
+import boolean_function_generator
 
 def monsetup(dimension):
     two_to_the_power_dimension = 2**dimension
@@ -24,7 +25,14 @@ def monsetup(dimension):
                 local_power_of_dimension_iterator = math.floor(local_power_of_dimension_iterator/2)
             D_Matrix[ power_of_dimension_iterator, power_of_dimension_iterator_second ] = multiply_factor
 
-    print(D_Matrix)
     return D_Matrix
+    
+def q_matrix_generator(number,dimension):
+    Q_Matrix = \
+        numpy.matmul( numpy.diag( boolean_function_generator.\
+                      boolean_function_generator( number, dimension ) ), \
+                      monsetup( dimension ) )
+    
+    return Q_Matrix
 
-monsetup(4)
+q_matrix_generator(3,4)

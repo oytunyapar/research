@@ -19,5 +19,4 @@ def boolean_function_generator(number,dimension):
     
     print(sign_vector)
     return sign_vector
-
-boolean_function_generator(65535,5)
+    
