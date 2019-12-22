@@ -3,7 +3,7 @@ import numpy
 def decimalToBinary(number):  
     return bin(number).replace("0b", "")
 
-def boolean_function_generator(function,dimension):
+def booleanFunctionGenerator(function,dimension):
     binary_number = decimalToBinary(function)
     vector_size = 2**dimension
     binary_size = len(binary_number)
