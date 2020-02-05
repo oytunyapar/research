@@ -4,7 +4,7 @@ import boolean_function_generator
 
 def monsetup(dimension):
     two_to_the_power_dimension = 2**dimension
-    D_Matrix = numpy.zeros( ( two_to_the_power_dimension, two_to_the_power_dimension ), dtype=numpy.int8 )
+    D_Matrix = numpy.zeros( ( two_to_the_power_dimension, two_to_the_power_dimension ), dtype=numpy.float32 )
     for power_of_dimension_iterator in range( 0, two_to_the_power_dimension ):
         local_power_of_dimension_iterator = power_of_dimension_iterator
 
