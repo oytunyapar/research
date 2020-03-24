@@ -1,4 +1,5 @@
 import monsetup
+import boolean_function_generator as bf
 
 import math
 import numpy
@@ -74,6 +75,57 @@ def create_dataset(Q_matrix, input_data, output_data):
     
     return train_ds, output_data
 
+def create_dataset_f(function_vector, input_data, output_data):
+    function_vector_size = numpy.size(function_vector,axis=0)
+
+    dimension = math.log2(function_vector_size)
+    if ( not dimension.is_integer() ):
+        print("Sizes of function vector is not power of two")
+        return
+
+    input_data_row_size = numpy.size(input_data,axis=0)
+    input_data_column_size = numpy.size(input_data,axis=1)
+
+    if ( input_data_column_size != function_vector_size ):
+        print("Input column and function vector size does not match.")
+        return
+
+    if ( input_data_row_size != numpy.size(output_data) ):
+        print("Input row and output length does not match.")
+        return
+
+    f_flattened = numpy.reshape(function_vector,[1,function_vector_size])
+
+    train_ds = numpy.zeros( [ input_data_row_size, function_vector_size +  input_data_column_size ], dtype=numpy.float32 )
+
+    for iterator in range ( input_data_row_size ):
+        train_ds[iterator, :] = numpy.concatenate( (f_flattened, numpy.reshape(input_data[iterator, :],[1,input_data_column_size])), axis=1)
+
+    return train_ds, output_data
+
+
+def monomial_exclusion_linear_programming_nn_function( function,dimension ):
+    input_data, output_data = linprog_result(function,dimension)
+
+    function = bf.booleanFunctionGenerator(function,dimension)
+    train_ds, output_data = create_dataset_f(function, input_data, output_data)
+    train_ds, output_data = create_dataset_f(function,input_data, output_data)
+
+    Input_Layer_Size = 2*(2**dimension)
+    First_Hidden_Layer_Size = 2**dimension
+    #Second_Hidden_Layer_Size = 2**dimension
+    Output_Layer_Size = 1
+
+    model = Sequential()
+    model.add( Dense(First_Hidden_Layer_Size, activation='relu', input_dim=Input_Layer_Size, name="First") )
+    #model.add( Dense(Second_Hidden_Layer_Size, activation='relu', input_dim=First_Hidden_Layer_Size, name="Second") )
+    model.add( Dense(Output_Layer_Size, activation='sigmoid', name="Output") )
+
+    model.compile(optimizer='adam',loss='binary_crossentropy',metrics=['accuracy'])
+
+    model.fit(train_ds, output_data, epochs=10, batch_size=32)
+    return 0
+
 def monomial_exclusion_linear_programming_nn( function,dimension ):
     Q_matrix = monsetup.qMatrixGenerator(function,dimension)
     input_data, output_data = linprog_result(function,dimension)
@@ -81,19 +133,28 @@ def monomial_exclusion_linear_programming_nn( function,dimension ):
 
     Input_Layer_Size = (2**dimension)**2 + 2**dimension
     First_Hidden_Layer_Size = 2*dimension*(2**dimension)
-    Second_Hidden_Layer_Size = 2**dimension
+    #Second_Hidden_Layer_Size = 2**dimension
     Output_Layer_Size = 1
 
     model = Sequential()
     model.add( Dense(First_Hidden_Layer_Size, activation='relu', input_dim=Input_Layer_Size, name="First") )
-    model.add( Dense(Second_Hidden_Layer_Size, activation='relu', input_dim=First_Hidden_Layer_Size, name="Second") )
-    model.add( Dense(Output_Layer_Size, activation='tanh', name="Output") )
+    #model.add( Dense(Second_Hidden_Layer_Size, activation='relu', input_dim=First_Hidden_Layer_Size, name="Second") )
+    model.add( Dense(Output_Layer_Size, activation='sigmoid', name="Output") )
 
-    model.compile(optimizer='adam',\
-                loss='mean_squared_error',\
-                metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
     model.fit(train_ds, output_data, epochs=10, batch_size=32)
     return 0
+
+def normalize_predicted_output(predicted_output):
+    predicted_output_size = numpy.size(predicted_output)
+    normalized_predicted_output = numpy.zeros(predicted_output_size)
+
+    for index in range(predicted_output_size):
+        if predicted_output[index] >= 0.5:
+            normalized_predicted_output[index] = 1
+
+    return normalized_predicted_output
+
 
 #linprog( c = numpy.ones(2**dimension), A_ub = None, b_ub = None, A_eq = Q_matrix[combination,:], b_eq = numpy.zeros(iterator), bounds = (0,None)  )
