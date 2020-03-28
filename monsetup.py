@@ -26,7 +26,8 @@ def monsetup(dimension):
             D_Matrix[ power_of_dimension_iterator, power_of_dimension_iterator_second ] = multiply_factor
 
     return D_Matrix
-    
+
+
 def qMatrixGenerator(function,dimension):
     Q_Matrix = \
         numpy.matmul( monsetup( dimension ),
@@ -34,3 +35,35 @@ def qMatrixGenerator(function,dimension):
                       booleanFunctionGenerator( function, dimension ) ) )
 
     return Q_Matrix
+
+
+def get_functions_from_spectrum(spectrum):
+    spectrum_size = numpy.size(spectrum)
+
+    dimension = math.log2(spectrum_size)
+    if not dimension.is_integer():
+        print("Sizes of absolute spectrum is not power of two")
+        return
+
+    dimension = int(dimension)
+    number_of_functions = 2**(2**dimension)
+
+    spectrum = spectrum.flatten()
+    spectrum = numpy.abs(spectrum)
+    spectrum = numpy.sort(spectrum)
+
+    function_list = []
+    spectrum_list = []
+
+    for function_iterator in range(number_of_functions):
+        q_matrix = qMatrixGenerator(function_iterator, dimension)
+        function_spectrum_raw = numpy.sum(q_matrix, axis=1)
+        function_spectrum = numpy.abs(function_spectrum_raw)
+        function_spectrum = numpy.sort(function_spectrum)
+
+        if (function_spectrum == spectrum).all():
+            function_list.append(function_iterator)
+            spectrum_list.append(function_spectrum_raw)
+
+    return numpy.array(function_list), numpy.array(spectrum_list)
+

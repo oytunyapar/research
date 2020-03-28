@@ -1,4 +1,4 @@
-function all_non_conflicts = findZeroables(problem_class, dimension)
+function [all_combination_map,all_conflict_map] = findZeroables(problem_class, dimension)
 % problem_class is a hexadecimal number
 
 global number_of_variables;
@@ -34,37 +34,53 @@ parfeval_handles(number_of_workers,1) = parallel.FevalFuture;
 
 subset_matrix = zeros(array_size,1,type);
 
-all_non_conflicts = [];
+all_combination_map = [];
+all_conflict_map = [];
 
-for ITERATOR0 = 1:number_of_variables
+for ITERATOR0 = 0:number_of_variables
     combinations = nchoosek(uint8(1:number_of_variables),ITERATOR0);
     combinations_size = nchoosek(number_of_variables,ITERATOR0);
     %new_conflicts = coefficientEquationsConflicts(problem_class,combinations,subset_matrix,SUBSET_MATRIX_NUMBER_OF_BITS);
-    for POOL_ITERATOR = 1:number_of_workers
-        factor = uint32(combinations_size/number_of_workers);
-        begin = (POOL_ITERATOR - 1)*factor + 1;
-        finish = POOL_ITERATOR*factor;
-        if(finish > combinations_size)
-            finish = combinations_size;
-        end
-        parfeval_handles(POOL_ITERATOR) = ...
-        parfeval(parallel_pool,@coefficientEquationsConflicts,3,...
-        problem_class, dimension, combinations(begin:finish,:),...
-        subset_matrix, SUBSET_MATRIX_NUMBER_OF_BITS);
-    end
+    factor = uint32(combinations_size/number_of_workers);
     
-    for POOL_ITERATOR = 1:number_of_workers
-        [~,new_subset_matrix,~,new_non_conflicts] = fetchNext(parfeval_handles);
+    if (factor < 1)
+        [new_subset_matrix,combination_map,conflict_map] = ...
+        coefficientEquationsConflicts(problem_class, ...
+                                      dimension, ...
+                                      combinations, ...
+                                      subset_matrix, ...
+                                      SUBSET_MATRIX_NUMBER_OF_BITS);
         subset_matrix = bitor(subset_matrix,new_subset_matrix);
-        all_non_conflicts = [all_non_conflicts;sum(power(2,double(new_non_conflicts - 1)),2)];
+        all_combination_map = [all_combination_map;combination_map];
+        all_conflict_map = [all_conflict_map;conflict_map];
+    else
+        factor = ceil(factor);
+        for POOL_ITERATOR = 1:number_of_workers
+            begin = (POOL_ITERATOR - 1)*factor + 1;
+            finish = POOL_ITERATOR*factor;
+            if(finish > combinations_size)
+                finish = combinations_size;
+            end
+            parfeval_handles(POOL_ITERATOR) = ...
+            parfeval(parallel_pool,@coefficientEquationsConflicts,3,...
+            problem_class, dimension, combinations(begin:finish,:),...
+            subset_matrix, SUBSET_MATRIX_NUMBER_OF_BITS);
+        end
+
+        for POOL_ITERATOR = 1:number_of_workers
+            [~,new_subset_matrix,combination_map,conflict_map] = fetchNext(parfeval_handles);
+            subset_matrix = bitor(subset_matrix,new_subset_matrix);
+            all_combination_map = [all_combination_map;combination_map];
+            all_conflict_map = [all_conflict_map;conflict_map];
+        end
     end
-    
+
     fprintf("ITERATION: %d\n",ITERATOR0);
 end
 
 end
 
-function [subset_matrix,conflicts,non_conflicts] = coefficientEquationsConflicts(problem_class, dimension, combinations, subset_matrix,subset_matrix_resolution)    
+function [subset_matrix,combination_map,conflict_map] = coefficientEquationsConflicts(problem_class, dimension, combinations, subset_matrix,subset_matrix_resolution) 
     number_of_variables = 2^dimension;
     PROBLEM = diag(ix2prob(problem_class,number_of_variables));
     INPUT_MATRIX = monsetup(dimension);
@@ -77,8 +93,9 @@ function [subset_matrix,conflicts,non_conflicts] = coefficientEquationsConflicts
     lower_bounds(1,1:number_of_variables) = 0.5;
     upper_bounds(1,1:number_of_variables) = Inf;
     
+    conflict_map = zeros(number_of_combinations,1);
+    combination_map = zeros(number_of_combinations,number_of_variables);
     conflicts = [];
-    non_conflicts = [];
 
     for ITERATOR1 = 1:number_of_combinations
         ITERATOR = sum(power(2,double(combinations(ITERATOR1,:)) - 1),2);
@@ -88,9 +105,10 @@ function [subset_matrix,conflicts,non_conflicts] = coefficientEquationsConflicts
             if(exitflag ~= 1)
                 conflicts = [conflicts;combinations(ITERATOR1,:)];
             else
-                non_conflicts = [non_conflicts;combinations(ITERATOR1,:)];
+                conflict_map(ITERATOR1) = 1;
             end
         end
+        combination_map(ITERATOR1,combinations(ITERATOR1,:)) = 1;
     end
     
     for ITERATOR1 = 1:size(conflicts,1)
