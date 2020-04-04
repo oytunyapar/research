@@ -1,4 +1,4 @@
-function [y,kk]=ix2prob(ix,bitlen);
+function [y,kk]=ix2prob(ix,bitlen)
 %% given the problem id returns the output spec.
 %% use as ix2prob(id, 2^problem_dimension);
 %% The standard form of a given problem with index=id can be obtained like this
@@ -7,8 +7,11 @@ function [y,kk]=ix2prob(ix,bitlen);
 %% a lot of zeros in it.
    y=zeros(bitlen,1);
    kk=0; 
- for h=1:bitlen,   % usually = 2^dim
+ for h=1:bitlen   % usually = 2^dim
      y(h)=2*mod(ix,2)-1;
      ix=floor(ix/2);
      kk=kk+(y(h)+1)/2;
- end; % h
+ end % h
+ 
+ kk = bitlen - kk;
+ y = -y;
