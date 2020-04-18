@@ -1,5 +1,7 @@
 import monsetup
 import boolean_function_generator as bf
+import os
+import pandas
 
 import math
 import numpy
@@ -13,7 +15,7 @@ from tensorflow.keras.layers import Dense, Flatten, Activation
 
 
 def linprog_result(function, dimension):
-    Q_matrix = monsetup.qMatrixGenerator(function, dimension)
+    q_matrix = monsetup.qMatrixGenerator(function, dimension)
     size = 2**dimension
     main_list = range(0, size)
 
@@ -32,7 +34,7 @@ def linprog_result(function, dimension):
             result = linprog(c=numpy.ones(size),
                              A_ub=None,
                              b_ub=None,
-                             A_eq=Q_matrix[combination, :],
+                             A_eq=q_matrix[combination, :],
                              b_eq=numpy.zeros(iterator),
                              bounds=(0.05, None))
             
@@ -44,35 +46,35 @@ def linprog_result(function, dimension):
     return input_data, output_data
 
 
-def create_dataset(Q_matrix, input_data, output_data):
-    Q_matrix_row_size = numpy.size(Q_matrix,axis=0)
-    Q_matrix_column_size = numpy.size(Q_matrix,axis=1)
+def create_dataset(q_matrix, input_data, output_data):
+    q_matrix_row_size = numpy.size(q_matrix, axis=0)
+    q_matrix_column_size = numpy.size(q_matrix, axis=1)
 
-    if ( Q_matrix_row_size != Q_matrix_column_size ):
+    if q_matrix_row_size != q_matrix_column_size:
         print("Q matrix is not a square matrix")
         return
 
-    dimension = math.log2(Q_matrix_row_size)
-    if ( not dimension.is_integer() ):
+    dimension = math.log2(q_matrix_row_size)
+    if not dimension.is_integer():
         print("Sizes of Q matrix is not power of two")
         return
 
     input_data_row_size = numpy.size(input_data,axis=0)
     input_data_column_size = numpy.size(input_data,axis=1)
 
-    if ( input_data_column_size != Q_matrix_row_size ):
+    if input_data_column_size != q_matrix_row_size:
         print("Input column and Q matrix row sizes does not match.")
         return
 
-    if ( input_data_row_size != numpy.size(output_data) ):
+    if input_data_row_size != numpy.size(output_data):
         print("Input row and output length does not match.")
         return
     
-    q_flattened = numpy.reshape(Q_matrix,[1,Q_matrix_row_size*Q_matrix_column_size])
+    q_flattened = numpy.reshape(q_matrix, [1, q_matrix_row_size * q_matrix_column_size])
 
-    train_ds = numpy.zeros( [ input_data_row_size, Q_matrix_row_size*Q_matrix_column_size +  input_data_column_size ], dtype=numpy.float32 )
+    train_ds = numpy.zeros([input_data_row_size, q_matrix_row_size * q_matrix_column_size + input_data_column_size], dtype=numpy.float32)
 
-    for iterator in range ( input_data_row_size ):
+    for iterator in range(input_data_row_size):
         train_ds[iterator, :] = numpy.concatenate( (q_flattened, numpy.reshape(input_data[iterator, :],[1,input_data_column_size])), axis=1)
     
     return train_ds, output_data
@@ -127,6 +129,38 @@ def create_and_save_dataset_spectrum(spectrum, input_file_name, output_file_name
 
     numpy.save(input_file_name, all_train_ds)
     numpy.save(output_file_name, all_output)
+
+
+def read_data_set(functions, dimension,
+                  data_folder="/home/oytun/Projects/research/SigmaPiFramework/dimension_4/spectrum/",
+                  input_file_format="%d.input", output_file_format="%d.output"):
+    number_of_functions = numpy.size(functions)
+    number_of_variables = 2**dimension
+    number_of_rows = 2**number_of_variables
+    number_of_columns = 32
+
+    train_ds = numpy.zeros([number_of_functions*number_of_rows, number_of_columns], dtype=numpy.int8)
+    output_ds = numpy.zeros([number_of_functions*number_of_rows], dtype=numpy.int8)
+
+    input_file_name_template = data_folder + input_file_format
+    output_file_name_template = data_folder + output_file_format
+
+    for iterator in range(number_of_functions):
+        input_file_name = input_file_name_template % functions[iterator]
+        output_file_name = output_file_name_template % functions[iterator]
+
+        if os.path.exists(input_file_name) and os.path.exists(output_file_name):
+            begin_index = iterator*number_of_rows
+            end_index = begin_index + number_of_rows
+            train_ds[begin_index:end_index, :] = numpy.array(pandas.read_csv(input_file_name, sep=" ", header=None),
+                                                             dtype=numpy.int8)
+            output_ds[begin_index:end_index] = \
+                numpy.reshape(numpy.array(pandas.read_csv(output_file_name, sep=" ", header=None), dtype=numpy.int8),
+                           [number_of_rows])
+
+        print("FUNCTION[%d]:%d\n" % (iterator, functions[iterator]))
+
+    return train_ds, output_ds
 
 
 def monomial_exclusion_linear_programming_nn_function(function, dimension):
