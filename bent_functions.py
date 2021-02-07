@@ -18,7 +18,7 @@ def find_bent_functions(dimension):
     bent_function_list = []
 
     for function_iterator in range(number_of_functions+1):
-        spectrum = abs(np.sum(ms.qMatrixGenerator(function_iterator, dimension), 1))
+        spectrum = abs(np.sum(ms.q_matrix_generator(function_iterator, dimension), 1))
         if all_same(spectrum) and spectrum[0] > 0:
             bent_function_list.append(function_iterator)
 

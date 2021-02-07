@@ -15,7 +15,7 @@ from tensorflow.keras.layers import Dense, Flatten, Activation
 
 
 def linprog_result(function, dimension):
-    q_matrix = monsetup.qMatrixGenerator(function, dimension)
+    q_matrix = monsetup.q_matrix_generator(function, dimension)
     size = 2**dimension
     main_list = range(0, size)
 
@@ -166,7 +166,7 @@ def read_data_set(functions, dimension,
 def monomial_exclusion_linear_programming_nn_function(function, dimension):
     input_data, output_data = linprog_result(function,dimension)
 
-    function = bf.booleanFunctionGenerator(function,dimension)
+    function = bf.boolean_function_generator(function, dimension)
     train_ds, output_data = create_dataset_f(function, input_data, output_data)
     train_ds, output_data = create_dataset_f(function,input_data, output_data)
 
@@ -187,7 +187,7 @@ def monomial_exclusion_linear_programming_nn_function(function, dimension):
 
 
 def monomial_exclusion_linear_programming_nn( function,dimension ):
-    Q_matrix = monsetup.qMatrixGenerator(function,dimension)
+    Q_matrix = monsetup.q_matrix_generator(function, dimension)
     input_data, output_data = linprog_result(function,dimension)
     train_ds, output_data = create_dataset(Q_matrix, input_data, output_data)
 
