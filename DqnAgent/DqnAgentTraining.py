@@ -65,7 +65,7 @@ class DqnAgentTraining:
                 self.k_vector[selected_action] += 1
 
                 next_state = numpy.matmul(self.q_matrix, self.k_vector)
-                q_value = self.predicted_q_value(next_state)
+                reward = self.predicted_reward(next_state)
 
                 self.current_state = next_state
 
