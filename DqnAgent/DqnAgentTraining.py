@@ -18,11 +18,18 @@ class DqnAgentTraining:
         self.function = function
         self.dimension = dimension
         self.q_matrix = monsetup.q_matrix_generator(function, dimension)
+
+        model_layer_sizes.insert(0, dimension**2)
+        model_layer_sizes.append(dimension**2)
         self.dqn_agent = create_dqn_agent(model_layer_sizes)
+
         self.memory = numpy.zeros([n_total_rl_steps, 3*(dimension**2)])
-        self.input_variable = numpy.sum(self.q_matrix, 1)
+        self.current_state = numpy.sum(self.q_matrix, 1)
+
         self.remaining_rl_steps = n_total_rl_steps
         self.n_epoch_rl_steps = n_epoch_rl_steps
+        self.current_rl_step = 0
+
         self.batch_size = batch_size
         self.k_vector = numpy.ones([dimension**2, 1])
 
@@ -36,18 +43,29 @@ class DqnAgentTraining:
         return self.memory[numbers.tolist(), :]
 
     def predicted_q_value(self, next_state):
+        next_number_of_zeros = numpy.count_nonzero(next_state == 0)
+        number_of_zeros = numpy.count_nonzero(self.current_state == 0)
+        return 0
+
+    def save_memory(self, previous_state, next_state, action, reward):
+        #self.memory[2, 1:3] = 3// 3 is exclusive
         return
 
     def reinforcement_learn_step(self, step_size):
         if step_size > 0:
             for step in range(step_size):
-                input_tensor = torch.tensor(self.input_variable)
+                input_tensor = torch.tensor(self.current_state)
                 output = self.model(input_tensor)
+
                 selected_action = output.argmax().tolist()
                 self.k_vector[selected_action] += 1
+
                 next_state = numpy.matmul(self.q_matrix, self.k_vector)
                 q_value = self.predicted_q_value(next_state)
-                self.input_variable = next_state
+
+                self.current_state = next_state
+
+                self.current_rl_step += 1
         else:
             print("RL step size problem step size: " + str(step_size) + "\n")
 
