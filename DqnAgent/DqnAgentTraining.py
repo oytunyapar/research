@@ -43,7 +43,7 @@ class DqnAgentTraining:
         numbers = rng.choice(self.memory.shape[0], size=size, replace=False)
         return self.memory[numbers.tolist(), :]
 
-    def predicted_q_value(self, next_state):
+    def predicted_reward(self, next_state):
         next_number_of_zeros = numpy.count_nonzero(next_state == 0)
         number_of_zeros = numpy.count_nonzero(self.current_state == 0)
         return (next_number_of_zeros - number_of_zeros)/self.dimension_square
