@@ -58,14 +58,18 @@ class DqnAgentTraining:
     def reinforcement_learn_step(self, step_size):
         if step_size > 0 and self.current_rl_step + step_size < self.n_total_rl_steps:
             for step in range(step_size):
-                input_tensor = torch.tensor(self.current_state)
-                output = self.model(input_tensor)
+                input_tensor = torch.tensor(self.current_state, dtype=torch.float64)
+                output = self.dqn_agent(input_tensor.float())
 
                 selected_action = output.argmax().tolist()
                 self.k_vector[selected_action] += 1
 
-                next_state = numpy.matmul(self.q_matrix, self.k_vector)
+                next_state = numpy.transpose(numpy.matmul(self.q_matrix, self.k_vector)).\
+                    reshape([self.dimension_square])
+
                 reward = self.predicted_reward(next_state)
+
+                self.save_memory(self.current_state, next_state, output.tolist(), reward)
 
                 self.current_state = next_state
 
