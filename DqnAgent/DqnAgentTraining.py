@@ -9,6 +9,7 @@ from DqnAgent.DqnAgent import create_dqn_agent_torch, create_dqn_agent_tensorflo
 import numpy
 import monsetup
 import torch
+import math
 import tensorflow
 
 
@@ -102,7 +103,7 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
     def train(self, given_input, desired_output):
         self.dqn_agent.fit(given_input,
                            desired_output,
-                           epochs=10, batch_size=self.batch_size / 4)
+                           epochs=10, batch_size=math.floor(self.batch_size / 4))
         return
 
 
