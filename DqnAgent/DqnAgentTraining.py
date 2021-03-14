@@ -10,7 +10,14 @@ import numpy
 import monsetup
 import torch
 import math
-import tensorflow
+import functools
+
+
+def create_number_with_precision(before_dot, after_dot, repeat_count_after_dot):
+    decimal_part = 0
+    for step in range(1, repeat_count_after_dot + 1):
+        decimal_part += after_dot * pow(10, -step)
+    return before_dot + decimal_part
 
 
 class DqnAgentTraining:
@@ -35,6 +42,13 @@ class DqnAgentTraining:
         self.batch_size = batch_size
         self.k_vector = numpy.ones([dimension**2, 1], dtype=numpy.float32)
 
+        self.random_movement_possibility = 0.05
+
+        self.discount_factor = create_number_with_precision(0, 9, self.dimension - 1)
+        self.learning_rate = 0.2
+
+        self.maximum_zeros_during_training = 0
+
         self.training_function = None
 
     def get_random_batch_from_memory(self, size):
@@ -49,7 +63,7 @@ class DqnAgentTraining:
     def predicted_reward(self, next_state):
         next_number_of_zeros = numpy.count_nonzero(next_state == 0)
         number_of_zeros = numpy.count_nonzero(self.current_state == 0)
-        return (next_number_of_zeros - number_of_zeros)/self.dimension_square
+        return (next_number_of_zeros - number_of_zeros)/self.dimension_square, next_number_of_zeros
 
     def save_memory(self, previous_state, next_state, action, reward):
         self.memory[self.current_rl_step, 0: self.dimension_square] = previous_state
@@ -66,13 +80,15 @@ class DqnAgentTraining:
             self.training_function(memory_batch[:, 0: self.dimension_square],
                                    memory_batch[:, 2 * self.dimension_square: 3 * self.dimension_square])
 
-
 class DqnAgentTrainingTensorflow(DqnAgentTraining):
     def __init__(self, function, dimension, n_total_rl_steps,
                  n_epoch_rl_steps, batch_size, model_layer_sizes):
         super().__init__(function, dimension, n_total_rl_steps, n_epoch_rl_steps, batch_size, model_layer_sizes)
         self.dqn_agent = create_dqn_agent_tensorflow(model_layer_sizes)
         self.current_state = numpy.sum(self.q_matrix, 1).reshape([1, self.dimension_square])
+
+        self.check_current_state = self.current_state
+        self.check_k_vector = numpy.ones([dimension ** 2, 1], dtype=numpy.float32)
 
         self.training_function = self.train
 
@@ -83,15 +99,29 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
             for step in range(step_size):
                 output = self.dqn_agent(self.current_state).numpy().reshape([self.dimension_square])
 
-                selected_action = output.argmax().tolist()
+                if numpy.random.uniform(0, 1) > self.random_movement_possibility:
+                    selected_action = output.argmax().tolist()
+                else:
+                    selected_action = numpy.random.default_rng().choice(self.dimension_square)
+
                 self.k_vector[selected_action] += 1
 
                 next_state = numpy.transpose(numpy.matmul(self.q_matrix, self.k_vector)). \
                     reshape([self.dimension_square])
 
-                reward = super().predicted_reward(next_state)
+                next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
 
-                super().save_memory(self.current_state.reshape([self.dimension_square]), next_state, output.tolist(),
+                reward, number_of_zeros = super().predicted_reward(next_state)
+
+                if number_of_zeros > self.maximum_zeros_during_training:
+                    self.maximum_zeros_during_training = number_of_zeros
+
+                output_list = output.tolist()
+                output_list[selected_action] = \
+                    output_list[selected_action] * (1 - self.learning_rate) + \
+                    reward * self.learning_rate * pow(self.discount_factor, self.current_rl_step)
+
+                super().save_memory(self.current_state.reshape([self.dimension_square]), next_state, output_list,
                                     reward)
 
                 self.current_state = next_state.reshape([1, self.dimension_square])
@@ -104,6 +134,31 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
         self.dqn_agent.fit(given_input,
                            desired_output,
                            epochs=10, batch_size=math.floor(self.batch_size / 4))
+        return
+
+    def check_agent(self):
+        self.check_current_state = numpy.sum(self.q_matrix, 1).reshape([1, self.dimension_square])
+        self.check_k_vector = numpy.ones([self.dimension ** 2, 1], dtype=numpy.float32)
+        for step in range(self.n_epoch_rl_steps):
+            output = self.dqn_agent(self.check_current_state).numpy().reshape([self.dimension_square])
+
+            selected_action = output.argmax().tolist()
+
+            self.check_k_vector[selected_action] += 1
+
+            next_state = numpy.transpose(numpy.matmul(self.q_matrix, self.check_k_vector)). \
+                reshape([self.dimension_square])
+
+            next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
+
+            reward, number_of_zeros = super().predicted_reward(next_state)
+
+            if number_of_zeros >= self.maximum_zeros_during_training:
+                print("Agent find maximum zeros:", number_of_zeros)
+                print("Agent found:", next_state)
+                break
+
+            self.check_current_state = next_state.reshape([1, self.dimension_square])
         return
 
 
@@ -124,13 +179,18 @@ class DqnAgentTrainingPytorch(DqnAgentTraining):
                 input_tensor = torch.tensor(self.current_state, dtype=torch.float32)
                 output = self.dqn_agent(input_tensor.float())
 
-                selected_action = output.argmax().tolist()
-                self.k_vector[selected_action] += 1
+                if numpy.random.uniform(0, 1) > self.random_movement_possibility:
+                    selected_action = output.argmax().tolist()
+                else:
+                    selected_action = numpy.random.default_rng().choice(self.dimension_square)
 
+                self.k_vector[selected_action] += 1
                 next_state = numpy.transpose(numpy.matmul(self.q_matrix, self.k_vector)). \
                     reshape([self.dimension_square])
 
-                reward = super().predicted_reward(next_state)
+                next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
+
+                reward, number_of_zeros = super().predicted_reward(next_state)
 
                 super().save_memory(self.current_state, next_state, output.tolist(), reward)
 
