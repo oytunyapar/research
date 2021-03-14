@@ -42,10 +42,11 @@ class DqnAgentTraining:
         self.batch_size = batch_size
         self.k_vector = numpy.ones([dimension**2, 1], dtype=numpy.float32)
 
-        self.random_movement_possibility = 0.05
+        self.random_movement_possibility = 0.99
+        self.random_movement_possibility_factor = self.random_movement_possibility/n_total_rl_steps
 
         self.discount_factor = create_number_with_precision(0, 9, self.dimension - 1)
-        self.learning_rate = 0.2
+        self.learning_rate = 0.1
 
         self.maximum_zeros_during_training = 0
 
@@ -111,6 +112,11 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
 
                 next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
 
+                #print("Agent found next_state:", next_state)
+                #print("Agent found: self.k_vector", self.k_vector.reshape(1, self.dimension_square))
+                #print("Agent found: output", output)
+
+                previous_reward, previous_number_of_zeros = super().predicted_reward(self.current_state)
                 reward, number_of_zeros = super().predicted_reward(next_state)
 
                 if number_of_zeros > self.maximum_zeros_during_training:
@@ -119,12 +125,15 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
                 output_list = output.tolist()
                 output_list[selected_action] = \
                     output_list[selected_action] * (1 - self.learning_rate) + \
-                    reward * self.learning_rate * pow(self.discount_factor, self.current_rl_step)
+                    (reward - previous_reward) * self.learning_rate * pow(self.discount_factor, self.current_rl_step)
 
                 super().save_memory(self.current_state.reshape([self.dimension_square]), next_state, output_list,
                                     reward)
 
                 self.current_state = next_state.reshape([1, self.dimension_square])
+
+                if self.random_movement_possibility > 0:
+                    self.random_movement_possibility -= self.random_movement_possibility_factor
 
                 self.current_rl_step += 1
         else:
