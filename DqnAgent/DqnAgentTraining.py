@@ -13,6 +13,30 @@ import math
 import functools
 
 
+def softmax_internal(values):
+    values_length = len(values)
+
+    for index in range(values_length):
+        values[index] = pow(math.e, values[index])
+
+    sum_of_values = sum(values)
+
+    for index in range(values_length):
+        values[index] /= sum_of_values
+
+    return values
+
+
+def make_negatives_zero(values):
+    values_length = len(values)
+
+    for index in range(values_length):
+        if values[index] < 0:
+            values[index] = 0
+
+    return values
+
+
 def create_number_with_precision(before_dot, after_dot, repeat_count_after_dot):
     decimal_part = 0
     for step in range(1, repeat_count_after_dot + 1):
@@ -105,6 +129,27 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
                 else:
                     selected_action = numpy.random.default_rng().choice(self.dimension_square)
 
+                output_list = output.tolist()
+                temp_k_vector = self.k_vector
+
+                for index in range(0, self.dimension_square):
+                    temp_k_vector[index] += 1
+
+                    next_state = numpy.transpose(numpy.matmul(self.q_matrix, temp_k_vector)). \
+                        reshape([self.dimension_square])
+
+                    next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
+
+                    reward, number_of_zeros = super().predicted_reward(next_state)
+
+                    output_list[index] = \
+                        output_list[index] * (1 - self.learning_rate) + \
+                        reward * self.learning_rate * pow(self.discount_factor, self.current_rl_step)
+
+                    temp_k_vector[index] -= 1
+
+                output_list = softmax_internal(output_list)
+
                 self.k_vector[selected_action] += 1
 
                 next_state = numpy.transpose(numpy.matmul(self.q_matrix, self.k_vector)). \
@@ -112,20 +157,12 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
 
                 next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
 
-                #print("Agent found next_state:", next_state)
-                #print("Agent found: self.k_vector", self.k_vector.reshape(1, self.dimension_square))
-                #print("Agent found: output", output)
-
-                previous_reward, previous_number_of_zeros = super().predicted_reward(self.current_state)
                 reward, number_of_zeros = super().predicted_reward(next_state)
+
+                #print("Agent found: reward", reward)
 
                 if number_of_zeros > self.maximum_zeros_during_training:
                     self.maximum_zeros_during_training = number_of_zeros
-
-                output_list = output.tolist()
-                output_list[selected_action] = \
-                    output_list[selected_action] * (1 - self.learning_rate) + \
-                    (reward - previous_reward) * self.learning_rate * pow(self.discount_factor, self.current_rl_step)
 
                 super().save_memory(self.current_state.reshape([self.dimension_square]), next_state, output_list,
                                     reward)
@@ -136,6 +173,11 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
                     self.random_movement_possibility -= self.random_movement_possibility_factor
 
                 self.current_rl_step += 1
+
+                #print("Agent found next_state:", next_state)
+                #print("Agent found: self.k_vector", self.k_vector.reshape(1, self.dimension_square))
+                #print("Agent found: output", output)
+
         else:
             print("RL step size problem step size: " + str(step_size) + "\n")
 
