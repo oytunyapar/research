@@ -49,13 +49,13 @@ class DqnAgentTraining:
                  n_epoch_rl_steps, batch_size, model_layer_sizes):
         self.function = function
         self.dimension = dimension
-        self.dimension_square = dimension**2
+        self.two_to_power_dimension = 2 ** dimension
         self.q_matrix = monsetup.q_matrix_generator(function, dimension)
 
-        model_layer_sizes.insert(0, dimension**2)
-        model_layer_sizes.append(dimension**2)
+        model_layer_sizes.insert(0, self.two_to_power_dimension)
+        model_layer_sizes.append(self.two_to_power_dimension)
 
-        self.memory = numpy.zeros([n_total_rl_steps, 3*self.dimension_square + 1], dtype=numpy.float32)
+        self.memory = numpy.zeros([n_total_rl_steps, 3 * self.two_to_power_dimension + 1], dtype=numpy.float32)
 
         self.n_total_rl_steps = n_total_rl_steps
         self.n_epoch_rl_steps = n_epoch_rl_steps
@@ -64,7 +64,7 @@ class DqnAgentTraining:
         self.memory_index = 0
 
         self.batch_size = batch_size
-        self.k_vector = numpy.ones([dimension**2, 1], dtype=numpy.float32)
+        self.k_vector = numpy.ones([self.two_to_power_dimension, 1], dtype=numpy.float32)
 
         self.random_movement_possibility = 0.99
         self.random_movement_possibility_factor = self.random_movement_possibility/n_total_rl_steps
@@ -88,13 +88,13 @@ class DqnAgentTraining:
     def predicted_reward(self, next_state):
         next_number_of_zeros = numpy.count_nonzero(next_state == 0)
         number_of_zeros = numpy.count_nonzero(self.current_state == 0)
-        return (next_number_of_zeros - number_of_zeros)/self.dimension_square, next_number_of_zeros
+        return (next_number_of_zeros - number_of_zeros) / self.two_to_power_dimension, next_number_of_zeros
 
     def save_memory(self, previous_state, next_state, action, reward):
-        self.memory[self.current_rl_step, 0: self.dimension_square] = previous_state
-        self.memory[self.current_rl_step, self.dimension_square: 2 * self.dimension_square] = next_state
-        self.memory[self.current_rl_step, 2 * self.dimension_square: 3 * self.dimension_square] = action
-        self.memory[self.current_rl_step, 3 * self.dimension_square] = reward
+        self.memory[self.current_rl_step, 0: self.two_to_power_dimension] = previous_state
+        self.memory[self.current_rl_step, self.two_to_power_dimension: 2 * self.two_to_power_dimension] = next_state
+        self.memory[self.current_rl_step, 2 * self.two_to_power_dimension: 3 * self.two_to_power_dimension] = action
+        self.memory[self.current_rl_step, 3 * self.two_to_power_dimension] = reward
         self.memory_index += 1
         return
 
@@ -102,18 +102,18 @@ class DqnAgentTraining:
         while self.current_rl_step < self.n_total_rl_steps:
             self.reinforcement_learn_step(self.n_epoch_rl_steps)
             memory_batch = self.get_random_batch_from_memory(self.batch_size)
-            self.training_function(memory_batch[:, 0: self.dimension_square],
-                                   memory_batch[:, 2 * self.dimension_square: 3 * self.dimension_square])
+            self.training_function(memory_batch[:, 0: self.two_to_power_dimension],
+                                   memory_batch[:, 2 * self.two_to_power_dimension: 3 * self.two_to_power_dimension])
 
 class DqnAgentTrainingTensorflow(DqnAgentTraining):
     def __init__(self, function, dimension, n_total_rl_steps,
                  n_epoch_rl_steps, batch_size, model_layer_sizes):
         super().__init__(function, dimension, n_total_rl_steps, n_epoch_rl_steps, batch_size, model_layer_sizes)
         self.dqn_agent = create_dqn_agent_tensorflow(model_layer_sizes)
-        self.current_state = numpy.sum(self.q_matrix, 1).reshape([1, self.dimension_square])
+        self.current_state = numpy.sum(self.q_matrix, 1).reshape([1, self.two_to_power_dimension])
 
         self.check_current_state = self.current_state
-        self.check_k_vector = numpy.ones([dimension ** 2, 1], dtype=numpy.float32)
+        self.check_k_vector = numpy.ones([self.two_to_power_dimension, 1], dtype=numpy.float32)
 
         self.training_function = self.train
 
@@ -122,21 +122,21 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
             if self.current_rl_step + step_size > self.n_total_rl_steps:
                 step_size = self.n_total_rl_steps - self.current_rl_step
             for step in range(step_size):
-                output = self.dqn_agent(self.current_state).numpy().reshape([self.dimension_square])
+                output = self.dqn_agent(self.current_state).numpy().reshape([self.two_to_power_dimension])
 
                 if numpy.random.uniform(0, 1) > self.random_movement_possibility:
                     selected_action = output.argmax().tolist()
                 else:
-                    selected_action = numpy.random.default_rng().choice(self.dimension_square)
+                    selected_action = numpy.random.default_rng().choice(self.two_to_power_dimension)
 
                 output_list = output.tolist()
                 temp_k_vector = self.k_vector
 
-                for index in range(0, self.dimension_square):
+                for index in range(0, self.two_to_power_dimension):
                     temp_k_vector[index] += 1
 
                     next_state = numpy.transpose(numpy.matmul(self.q_matrix, temp_k_vector)). \
-                        reshape([self.dimension_square])
+                        reshape([self.two_to_power_dimension])
 
                     next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
 
@@ -153,7 +153,7 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
                 self.k_vector[selected_action] += 1
 
                 next_state = numpy.transpose(numpy.matmul(self.q_matrix, self.k_vector)). \
-                    reshape([self.dimension_square])
+                    reshape([self.two_to_power_dimension])
 
                 next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
 
@@ -164,10 +164,10 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
                 if number_of_zeros > self.maximum_zeros_during_training:
                     self.maximum_zeros_during_training = number_of_zeros
 
-                super().save_memory(self.current_state.reshape([self.dimension_square]), next_state, output_list,
+                super().save_memory(self.current_state.reshape([self.two_to_power_dimension]), next_state, output_list,
                                     reward)
 
-                self.current_state = next_state.reshape([1, self.dimension_square])
+                self.current_state = next_state.reshape([1, self.two_to_power_dimension])
 
                 if self.random_movement_possibility > 0:
                     self.random_movement_possibility -= self.random_movement_possibility_factor
@@ -184,21 +184,21 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
     def train(self, given_input, desired_output):
         self.dqn_agent.fit(given_input,
                            desired_output,
-                           epochs=10, batch_size=math.floor(self.batch_size / 4))
+                           epochs=50, batch_size=math.floor(self.batch_size / 4))
         return
 
     def check_agent(self):
-        self.check_current_state = numpy.sum(self.q_matrix, 1).reshape([1, self.dimension_square])
-        self.check_k_vector = numpy.ones([self.dimension ** 2, 1], dtype=numpy.float32)
+        self.check_current_state = numpy.sum(self.q_matrix, 1).reshape([1, self.two_to_power_dimension])
+        self.check_k_vector = numpy.ones([self.two_to_power_dimension, 1], dtype=numpy.float32)
         for step in range(self.n_epoch_rl_steps):
-            output = self.dqn_agent(self.check_current_state).numpy().reshape([self.dimension_square])
+            output = self.dqn_agent(self.check_current_state).numpy().reshape([self.two_to_power_dimension])
 
             selected_action = output.argmax().tolist()
 
             self.check_k_vector[selected_action] += 1
 
             next_state = numpy.transpose(numpy.matmul(self.q_matrix, self.check_k_vector)). \
-                reshape([self.dimension_square])
+                reshape([self.two_to_power_dimension])
 
             next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
 
@@ -209,7 +209,7 @@ class DqnAgentTrainingTensorflow(DqnAgentTraining):
                 print("Agent found:", next_state)
                 break
 
-            self.check_current_state = next_state.reshape([1, self.dimension_square])
+            self.check_current_state = next_state.reshape([1, self.two_to_power_dimension])
         return
 
 
@@ -233,11 +233,11 @@ class DqnAgentTrainingPytorch(DqnAgentTraining):
                 if numpy.random.uniform(0, 1) > self.random_movement_possibility:
                     selected_action = output.argmax().tolist()
                 else:
-                    selected_action = numpy.random.default_rng().choice(self.dimension_square)
+                    selected_action = numpy.random.default_rng().choice(self.two_to_power_dimension)
 
                 self.k_vector[selected_action] += 1
                 next_state = numpy.transpose(numpy.matmul(self.q_matrix, self.k_vector)). \
-                    reshape([self.dimension_square])
+                    reshape([self.two_to_power_dimension])
 
                 next_state = (next_state / functools.reduce(numpy.gcd, numpy.array(next_state, dtype=numpy.int)))
 
