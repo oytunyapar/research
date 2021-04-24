@@ -11,13 +11,12 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                  n_epoch_rl_steps, batch_size, model_layer_sizes):
         super().__init__(function, dimension, n_total_rl_steps, n_epoch_rl_steps, batch_size, model_layer_sizes)
         self.dqn_agent = DqnAgentTensorflow.create_dqn_agent_tensorflow(model_layer_sizes)
-        self.current_state = numpy.sum(self.q_matrix, 1).reshape([1, self.two_to_power_dimension])
-        self.walsh_spectrum = self.current_state.copy()
+        self.current_state = self.q_matrix
+        self.walsh_spectrum = self.q_matrix.sum(1)
 
         self.check_current_state = self.current_state
-        self.check_k_vector = numpy.ones([self.two_to_power_dimension, 1], dtype=numpy.float32)
 
-        self.maximum_zeros_during_training = numpy.count_nonzero(self.current_state == 0)
+        self.maximum_zeros_during_training = numpy.count_nonzero(self.current_state.sum(1) == 0)
 
         self.training_function = self.train
 
@@ -26,12 +25,13 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
             if self.current_rl_step + step_size > self.n_total_rl_steps:
                 step_size = self.n_total_rl_steps - self.current_rl_step
             for step in range(step_size):
-                output = self.dqn_agent(self.current_state).numpy().reshape([self.two_to_power_dimension])
+                output = self.dqn_agent(self.current_state.reshape(self.state_size, order='F')).numpy().\
+                    reshape([self.action_size])
 
                 if numpy.random.uniform(0, 1) > self.random_movement_possibility():
                     selected_action = output.argmax().tolist()
                 else:
-                    selected_action = numpy.random.default_rng().choice(self.two_to_power_dimension)
+                    selected_action = numpy.random.default_rng().choice(self.action_size)
 
                 output_list = output.tolist()
                 temp_k_vector = self.k_vector
