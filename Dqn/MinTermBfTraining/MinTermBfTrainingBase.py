@@ -13,7 +13,7 @@ class MinTermBfTrainingBase:
         self.current_state = self.q_matrix.copy()
 
         self.state_size = self.two_to_power_dimension ** 2
-        self.action_size = self.two_to_power_dimension
+        self.action_size = self.two_to_power_dimension + 1
         model_layer_sizes.insert(0, self.state_size)
         model_layer_sizes.append(self.action_size)
 
@@ -61,8 +61,7 @@ class MinTermBfTrainingBase:
 
     def predicted_reward(self, next_state):
         next_number_of_zeros = numpy.count_nonzero(next_state.sum(1) == 0)
-        number_of_zeros = numpy.count_nonzero(self.current_state.sum(1) == 0)
-        return (next_number_of_zeros - number_of_zeros) / self.two_to_power_dimension, next_number_of_zeros
+        return next_number_of_zeros / self.two_to_power_dimension, next_number_of_zeros
 
     def save_memory(self, previous_state, next_state, action, reward):
         self.short_memory[self.short_memory_index, 0: self.state_size] = \

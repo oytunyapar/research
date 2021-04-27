@@ -29,45 +29,37 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                     selected_action = numpy.random.default_rng().choice(self.action_size)
 
                 output_list = output.tolist()
-                temp_k_vector = self.k_vector.copy()
 
-                for index in range(0, self.two_to_power_dimension):
-                    temp_k_vector[index] += 1
+                if selected_action < self.k_vector.size:
+                    self.k_vector[selected_action] += 1
 
-                    temp_k_vector_gcd = functools.reduce(numpy.gcd, numpy.array(temp_k_vector, dtype=numpy.int))
+                    k_vector_gcd = functools.reduce(numpy.gcd, numpy.array(self.k_vector, dtype=numpy.int))
 
-                    temp_k_vector /= temp_k_vector_gcd
+                    self.k_vector /= k_vector_gcd
 
-                    next_state = self.q_matrix * temp_k_vector
+                    next_state = self.q_matrix * self.k_vector
+
+                    next_output = self.dqn_agent(next_state.reshape(1, self.state_size, order='F')).numpy(). \
+                        reshape([self.action_size])
+                    next_output_max = next_output[next_output.argmax()]
 
                     reward, number_of_zeros = super().predicted_reward(next_state)
 
-                    output_list[index] = \
-                        output_list[index] * (1 - self.learning_rate) + \
-                        reward * self.learning_rate * pow(self.discount_factor, self.current_rl_step)
+                    output_list[selected_action] = \
+                        output_list[selected_action] * (1 - self.learning_rate) + \
+                        reward * self.learning_rate +\
+                        self.learning_rate * pow(self.discount_factor, self.current_rl_step) * next_output_max
 
-                    temp_k_vector *= temp_k_vector_gcd
+                    if number_of_zeros > self.maximum_zeros_during_training:
+                        self.maximum_zeros_during_training = number_of_zeros
+                        self.maximum_zeros_k_vector = self.k_vector.copy()
 
-                    temp_k_vector[index] -= 1
-
-                self.k_vector[selected_action] += 1
-
-                k_vector_gcd = functools.reduce(numpy.gcd, numpy.array(self.k_vector, dtype=numpy.int))
-
-                self.k_vector /= k_vector_gcd
-
-                next_state = self.q_matrix * self.k_vector
-
-                reward, number_of_zeros = super().predicted_reward(next_state)
-
-                if number_of_zeros > self.maximum_zeros_during_training:
-                    self.maximum_zeros_during_training = number_of_zeros
-                    self.maximum_zeros_k_vector = self.k_vector.copy()
+                else:
+                    next_state = self.current_state.copy()
+                    reward = 0
 
                 super().save_memory(self.current_state, next_state, output_list, reward)
-
                 self.current_state = next_state
-
                 self.current_rl_step += 1
 
                 #print("Agent found next_state:", next_state)
@@ -97,13 +89,19 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
             selected_action = output.argmax().tolist()
 
-            self.k_vector_check[selected_action] += 1
+            if selected_action < self.k_vector.size:
+                self.k_vector_check[selected_action] += 1
 
-            k_vector_check_gcd = functools.reduce(numpy.gcd, numpy.array(self.k_vector_check, dtype=numpy.int))
+                k_vector_check_gcd = functools.reduce(numpy.gcd, numpy.array(self.k_vector_check, dtype=numpy.int))
 
-            self.k_vector_check /= k_vector_check_gcd
+                self.k_vector_check /= k_vector_check_gcd
 
-            self.check_current_state = self.q_matrix * self.k_vector_check
+                self.check_current_state = self.q_matrix * self.k_vector_check
+            else:
+                print("No Action!")
+                print("Agent find maximum zeros:", number_of_zeros)
+                print("Agent found:", self.check_current_state)
+                break
 
         self.k_vector_check = numpy.ones(self.two_to_power_dimension)
 
