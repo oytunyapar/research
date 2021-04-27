@@ -7,9 +7,8 @@ from ..DqnAgent import DqnAgentTensorflow
 
 
 class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
-    def __init__(self, function, dimension, n_total_rl_steps,
-                 n_epoch_rl_steps, batch_size, model_layer_sizes):
-        super().__init__(function, dimension, n_total_rl_steps, n_epoch_rl_steps, batch_size, model_layer_sizes)
+    def __init__(self, function, dimension, total_rl_steps_factor, model_layer_sizes):
+        super().__init__(function, dimension, total_rl_steps_factor, model_layer_sizes)
         self.dqn_agent = DqnAgentTensorflow.create_dqn_agent_tensorflow(model_layer_sizes)
 
         self.check_current_state = self.q_matrix.copy()
@@ -63,6 +62,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
                 if number_of_zeros > self.maximum_zeros_during_training:
                     self.maximum_zeros_during_training = number_of_zeros
+                    self.maximum_zeros_k_vector = self.k_vector.copy()
 
                 super().save_memory(self.current_state, next_state, output_list, reward)
 
@@ -73,7 +73,6 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                 #print("Agent found next_state:", next_state)
                 #print("Agent found: self.k_vector", self.k_vector.reshape(1, self.dimension_square))
                 #print("Agent found: output", output)
-
         else:
             print("RL step size problem step size: " + str(step_size) + "\n")
 
@@ -84,7 +83,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
         return
 
     def check_agent(self):
-        for step in range(self.n_epoch_rl_steps):
+        for step in range(self.n_total_rl_steps):
 
             reward, number_of_zeros = super().predicted_reward(self.check_current_state)
 
@@ -105,5 +104,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
             self.k_vector_check /= k_vector_check_gcd
 
             self.check_current_state = self.q_matrix * self.k_vector_check
+
+        self.k_vector_check = numpy.ones(self.two_to_power_dimension)
 
         return
