@@ -11,7 +11,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
         super().__init__(function, dimension, total_rl_steps_factor, model_layer_sizes)
         self.dqn_agent = DqnAgentTensorflow.create_dqn_agent_tensorflow(model_layer_sizes)
 
-        self.check_current_state = self.q_matrix.copy()
+        self.check_current_state = self.current_state.copy()
 
         self.training_function = self.train
 
@@ -20,8 +20,9 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
             if self.current_rl_step + step_size > self.n_total_rl_steps:
                 step_size = self.n_total_rl_steps - self.current_rl_step
             for step in range(step_size):
-                output = self.dqn_agent(self.current_state.reshape(1, self.state_size, order='F')).numpy().\
-                    reshape([self.action_size])
+                self.current_state[0, 0:self.function_representation_size] = self.function_representation
+                self.current_state[0, self.function_representation_size:self.state_size] = self.k_vector
+                output = self.dqn_agent(self.current_state).numpy().reshape([self.action_size])
 
                 if numpy.random.uniform(0, 1) > self.random_movement_possibility():
                     selected_action = output.argmax().tolist()
@@ -37,18 +38,11 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
                     self.k_vector /= k_vector_gcd
 
-                    next_state = self.q_matrix * self.k_vector
+                    next_state = numpy.ones([1, self.state_size])
+                    next_state[0, 0:self.function_representation_size] = self.function_representation
+                    next_state[0, self.function_representation_size:self.state_size] = self.k_vector
 
-                    next_output = self.dqn_agent(next_state.reshape(1, self.state_size, order='F')).numpy(). \
-                        reshape([self.action_size])
-                    next_output_max = next_output[next_output.argmax()]
-
-                    reward, number_of_zeros = super().predicted_reward(next_state)
-
-                    output_list[selected_action] = \
-                        output_list[selected_action] * (1 - self.learning_rate) + \
-                        reward * self.learning_rate +\
-                        self.learning_rate * pow(self.discount_factor, self.current_rl_step) * next_output_max
+                    reward, number_of_zeros = super().predicted_reward(self.k_vector)
 
                     if number_of_zeros > self.maximum_zeros_during_training:
                         self.maximum_zeros_during_training = number_of_zeros
@@ -57,6 +51,15 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                 else:
                     next_state = self.current_state.copy()
                     reward = 0
+
+                next_output = self.dqn_agent(next_state).numpy().reshape([self.action_size])
+
+                next_output_max = next_output[next_output.argmax()]
+
+                output_list[selected_action] = \
+                    output_list[selected_action] * (1 - self.learning_rate) + \
+                    reward * self.learning_rate + \
+                    self.learning_rate * pow(self.discount_factor, self.current_rl_step) * next_output_max
 
                 super().save_memory(self.current_state, next_state, output_list, reward)
                 self.current_state = next_state
@@ -75,17 +78,16 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
         return
 
     def check_agent(self):
-        for step in range(self.n_total_rl_steps):
+        for step in range(self.n_epoch_rl_steps):
 
-            reward, number_of_zeros = super().predicted_reward(self.check_current_state)
+            reward, number_of_zeros = super().predicted_reward(self.k_vector_check)
 
             if number_of_zeros >= self.maximum_zeros_during_training:
                 print("Agent find maximum zeros:", number_of_zeros)
-                print("Agent found:", self.check_current_state)
+                print("Agent found:", self.k_vector_check)
                 break
 
-            output = self.dqn_agent(
-                self.check_current_state.reshape(1, self.state_size, order='F')).numpy().reshape([self.action_size])
+            output = self.dqn_agent(self.check_current_state).numpy().reshape([self.action_size])
 
             selected_action = output.argmax().tolist()
 
@@ -96,11 +98,11 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
                 self.k_vector_check /= k_vector_check_gcd
 
-                self.check_current_state = self.q_matrix * self.k_vector_check
+                self.check_current_state[0, self.function_representation_size:self.state_size] = self.k_vector_check
             else:
                 print("No Action!")
                 print("Agent find maximum zeros:", number_of_zeros)
-                print("Agent found:", self.check_current_state)
+                print("Agent found:", self.k_vector_check)
                 break
 
         self.k_vector_check = numpy.ones(self.two_to_power_dimension)
