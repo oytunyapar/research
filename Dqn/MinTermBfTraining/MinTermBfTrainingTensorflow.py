@@ -64,27 +64,22 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                 super().save_memory(self.current_state, next_state, output_list, reward)
                 self.current_state = next_state
                 self.current_rl_step += 1
-
-                #print("Agent found next_state:", next_state)
-                #print("Agent found: self.k_vector", self.k_vector.reshape(1, self.dimension_square))
-                #print("Agent found: output", output)
         else:
             print("RL step size problem step size: " + str(step_size) + "\n")
 
     def train(self, given_input, desired_output):
         self.dqn_agent.fit(given_input,
                            desired_output,
-                           epochs=50, batch_size=math.floor(self.batch_size / 4))
+                           epochs=10, batch_size=math.floor(self.batch_size / 4))
         return
 
-    def check_agent(self):
-        for step in range(self.n_epoch_rl_steps):
+    def check_agent(self, loop_constant):
+        number_of_zeros = 0
+        for step in range(loop_constant * self.n_epoch_rl_steps):
 
             reward, number_of_zeros = super().predicted_reward(self.k_vector_check)
 
             if number_of_zeros >= self.maximum_zeros_during_training:
-                print("Agent find maximum zeros:", number_of_zeros)
-                print("Agent found:", self.k_vector_check)
                 break
 
             output = self.dqn_agent(self.check_current_state).numpy().reshape([self.action_size])
@@ -101,10 +96,10 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                 self.check_current_state[0, self.function_representation_size:self.state_size] = self.k_vector_check
             else:
                 print("No Action!")
-                print("Agent find maximum zeros:", number_of_zeros)
-                print("Agent found:", self.k_vector_check)
                 break
 
+        print("Agent find maximum zeros:", number_of_zeros)
+        print("Agent found:", self.k_vector_check)
         self.k_vector_check = numpy.ones(self.two_to_power_dimension)
 
         return

@@ -1,6 +1,8 @@
 import numpy
 import monsetup
 from ..Utilities import HelperFunctions
+import math
+import signal
 
 
 class MinTermBfTrainingBase:
@@ -42,6 +44,8 @@ class MinTermBfTrainingBase:
         self.long_memory = numpy.zeros([self.long_memory_size, 2 * self.state_size + self.action_size + 1],
                                        dtype=numpy.float32)
 
+        self.batch_factor = 20
+
         self.batch_size = self.n_epoch_rl_steps
 
         self.discount_factor = HelperFunctions.create_number_with_precision(0, 9, self.dimension - 1)
@@ -51,6 +55,13 @@ class MinTermBfTrainingBase:
         self.maximum_zeros_k_vector = numpy.ones(self.two_to_power_dimension)
 
         self.training_function = None
+        self.continue_training = True
+
+        signal.signal(signal.SIGINT, self.sigint_handler)
+
+    def sigint_handler(self, signum, frame):
+        print("User interrupt received.")
+        self.continue_training = False
 
     def random_movement_possibility(self):
         offset = 3
@@ -67,7 +78,7 @@ class MinTermBfTrainingBase:
         return self.long_memory[numbers.tolist(), :]
 
     def predicted_reward(self, next_k_vector):
-        next_number_of_zeros = numpy.count_nonzero(numpy.matmul(self.q_matrix, next_k_vector)== 0)
+        next_number_of_zeros = numpy.count_nonzero(numpy.matmul(self.q_matrix, next_k_vector) == 0)
         return next_number_of_zeros / self.two_to_power_dimension, next_number_of_zeros
 
     def save_memory(self, previous_state, next_state, action, reward):
@@ -86,9 +97,9 @@ class MinTermBfTrainingBase:
         return
 
     def train_agent(self):
-        while self.current_rl_step < self.n_total_rl_steps:
+        while self.current_rl_step < self.n_total_rl_steps and self.continue_training:
             self.reinforcement_learn_step(self.n_epoch_rl_steps)
-            memory_batch = self.get_random_batch_from_memory(self.batch_size)
+            memory_batch = self.get_random_batch_from_memory(math.ceil(self.long_memory_index/self.batch_factor))
             self.training_function(memory_batch[:, 0: self.state_size],
                                    memory_batch[:, 2 * self.state_size: 2 * self.state_size + self.action_size])
             self.k_vector = numpy.ones(self.two_to_power_dimension)
