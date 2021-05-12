@@ -7,8 +7,8 @@ from ..DqnAgent import DqnAgentTensorflow
 
 
 class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
-    def __init__(self, function, dimension, total_rl_steps_factor, model_layer_sizes):
-        super().__init__(function, dimension, total_rl_steps_factor, model_layer_sizes)
+    def __init__(self, function, dimension, number_of_epochs, model_layer_sizes):
+        super().__init__(function, dimension, number_of_epochs, model_layer_sizes)
         self.dqn_agent = DqnAgentTensorflow.create_dqn_agent_tensorflow(model_layer_sizes)
 
         self.check_current_state = self.current_state.copy()
@@ -31,6 +31,9 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
                 output_list = output.tolist()
 
+                reward = 0
+                no_action = False
+
                 if selected_action < self.k_vector.size:
                     self.k_vector[selected_action] += 1
 
@@ -50,16 +53,19 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
                 else:
                     next_state = self.current_state.copy()
-                    reward = 0
+                    no_action = True
+
+                self.epoch_total_reward += reward
 
                 next_output = self.dqn_agent(next_state).numpy().reshape([self.action_size])
 
                 next_output_max = next_output[next_output.argmax()]
 
-                output_list[selected_action] = \
-                    output_list[selected_action] * (1 - self.learning_rate) + \
-                    reward * self.learning_rate + \
-                    self.learning_rate * pow(self.discount_factor, self.current_rl_step) * next_output_max
+                if not no_action:
+                    output_list[selected_action] = \
+                        output_list[selected_action] * (1 - self.learning_rate) + \
+                        reward * self.learning_rate + \
+                        self.learning_rate * pow(self.discount_factor, self.current_rl_step) * next_output_max
 
                 super().save_memory(self.current_state, next_state, output_list, reward)
                 self.current_state = next_state
@@ -80,8 +86,10 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
             reward, number_of_zeros = super().predicted_reward(self.k_vector_check)
 
             if number_of_zeros >= self.maximum_zeros_during_training:
-                break
+                print("Already max zero found during training.")
 
+            self.check_current_state[0, 0:self.function_representation_size] = self.function_representation
+            self.check_current_state[0, self.function_representation_size:self.state_size] = self.k_vector_check
             output = self.dqn_agent(self.check_current_state).numpy().reshape([self.action_size])
 
             selected_action = output.argmax().tolist()
@@ -92,8 +100,6 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                 k_vector_check_gcd = functools.reduce(numpy.gcd, numpy.array(self.k_vector_check, dtype=numpy.int))
 
                 self.k_vector_check /= k_vector_check_gcd
-
-                self.check_current_state[0, self.function_representation_size:self.state_size] = self.k_vector_check
             else:
                 print("No Action!")
                 break

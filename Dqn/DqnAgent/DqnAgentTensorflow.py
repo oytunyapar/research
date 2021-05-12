@@ -16,6 +16,8 @@ def create_dqn_agent_tensorflow(layer_sizes):
 
         model.add(Dense(layer_sizes[layer_iterator + 1], activation='relu', input_dim=layer_sizes[layer_iterator],
                         name=str(layer_iterator), kernel_initializer=initializer))
-
-    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
+    learning_rate = 0.001
+    model.compile(loss=tensorflow.keras.losses.Huber(),
+                  optimizer=tensorflow.keras.optimizers.Adam(lr=learning_rate),
+                  metrics=['accuracy'])
     return model
