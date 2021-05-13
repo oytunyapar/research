@@ -50,14 +50,14 @@ class MinTermBfTrainingBase:
             [self.memory_positive_reward_size, 2 * self.state_size + self.action_size + 1],
             dtype=numpy.float32)
 
-        self.replay_memory_size = self.two_to_power_dimension * 50
+        self.replay_memory_size = self.two_to_power_dimension * 100
 
-        self.positive_reward_bias_factor = 0.6
+        self.positive_reward_bias_factor = 0.5
 
         self.batch_size = self.n_epoch_rl_steps
 
-        self.discount_factor = HelperFunctions.create_number_with_precision(0, 9, self.dimension - 1)
-        self.learning_rate = 0.1
+        self.discount_factor = HelperFunctions.create_number_with_precision(0, 6, self.dimension - 1)
+        self.learning_rate = 0.2
 
         self.maximum_zeros_during_training = numpy.count_nonzero(self.walsh_spectrum == 0)
         self.maximum_zeros_k_vector = numpy.ones(self.two_to_power_dimension)
@@ -124,7 +124,8 @@ class MinTermBfTrainingBase:
 
     def predicted_reward(self, next_k_vector):
         next_number_of_zeros = numpy.count_nonzero(numpy.matmul(self.q_matrix, next_k_vector) == 0)
-        return next_number_of_zeros / self.two_to_power_dimension, next_number_of_zeros
+        #/ self.two_to_power_dimension
+        return next_number_of_zeros, next_number_of_zeros
 
     def save_memory(self, previous_state, next_state, action, reward):
         if reward > 0:

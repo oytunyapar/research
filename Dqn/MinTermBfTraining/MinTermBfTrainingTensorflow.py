@@ -54,6 +54,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                 else:
                     next_state = self.current_state.copy()
                     no_action = True
+                    reward, number_of_zeros = super().predicted_reward(self.k_vector)
 
                 self.epoch_total_reward += reward
 
@@ -66,6 +67,10 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                         output_list[selected_action] * (1 - self.learning_rate) + \
                         reward * self.learning_rate + \
                         self.learning_rate * pow(self.discount_factor, self.current_rl_step) * next_output_max
+                else:
+                    output_list[selected_action] = \
+                        output_list[selected_action] * (1 - self.learning_rate) + \
+                        reward * self.learning_rate
 
                 super().save_memory(self.current_state, next_state, output_list, reward)
                 self.current_state = next_state
@@ -76,7 +81,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
     def train(self, given_input, desired_output):
         self.dqn_agent.fit(given_input,
                            desired_output,
-                           epochs=10, batch_size=math.floor(self.batch_size / 4))
+                           epochs=self.two_to_power_dimension, batch_size=math.floor(self.batch_size / 4))
         return
 
     def check_agent(self, loop_constant):
