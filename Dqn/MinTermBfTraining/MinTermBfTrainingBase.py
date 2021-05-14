@@ -7,19 +7,31 @@ import math
 
 class MinTermBfTrainingBase:
     def __init__(self, function, dimension, number_of_epochs, model_layer_sizes):
-        self.function = function
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
-        self.q_matrix = monsetup.q_matrix_generator(function, dimension)
+
+        self.number_of_all_functions = 2 ** self.two_to_power_dimension
+
+        self.function = function
+
+        self.all_function_training = False
+        if self.function == 0:
+            self.all_function_training = True
+        elif self.function >= self.number_of_all_functions:
+            raise Exception("Function must be smaller than " + str(self.number_of_all_functions))
+
+        if self.all_function_training:
+            self.function = numpy.random.randint(low=1, high=self.number_of_all_functions)
+
+        self.q_matrix = monsetup.q_matrix_generator(function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
+        self.function_representation_size = self.two_to_power_dimension ** 2
+        self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
 
         self.k_vector_size = self.two_to_power_dimension
         self.k_vector = numpy.ones(self.two_to_power_dimension)
 
         self.k_vector_check = numpy.ones(self.two_to_power_dimension)
-
-        self.function_representation_size = self.two_to_power_dimension ** 2
-        self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
 
         self.state_size = self.function_representation_size + self.k_vector_size
         self.action_size = self.two_to_power_dimension + 1
@@ -56,16 +68,33 @@ class MinTermBfTrainingBase:
 
         self.batch_size = self.n_epoch_rl_steps
 
-        self.discount_factor = HelperFunctions.create_number_with_precision(0, 6, self.dimension - 1)
-        self.learning_rate = 0.2
+        self.discount_factor = 0.7
+        self.learning_rate = 0.6
 
-        self.maximum_zeros_during_training = numpy.count_nonzero(self.walsh_spectrum == 0)
-        self.maximum_zeros_k_vector = numpy.ones(self.two_to_power_dimension)
+        self.maximum_zeros_during_training = numpy.zeros(self.number_of_all_functions)
+        self.maximum_zeros_during_training[self.function] = numpy.count_nonzero(self.walsh_spectrum == 0)
+        self.maximum_zeros_k_vector = numpy.ones([self.number_of_all_functions, self.two_to_power_dimension])
 
         self.training_function = None
         self.continue_training = True
 
         signal.signal(signal.SIGINT, self.sigint_handler)
+
+    def set_function(self, function):
+        if function == 0 or function >= self.number_of_all_functions:
+            print("Function must be between 0 and ", str(self.number_of_all_functions))
+            return
+
+        self.function = function
+        self.q_matrix = monsetup.q_matrix_generator(function, self.dimension)
+        self.walsh_spectrum = self.q_matrix.sum(1)
+
+        number_of_zeros = numpy.count_nonzero(self.walsh_spectrum == 0)
+        if number_of_zeros > self.maximum_zeros_during_training[self.function]:
+            self.maximum_zeros_during_training[self.function] = number_of_zeros
+            self.maximum_zeros_k_vector[self.function, :] = numpy.ones(self.two_to_power_dimension)
+
+        self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
 
     def sigint_handler(self, signum, frame):
         print("User interrupt received.")
@@ -160,6 +189,8 @@ class MinTermBfTrainingBase:
                 memory_batch = self.get_random_batch_from_memory(self.replay_memory_size)
                 self.training_function(memory_batch[:, 0: self.state_size],
                                        memory_batch[:, 2 * self.state_size: 2 * self.state_size + self.action_size])
+            if self.all_function_training:
+                self.set_function(numpy.random.randint(low=1, high=self.number_of_all_functions))
             self.reward_per_epoch[self.current_epoch] = self.epoch_total_reward
             self.epoch_total_reward = 0
             self.k_vector = numpy.ones(self.two_to_power_dimension)

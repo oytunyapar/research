@@ -31,7 +31,6 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
                 output_list = output.tolist()
 
-                reward = 0
                 no_action = False
 
                 if selected_action < self.k_vector.size:
@@ -47,9 +46,9 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
                     reward, number_of_zeros = super().predicted_reward(self.k_vector)
 
-                    if number_of_zeros > self.maximum_zeros_during_training:
-                        self.maximum_zeros_during_training = number_of_zeros
-                        self.maximum_zeros_k_vector = self.k_vector.copy()
+                    if number_of_zeros > self.maximum_zeros_during_training[self.function]:
+                        self.maximum_zeros_during_training[self.function] = number_of_zeros
+                        self.maximum_zeros_k_vector[self.function, :] = self.k_vector
 
                 else:
                     next_state = self.current_state.copy()
@@ -66,7 +65,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
                     output_list[selected_action] = \
                         output_list[selected_action] * (1 - self.learning_rate) + \
                         reward * self.learning_rate + \
-                        self.learning_rate * pow(self.discount_factor, self.current_rl_step) * next_output_max
+                        self.learning_rate * self.discount_factor * next_output_max
                 else:
                     output_list[selected_action] = \
                         output_list[selected_action] * (1 - self.learning_rate) + \
@@ -90,7 +89,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
             reward, number_of_zeros = super().predicted_reward(self.k_vector_check)
 
-            if number_of_zeros >= self.maximum_zeros_during_training:
+            if number_of_zeros >= self.maximum_zeros_during_training[self.function]:
                 print("Already max zero found during training.")
 
             self.check_current_state[0, 0:self.function_representation_size] = self.function_representation
