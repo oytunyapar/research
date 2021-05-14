@@ -22,6 +22,11 @@ class MinTermBfTrainingBase:
 
         if self.all_function_training:
             self.function = numpy.random.randint(low=1, high=self.number_of_all_functions)
+            self.training_each_episode = self.two_to_power_dimension
+        else:
+            self.training_each_episode = 1
+
+        self.replay_memory_size = self.two_to_power_dimension * 100
 
         self.q_matrix = monsetup.q_matrix_generator(function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
@@ -61,8 +66,6 @@ class MinTermBfTrainingBase:
         self.memory_positive_reward = numpy.zeros(
             [self.memory_positive_reward_size, 2 * self.state_size + self.action_size + 1],
             dtype=numpy.float32)
-
-        self.replay_memory_size = self.two_to_power_dimension * 100
 
         self.positive_reward_bias_factor = 0.5
 
@@ -186,9 +189,10 @@ class MinTermBfTrainingBase:
             print("EPOCH ", self.current_epoch, "/", self.number_of_epochs)
             self.reinforcement_learn_step(self.n_epoch_rl_steps)
             if self.current_rl_step >= self.replay_memory_size:
-                memory_batch = self.get_random_batch_from_memory(self.replay_memory_size)
-                self.training_function(memory_batch[:, 0: self.state_size],
-                                       memory_batch[:, 2 * self.state_size: 2 * self.state_size + self.action_size])
+                for step in range(self.training_each_episode):
+                    memory_batch = self.get_random_batch_from_memory(self.replay_memory_size)
+                    self.training_function(memory_batch[:, 0: self.state_size],
+                                           memory_batch[:, 2 * self.state_size: 2 * self.state_size + self.action_size])
             if self.all_function_training:
                 self.set_function(numpy.random.randint(low=1, high=self.number_of_all_functions))
             self.reward_per_epoch[self.current_epoch] = self.epoch_total_reward
