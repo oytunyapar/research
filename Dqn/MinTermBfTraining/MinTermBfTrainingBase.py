@@ -1,6 +1,5 @@
 import numpy
 import monsetup
-from ..Utilities import HelperFunctions
 import signal
 import math
 
@@ -24,14 +23,15 @@ class MinTermBfTrainingBase:
             self.function = numpy.random.randint(low=1, high=self.number_of_all_functions)
             self.training_each_episode = self.two_to_power_dimension
         else:
-            self.training_each_episode = 1
-
-        self.replay_memory_size = self.two_to_power_dimension * 100
+            self.training_each_episode = self.dimension
 
         self.q_matrix = monsetup.q_matrix_generator(function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
-        self.function_representation_size = self.two_to_power_dimension ** 2
-        self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
+        #self.function_representation_size = self.two_to_power_dimension ** 2
+        #self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
+
+        self.function_representation_size = self.two_to_power_dimension
+        self.function_representation = self.walsh_spectrum
 
         self.k_vector_size = self.two_to_power_dimension
         self.k_vector = numpy.ones(self.two_to_power_dimension)
@@ -50,28 +50,37 @@ class MinTermBfTrainingBase:
         self.current_rl_step = 0
         self.number_of_epochs = number_of_epochs
 
+        self.replay_memory_size = self.n_epoch_rl_steps ** 2
+
+        self.training_factor = (self.replay_memory_size/self.n_epoch_rl_steps)/8
+
         self.current_epoch = 0
         self.epoch_total_reward = 0
         self.reward_per_epoch = numpy.zeros([number_of_epochs])
 
+        self.memory_row_length = 2 * self.state_size + self.action_size + 1
+
         self.memory_zero_reward_size = self.n_total_rl_steps
         self.memory_zero_reward_index = 0
 
-        self.memory_zero_reward = numpy.zeros([self.memory_zero_reward_size, 2 * self.state_size + self.action_size + 1],
-                                              dtype=numpy.float32)
+        self.memory_zero_reward = numpy.zeros(
+            [self.memory_zero_reward_size, self.memory_row_length],
+            dtype=numpy.float32)
 
         self.memory_positive_reward_size = self.n_total_rl_steps
         self.memory_positive_reward_index = 0
 
         self.memory_positive_reward = numpy.zeros(
-            [self.memory_positive_reward_size, 2 * self.state_size + self.action_size + 1],
+            [self.memory_positive_reward_size, self.memory_row_length],
             dtype=numpy.float32)
+
+        self.priority_reward_memory = {}
 
         self.positive_reward_bias_factor = 0.5
 
         self.batch_size = self.n_epoch_rl_steps
 
-        self.discount_factor = 0.7
+        self.discount_factor = 0.99
         self.learning_rate = 0.6
 
         self.maximum_zeros_during_training = numpy.zeros(self.number_of_all_functions)
@@ -97,14 +106,15 @@ class MinTermBfTrainingBase:
             self.maximum_zeros_during_training[self.function] = number_of_zeros
             self.maximum_zeros_k_vector[self.function, :] = numpy.ones(self.two_to_power_dimension)
 
-        self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
+        #self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
+        self.function_representation = self.walsh_spectrum
 
     def sigint_handler(self, signum, frame):
         print("User interrupt received.")
         self.continue_training = False
 
     def random_movement_possibility(self):
-        offset = 3
+        offset = 2
         return numpy.tanh(offset - offset * (self.current_rl_step / self.n_total_rl_steps))
 
     def get_random_batch_from_memory(self, size):
@@ -168,6 +178,19 @@ class MinTermBfTrainingBase:
                 self.memory_positive_reward[self.memory_positive_reward_index, self.state_size: 2 * self.state_size] = next_state.reshape(self.state_size)
                 self.memory_positive_reward[self.memory_positive_reward_index, 2 * self.state_size: 2 * self.state_size + self.action_size] = action
                 self.memory_positive_reward[self.memory_positive_reward_index, 2 * self.state_size + self.action_size] = reward
+
+                if reward in self.priority_reward_memory:
+                    self.priority_reward_memory[reward] =\
+                        numpy.concatenate((self.priority_reward_memory[reward],
+                                           numpy.reshape(
+                                               self.memory_positive_reward[self.memory_positive_reward_index, :],
+                                               [1, self.memory_row_length])),
+                                          axis=0)
+                else:
+                    self.priority_reward_memory[reward] =\
+                        numpy.reshape(self.memory_positive_reward[self.memory_positive_reward_index, :],
+                                      [1, self.memory_row_length])
+
                 self.memory_positive_reward_index += 1
         else:
             if self.memory_zero_reward_index >= self.memory_zero_reward_size:
@@ -181,6 +204,12 @@ class MinTermBfTrainingBase:
 
         return
 
+    def manual_train(self):
+        memory_batch = self.get_random_batch_from_memory(self.replay_memory_size)
+        self.training_function(memory_batch[:, 0: self.state_size],
+                               memory_batch[:,
+                               2 * self.state_size: 2 * self.state_size + self.action_size])
+
     def train_agent(self):
         if self.n_total_rl_steps < self.replay_memory_size:
             print("Total RL steps is smaller than replay memory size.")
@@ -189,10 +218,9 @@ class MinTermBfTrainingBase:
             print("EPOCH ", self.current_epoch, "/", self.number_of_epochs)
             self.reinforcement_learn_step(self.n_epoch_rl_steps)
             if self.current_rl_step >= self.replay_memory_size:
-                for step in range(self.training_each_episode):
-                    memory_batch = self.get_random_batch_from_memory(self.replay_memory_size)
-                    self.training_function(memory_batch[:, 0: self.state_size],
-                                           memory_batch[:, 2 * self.state_size: 2 * self.state_size + self.action_size])
+                if (self.current_epoch % self.training_factor) == 0:
+                    for step in range(self.training_each_episode):
+                        self.manual_train()
             if self.all_function_training:
                 self.set_function(numpy.random.randint(low=1, high=self.number_of_all_functions))
             self.reward_per_epoch[self.current_epoch] = self.epoch_total_reward

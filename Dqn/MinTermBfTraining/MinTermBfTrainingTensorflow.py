@@ -80,7 +80,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
     def train(self, given_input, desired_output):
         self.dqn_agent.fit(given_input,
                            desired_output,
-                           epochs=self.two_to_power_dimension, batch_size=math.floor(self.batch_size / 4))
+                           epochs=5, batch_size=math.floor(self.batch_size / 4))
         return
 
     def check_agent(self, loop_constant):
