@@ -154,12 +154,15 @@ class MinTermBfTrainingBase:
             remaining_memory_size = 0
 
         rng = numpy.random.default_rng()
-        positive_reward_indices = rng.choice(self.memory_positive_reward_index,
-                                             size=positive_reward_memory_size, replace=False)
+        #positive_reward_indices = rng.choice(self.memory_positive_reward_index,
+                                             #size=positive_reward_memory_size, replace=False)
+        #positive_reward_memory_partition = self.memory_positive_reward[positive_reward_indices.tolist(), :]
         zero_reward_indices = rng.choice(self.memory_zero_reward_index, size=zero_reward_memory_size, replace=False)
 
-        positive_reward_memory_partition = self.memory_positive_reward[positive_reward_indices.tolist(), :]
         zero_reward_memory_partition = self.memory_zero_reward[zero_reward_indices.tolist(), :]
+
+        positive_reward_memory_partition = self.construct_prioritized_reward_batch(positive_reward_memory_size)
+
         returned_memory = numpy.concatenate((positive_reward_memory_partition, zero_reward_memory_partition), axis=0)
         numpy.random.shuffle(returned_memory)
         return returned_memory
@@ -203,6 +206,41 @@ class MinTermBfTrainingBase:
                 self.memory_zero_reward_index += 1
 
         return
+
+    def construct_prioritized_reward_batch(self, size):
+        keys = list(self.priority_reward_memory.keys())
+        keys_length = len(keys)
+        size_of_each_priority = math.floor(size/keys_length)
+        remaining = size - size_of_each_priority * keys_length
+        keys.sort()
+        keys.reverse()
+
+        constructed_priority_memory = numpy.zeros([size, self.memory_row_length])
+        constructed_priority_memory_index = 0
+
+        for key in keys:
+            current_memory = self.priority_reward_memory[key]
+            current_memory_length = current_memory.shape[0]
+            if current_memory_length > (size_of_each_priority + remaining):
+                rng = numpy.random.default_rng()
+                priority_reward_indices = rng.choice(current_memory_length,
+                                                     size=(size_of_each_priority + remaining), replace=False)
+
+                priority_reward_memory_partition = current_memory[priority_reward_indices.tolist(), :]
+
+                remaining = 0
+            else:
+                remaining += (size_of_each_priority - current_memory_length)
+                priority_reward_memory_partition = current_memory
+
+            priority_reward_memory_partition_size = priority_reward_memory_partition.shape[0]
+            constructed_priority_memory[constructed_priority_memory_index:
+                                        constructed_priority_memory_index + priority_reward_memory_partition_size, :] \
+                = priority_reward_memory_partition
+
+            constructed_priority_memory_index += priority_reward_memory_partition_size
+
+        return constructed_priority_memory[0:constructed_priority_memory_index, :]
 
     def manual_train(self):
         memory_batch = self.get_random_batch_from_memory(self.replay_memory_size)
