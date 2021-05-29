@@ -50,7 +50,7 @@ class MinTermBfTrainingBase:
         self.current_rl_step = 0
         self.number_of_epochs = number_of_epochs
 
-        self.replay_memory_size = (self.n_epoch_rl_steps * self.two_to_power_dimension)*4
+        self.replay_memory_size = (self.n_epoch_rl_steps ** 2)
         self.training_factor = math.floor(self.training_each_episode/4)
 
         self.current_epoch = 0
@@ -59,7 +59,7 @@ class MinTermBfTrainingBase:
 
         self.memory_row_length = 2 * self.state_size + self.action_size + 1
 
-        self.pile_memory = False
+        self.pile_memory = True
 
         if self.pile_memory:
             self.pile_memory_zero_reward_size = self.n_total_rl_steps
