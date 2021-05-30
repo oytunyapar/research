@@ -20,8 +20,6 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
             if self.current_rl_step + step_size > self.n_total_rl_steps:
                 step_size = self.n_total_rl_steps - self.current_rl_step
             for step in range(step_size):
-                self.current_state[0, 0:self.function_representation_size] = self.function_representation
-                self.current_state[0, self.function_representation_size:self.state_size] = self.k_vector
                 output = self.dqn_agent(self.current_state).numpy().reshape([self.action_size])
 
                 if numpy.random.uniform(0, 1) > self.random_movement_possibility():
@@ -40,8 +38,7 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
 
                     self.k_vector /= k_vector_gcd
 
-                    next_state = numpy.ones([1, self.state_size])
-                    next_state[0, 0:self.function_representation_size] = self.function_representation
+                    next_state = self.current_state.copy()
                     next_state[0, self.function_representation_size:self.state_size] = self.k_vector
 
                     reward, number_of_zeros = super().predicted_reward(self.k_vector)

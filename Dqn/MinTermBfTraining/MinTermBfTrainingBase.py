@@ -23,7 +23,7 @@ class MinTermBfTrainingBase:
             self.function = numpy.random.randint(low=1, high=self.number_of_all_functions)
             self.training_each_episode = 2 ** self.two_to_power_dimension
         else:
-            self.training_each_episode = self.two_to_power_dimension
+            self.training_each_episode = self.dimension
 
         self.q_matrix = monsetup.q_matrix_generator(function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
@@ -44,6 +44,8 @@ class MinTermBfTrainingBase:
         model_layer_sizes.append(self.action_size)
 
         self.current_state = numpy.ones([1, self.state_size])
+        self.current_state[0, 0:self.function_representation_size] = self.function_representation
+        self.current_state[0, self.function_representation_size:self.state_size] = self.k_vector
 
         self.n_epoch_rl_steps = self.two_to_power_dimension ** 2
         self.n_total_rl_steps = number_of_epochs * self.n_epoch_rl_steps
@@ -52,6 +54,8 @@ class MinTermBfTrainingBase:
 
         self.replay_memory_size = (self.n_epoch_rl_steps ** 2)
         self.training_factor = math.floor(self.training_each_episode/4)
+        if self.training_factor == 0:
+            self.training_factor = 1
 
         self.current_epoch = 0
         self.epoch_total_reward = 0
@@ -125,6 +129,9 @@ class MinTermBfTrainingBase:
 
         #self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
         self.function_representation = self.walsh_spectrum
+
+        self.current_state[0, 0:self.function_representation_size] = self.function_representation
+        self.current_state[0, self.function_representation_size:self.state_size] = self.k_vector
 
     def sigint_handler(self, signum, frame):
         print("User interrupt received.")
