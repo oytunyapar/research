@@ -19,13 +19,18 @@ class PolynomialRoot:
         self.number_of_coefficients = degree + 1
 
         if not self.all_polynomial_training:
+            self.number_of_episodes = 1
             self.coefficients = coefficients
+        else:
+            self.number_of_episodes = 100
             self.max_coefficient_value = 100
+            self.change_function()
 
         self.continue_training = True
 
         self.variable_value = 1
-        self.state_size = coefficients_length + 1
+        self.test_variable_value = 1
+        self.state_size = self.number_of_coefficients + 1
         self.action_size_except_no_action = 2
         self.action_size = self.action_size_except_no_action + 1
         model_layer_sizes.insert(0, self.state_size)
@@ -34,28 +39,39 @@ class PolynomialRoot:
         self.dqn_agent = DqnAgentTensorflow.create_dqn_agent_tensorflow(model_layer_sizes)
 
         self.current_state = numpy.ones([1, self.state_size])
+        self.current_state[0, 0:self.number_of_coefficients] = self.coefficients
+        self.current_state[0, self.number_of_coefficients] = self.variable_value
+
+        self.check_current_state = self.current_state.copy()
 
         self.n_epoch_rl_steps = 50
-        self.n_total_rl_steps = number_of_epochs * self.n_epoch_rl_steps
-        self.current_rl_step = 0
-        self.number_of_epochs = number_of_epochs
+        self.n_episode_rl_steps = number_of_epochs * self.n_epoch_rl_steps
+        self.n_total_rl_steps = self.number_of_episodes * self.n_episode_rl_steps
+        self.episode_rl_step_counter = 0
+        self.total_rl_step_counter = 0
+        self.number_of_epochs_per_episode = number_of_epochs
+        self.total_number_of_epochs = self.number_of_epochs_per_episode * self.number_of_episodes
         self.current_epoch = 0
 
         self.discount_factor = 0.99
         self.learning_rate = 0.6
 
         self.epoch_total_reward = 0
-        self.reward_per_epoch = numpy.zeros([number_of_epochs])
+        self.reward_per_epoch = numpy.zeros([self.total_number_of_epochs])
 
         self.memory_row_length = 2 * self.state_size + self.action_size + 1
-        self.memory_size = self.n_epoch_rl_steps
+        self.memory_size = self.n_episode_rl_steps
         self.memory_index = 0
-        self.replay_memory_size = math.ceil(self.memory_size / self.degree)
+        self.replay_memory_size = self.n_epoch_rl_steps
         self.batch_size = math.ceil(self.replay_memory_size / self.degree)
 
         self.memory = numpy.zeros(
             [self.memory_size, self.memory_row_length],
             dtype=numpy.float32)
+
+        self.increase_variable_action = 0
+        self.decrease_variable_action = 1
+        self.change_margin = 0.1
 
         signal.signal(signal.SIGINT, self.sigint_handler)
 
@@ -65,7 +81,7 @@ class PolynomialRoot:
 
     def random_movement_possibility(self):
         offset = 2
-        return numpy.tanh(offset - offset * (self.current_rl_step / self.n_total_rl_steps))
+        return numpy.tanh(offset - offset * (self.total_rl_step_counter / self.n_total_rl_steps))
 
     def polynomial(self, variable):
         result = 0
@@ -92,6 +108,9 @@ class PolynomialRoot:
     def clear_memory(self):
         self.memory_index = 0
 
+    def clear_episode_counters(self):
+        self.episode_rl_step_counter = 0
+
     def get_random_batch_from_memory(self, size):
         if size > self.memory_index:
             print("ERROR: Requested size: ", size, " random memory batch is invalid.")
@@ -102,8 +121,13 @@ class PolynomialRoot:
         return memory_partition
 
     def change_function(self):
+        self.variable_value = 1
         self.coefficients = numpy.random.randint(self.max_coefficient_value,
                                                  size=self.number_of_coefficients).tolist()
+        self.current_state[0, 0:self.number_of_coefficients] = self.coefficients
+        self.current_state[0, self.number_of_coefficients] = self.variable_value
+        self.check_current_state = self.current_state.copy()
+        self.test_variable_value = 1
         return
 
     def train(self):
@@ -118,11 +142,9 @@ class PolynomialRoot:
 
     def reinforcement_learn_step(self, step_size):
         if step_size > 0:
-            if self.current_rl_step + step_size > self.n_total_rl_steps:
-                step_size = self.n_total_rl_steps - self.current_rl_step
+            if self.episode_rl_step_counter + step_size > self.n_episode_rl_steps:
+                step_size = self.n_episode_rl_steps - self.episode_rl_step_counter
             for step in range(step_size):
-                self.current_state[0, 0:self.coefficients_length] = self.coefficients
-                self.current_state[0, self.coefficients_length] = self.variable_value
                 output = self.dqn_agent(self.current_state).numpy().reshape([self.action_size])
 
                 if numpy.random.uniform(0, 1) > self.random_movement_possibility():
@@ -134,7 +156,85 @@ class PolynomialRoot:
 
                 no_action = False
 
-                #if selected_action < self.action_size_except_no_action:
-                #else:
+                if selected_action < self.action_size_except_no_action:
+                    if selected_action == self.increase_variable_action:
+                        self.variable_value += self.change_margin
+                    elif selected_action == self.decrease_variable_action:
+                        self.variable_value -= self.change_margin
+                    else:
+                        raise Exception("reinforcement_learn_step: Undefined behaviour")
+
+                    next_state = self.current_state.copy()
+                    next_state[0, self.number_of_coefficients] = self.variable_value
+
+                    reward = self.predicted_reward(self.variable_value)
+                else:
+                    next_state = self.current_state.copy()
+                    no_action = True
+                    reward = self.predicted_reward(self.variable_value)
+
+                self.epoch_total_reward += reward
+
+                next_output = self.dqn_agent(next_state).numpy().reshape([self.action_size])
+                next_output_max = next_output[next_output.argmax()]
+
+                if not no_action:
+                    output_list[selected_action] = \
+                        output_list[selected_action] * (1 - self.learning_rate) + \
+                        reward * self.learning_rate + \
+                        self.learning_rate * self.discount_factor * next_output_max
+                else:
+                    output_list[selected_action] = \
+                        output_list[selected_action] * (1 - self.learning_rate) + \
+                        reward * self.learning_rate
+
+                self.save_memory(self.current_state, next_state, output_list, reward)
+                self.current_state = next_state
+                self.episode_rl_step_counter += 1
+                self.total_rl_step_counter += 1
         else:
             print("RL step size problem step size: " + str(step_size) + "\n")
+
+    def train_agent(self):
+        if self.n_episode_rl_steps < self.replay_memory_size:
+            print("Total RL steps is smaller than replay memory size.")
+            return
+
+        for episode in range(self.number_of_episodes):
+            while self.episode_rl_step_counter < self.n_episode_rl_steps and self.continue_training:
+                print("EPOCH ", self.current_epoch, "/", self.total_number_of_epochs)
+                self.reinforcement_learn_step(self.n_epoch_rl_steps)
+
+                if self.replay_memory_size < self.memory_index:
+                    self.train()
+
+                self.reward_per_epoch[self.current_epoch] = self.epoch_total_reward
+                self.epoch_total_reward = 0
+                self.current_epoch += 1
+
+            if self.number_of_episodes > 1:
+                self.clear_episode_counters()
+                self.clear_memory()
+                self.change_function()
+
+    def check_agent(self, loop_constant):
+        self.test_variable_value = 1
+        for step in range(loop_constant * self.n_epoch_rl_steps):
+            self.check_current_state[0, 0:self.number_of_coefficients] = self.coefficients
+            self.check_current_state[0, self.number_of_coefficients] = self.test_variable_value
+            output = self.dqn_agent(self.check_current_state).numpy().reshape([self.action_size])
+            selected_action = output.argmax().tolist()
+
+            if selected_action < self.action_size_except_no_action:
+                if selected_action == self.increase_variable_action:
+                    self.test_variable_value += self.change_margin
+                elif selected_action == self.decrease_variable_action:
+                    self.test_variable_value -= self.change_margin
+                else:
+                    raise Exception("reinforcement_learn_step: Undefined behaviour")
+            else:
+                print("No Action!")
+                break
+
+        print("Agent found:", self.test_variable_value)
+        print("When we put in polynomial:", self.polynomial(self.test_variable_value))
