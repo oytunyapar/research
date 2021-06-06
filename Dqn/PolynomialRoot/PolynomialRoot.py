@@ -28,8 +28,8 @@ class PolynomialRoot:
 
         self.continue_training = True
 
-        self.variable_value = 1
-        self.test_variable_value = 1
+        self.variable_value = 1.0
+        self.test_variable_value = 1.0
         self.state_size = self.number_of_coefficients + 1
         self.action_size_except_no_action = 2
         self.action_size = self.action_size_except_no_action + 1
@@ -56,13 +56,15 @@ class PolynomialRoot:
         self.discount_factor = 0.99
         self.learning_rate = 0.6
 
+        self.old_absolute_value = abs(self.polynomial(self.variable_value))
+
         self.epoch_total_reward = 0
         self.reward_per_epoch = numpy.zeros([self.total_number_of_epochs])
 
         self.memory_row_length = 2 * self.state_size + self.action_size + 1
         self.memory_size = self.n_episode_rl_steps
         self.memory_index = 0
-        self.replay_memory_size = self.n_epoch_rl_steps
+        self.replay_memory_size = self.n_epoch_rl_steps * 10
         self.batch_size = math.ceil(self.replay_memory_size / self.degree)
 
         self.memory = numpy.zeros(
@@ -90,7 +92,10 @@ class PolynomialRoot:
         return result
 
     def predicted_reward(self, variable):
-        return -abs(self.polynomial(variable))
+        new_absolute_value = abs(self.polynomial(variable))
+        reward = self.old_absolute_value - new_absolute_value
+        self.old_absolute_value = new_absolute_value
+        return ((self.degree**2) * reward) - new_absolute_value/self.degree
 
     def save_memory(self, previous_state, next_state, action, reward):
         memory_entry = numpy.zeros([1, self.memory_row_length])
@@ -121,13 +126,13 @@ class PolynomialRoot:
         return memory_partition
 
     def change_function(self):
-        self.variable_value = 1
+        self.variable_value = 1.0
         self.coefficients = numpy.random.randint(self.max_coefficient_value,
                                                  size=self.number_of_coefficients).tolist()
         self.current_state[0, 0:self.number_of_coefficients] = self.coefficients
         self.current_state[0, self.number_of_coefficients] = self.variable_value
         self.check_current_state = self.current_state.copy()
-        self.test_variable_value = 1
+        self.test_variable_value = 1.0
         return
 
     def train(self):
@@ -158,9 +163,9 @@ class PolynomialRoot:
 
                 if selected_action < self.action_size_except_no_action:
                     if selected_action == self.increase_variable_action:
-                        self.variable_value += self.change_margin
+                        self.variable_value = round(self.variable_value + self.change_margin, 2)
                     elif selected_action == self.decrease_variable_action:
-                        self.variable_value -= self.change_margin
+                        self.variable_value = round(self.variable_value - self.change_margin, 2)
                     else:
                         raise Exception("reinforcement_learn_step: Undefined behaviour")
 
@@ -218,7 +223,6 @@ class PolynomialRoot:
                 self.change_function()
 
     def check_agent(self, loop_constant):
-        self.test_variable_value = 1
         for step in range(loop_constant * self.n_epoch_rl_steps):
             self.check_current_state[0, 0:self.number_of_coefficients] = self.coefficients
             self.check_current_state[0, self.number_of_coefficients] = self.test_variable_value
@@ -227,9 +231,9 @@ class PolynomialRoot:
 
             if selected_action < self.action_size_except_no_action:
                 if selected_action == self.increase_variable_action:
-                    self.test_variable_value += self.change_margin
+                    self.test_variable_value = round(self.test_variable_value + self.change_margin, 2)
                 elif selected_action == self.decrease_variable_action:
-                    self.test_variable_value -= self.change_margin
+                    self.test_variable_value = round(self.test_variable_value - self.change_margin, 2)
                 else:
                     raise Exception("reinforcement_learn_step: Undefined behaviour")
             else:
