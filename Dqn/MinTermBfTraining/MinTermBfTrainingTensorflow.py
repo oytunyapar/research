@@ -7,8 +7,8 @@ from ..DqnAgent import DqnAgentTensorflow
 
 
 class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
-    def __init__(self, function, dimension, number_of_epochs, model_layer_sizes):
-        super().__init__(function, dimension, number_of_epochs, model_layer_sizes)
+    def __init__(self, function, dimension, number_of_epochs, model_layer_sizes, q_matrix_representation):
+        super().__init__(function, dimension, number_of_epochs, model_layer_sizes, q_matrix_representation)
         self.dqn_agent = DqnAgentTensorflow.create_dqn_agent_tensorflow(model_layer_sizes)
 
         self.check_current_state = self.current_state.copy()
@@ -104,6 +104,8 @@ class MinTermBfTrainingTensorflow(MinTermBfTrainingBase):
             else:
                 print("No Action!")
                 break
+
+        self.coefficients = (2 ** -self.dimension) * numpy.matmul(self.q_matrix, self.k_vector_check)
 
         print("Agent find maximum zeros:", number_of_zeros)
         print("Agent found:", self.k_vector_check)

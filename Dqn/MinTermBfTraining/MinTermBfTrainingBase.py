@@ -1,11 +1,12 @@
 import numpy
 import monsetup
+import boolean_function_generator
 import signal
 import math
 
 
 class MinTermBfTrainingBase:
-    def __init__(self, function, dimension, number_of_epochs, model_layer_sizes):
+    def __init__(self, function, dimension, number_of_epochs, model_layer_sizes, q_matrix_representation):
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
 
@@ -25,18 +26,26 @@ class MinTermBfTrainingBase:
         else:
             self.training_each_episode = self.dimension
 
+        self.function_vector = boolean_function_generator.boolean_function_generator(function, dimension)
+        self.d_matrix = monsetup.monsetup(dimension)
         self.q_matrix = monsetup.q_matrix_generator(function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
-        #self.function_representation_size = self.two_to_power_dimension ** 2
-        #self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
 
-        self.function_representation_size = self.two_to_power_dimension
-        self.function_representation = self.walsh_spectrum
+        self.q_matrix_representation = q_matrix_representation
+
+        if q_matrix_representation:
+            self.function_representation_size = self.two_to_power_dimension ** 2
+            self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
+        else:
+            self.function_representation_size = self.two_to_power_dimension
+            self.function_representation = self.walsh_spectrum
 
         self.k_vector_size = self.two_to_power_dimension
         self.k_vector = numpy.ones(self.two_to_power_dimension)
 
         self.k_vector_check = numpy.ones(self.two_to_power_dimension)
+
+        self.coefficients = numpy.ones([1, self.two_to_power_dimension])
 
         self.state_size = self.function_representation_size + self.k_vector_size
         self.action_size = self.two_to_power_dimension + 1
@@ -52,8 +61,8 @@ class MinTermBfTrainingBase:
         self.current_rl_step = 0
         self.number_of_epochs = number_of_epochs
 
-        self.replay_memory_size = (self.n_epoch_rl_steps ** 2)
-        self.training_factor = math.floor(self.training_each_episode/4)
+        self.replay_memory_size = self.n_epoch_rl_steps * self.two_to_power_dimension * 4
+        self.training_factor = 4 * (self.dimension - 1)
         if self.training_factor == 0:
             self.training_factor = 1
 
@@ -63,7 +72,7 @@ class MinTermBfTrainingBase:
 
         self.memory_row_length = 2 * self.state_size + self.action_size + 1
 
-        self.pile_memory = True
+        self.pile_memory = False
 
         if self.pile_memory:
             self.pile_memory_zero_reward_size = self.n_total_rl_steps
@@ -103,11 +112,12 @@ class MinTermBfTrainingBase:
         signal.signal(signal.SIGINT, self.sigint_handler)
 
     def set_function(self, function):
-        if function == 0 or function >= self.number_of_all_functions:
+        if function >= self.number_of_all_functions:
             print("Function must be between 0 and ", str(self.number_of_all_functions))
             return
 
         self.function = function
+        self.function_vector = boolean_function_generator.boolean_function_generator(function, self.dimension)
         self.q_matrix = monsetup.q_matrix_generator(function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
 
@@ -127,8 +137,10 @@ class MinTermBfTrainingBase:
             else:
                 self.priority_reward_memory = {}
 
-        #self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
-        self.function_representation = self.walsh_spectrum
+        if self.q_matrix_representation:
+            self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
+        else:
+            self.function_representation = self.walsh_spectrum
 
         self.current_state[0, 0:self.function_representation_size] = self.function_representation
         self.current_state[0, self.function_representation_size:self.state_size] = self.k_vector
