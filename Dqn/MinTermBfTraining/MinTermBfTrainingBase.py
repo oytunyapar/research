@@ -3,10 +3,12 @@ import monsetup
 import boolean_function_generator
 import signal
 import math
+from multiprocessing import Process, Queue
 
 
 class MinTermBfTrainingBase:
-    def __init__(self, function, dimension, number_of_epochs, model_layer_sizes, q_matrix_representation):
+    def __init__(self, function, dimension, number_of_epochs, model_layer_sizes,
+                 q_matrix_representation, multiprocess, pile_memory):
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
 
@@ -61,10 +63,9 @@ class MinTermBfTrainingBase:
         self.current_rl_step = 0
         self.number_of_epochs = number_of_epochs
 
-        self.replay_memory_size = self.n_epoch_rl_steps * self.two_to_power_dimension * 4
-        self.training_factor = 4 * (self.dimension - 1)
-        if self.training_factor == 0:
-            self.training_factor = 1
+        self.replay_memory_size = self.n_epoch_rl_steps * self.two_to_power_dimension * 2
+        self.training_factor = self.two_to_power_dimension
+        self.memory_window_size = self.replay_memory_size * 4
 
         self.current_epoch = 0
         self.epoch_total_reward = 0
@@ -72,7 +73,10 @@ class MinTermBfTrainingBase:
 
         self.memory_row_length = 2 * self.state_size + self.action_size + 1
 
-        self.pile_memory = False
+        if multiprocess:
+            self.pile_memory = True
+        else:
+            self.pile_memory = pile_memory
 
         if self.pile_memory:
             self.pile_memory_zero_reward_size = self.n_total_rl_steps
@@ -153,6 +157,10 @@ class MinTermBfTrainingBase:
         offset = 2
         return numpy.tanh(offset - offset * (self.current_rl_step / self.n_total_rl_steps))
 
+    def random_movement_possibility_epoch(self):
+        offset = 2
+        return numpy.tanh(offset - offset * (self.current_epoch / self.number_of_epochs))
+
     def get_random_batch_from_memory(self, size):
         if self.pile_memory:
             total_positive_reward_memory_size = self.pile_memory_positive_reward_index
@@ -209,15 +217,41 @@ class MinTermBfTrainingBase:
 
     def predicted_reward(self, next_k_vector):
         next_number_of_zeros = numpy.count_nonzero(numpy.matmul(self.q_matrix, next_k_vector) == 0)
+        reward = self.two_to_power_dimension * next_number_of_zeros
         #/ self.two_to_power_dimension
-        return next_number_of_zeros, next_number_of_zeros
+        return reward, next_number_of_zeros
 
-    def save_memory(self, previous_state, next_state, action, reward):
+    def create_memory_line(self, previous_state, next_state, action, reward):
         memory_entry = numpy.zeros([1, self.memory_row_length])
         memory_entry[0, 0: self.state_size] = previous_state.reshape(self.state_size)
         memory_entry[0, self.state_size: 2 * self.state_size] = next_state.reshape(self.state_size)
         memory_entry[0, 2 * self.state_size: 2 * self.state_size + self.action_size] = action
         memory_entry[0, 2 * self.state_size + self.action_size] = reward
+
+        return memory_entry
+
+    def save_memory_local(self, zero_reward_memory, zero_reward_memory_index,
+                          positive_reward_memory, positive_reward_memory_index,
+                          previous_state, next_state, action, reward):
+        memory_entry = self.create_memory_line(previous_state, next_state, action, reward)
+
+        if reward > 0:
+            if positive_reward_memory.shape[0] > positive_reward_memory_index:
+                positive_reward_memory[positive_reward_memory_index] = memory_entry
+                positive_reward_memory_index += 1
+            else:
+                print("save_memory_local ERROR: Positive reward memory is full.")
+        else:
+            if zero_reward_memory.shape[0] > zero_reward_memory_index:
+                zero_reward_memory[zero_reward_memory_index] = memory_entry
+                zero_reward_memory_index += 1
+            else:
+                print("save_memory_local ERROR: Zero reward memory is full.")
+
+        return zero_reward_memory_index, positive_reward_memory_index
+
+    def save_memory(self, previous_state, next_state, action, reward):
+        memory_entry = self.create_memory_line(previous_state, next_state, action, reward)
 
         if reward > 0:
             if self.pile_memory:
@@ -258,6 +292,25 @@ class MinTermBfTrainingBase:
                 self.zero_reward_memory = self.zero_reward_memory_all_functions[self.function]
 
         return
+
+    def save_memory_bulk(self, zero_reward_memory, positive_reward_memory):
+        zero_reward_memory_length = zero_reward_memory.shape[0]
+        if zero_reward_memory.shape[1] == self.memory_row_length and\
+           zero_reward_memory_length + self.pile_memory_zero_reward_index <= self.pile_memory_zero_reward_size:
+            self.pile_memory_zero_reward[self.pile_memory_zero_reward_index:
+                                         self.pile_memory_zero_reward_index + zero_reward_memory_length] = \
+                zero_reward_memory
+            self.pile_memory_zero_reward_index += zero_reward_memory_length
+
+        positive_reward_memory_length = positive_reward_memory.shape[0]
+        if positive_reward_memory.shape[1] == self.memory_row_length and \
+                positive_reward_memory_length + self.pile_memory_positive_reward_index\
+                <= self.pile_memory_positive_reward_size:
+            self.pile_memory_positive_reward[self.pile_memory_positive_reward_index:
+                                             self.pile_memory_positive_reward_index + positive_reward_memory_length] =\
+                positive_reward_memory
+
+            self.pile_memory_positive_reward_index += positive_reward_memory_length
 
     def construct_zero_reward_batch(self, size):
         if size == 0:
@@ -349,6 +402,23 @@ class MinTermBfTrainingBase:
 
             return constructed_priority_memory[0:constructed_priority_memory_index, :]
 
+    def forget_about_freeman_impl(self, memory, memory_index):
+        if memory_index > self.memory_window_size:
+            memory[0:self.memory_window_size, :] = memory[memory_index - self.memory_window_size:memory_index, :]
+            return self.memory_window_size
+        else:
+            return memory_index
+
+    def forget_about_freeman(self):
+        if self.pile_memory:
+            self.pile_memory_positive_reward_index = \
+                self.forget_about_freeman_impl(self.pile_memory_positive_reward, self.pile_memory_positive_reward_index)
+
+            self.pile_memory_zero_reward_index = \
+                self.forget_about_freeman_impl(self.pile_memory_zero_reward, self.pile_memory_zero_reward_index)
+        else:
+            print("forget_about_freeman is not supported for dictionary memory.")
+
     def manual_train(self):
         memory_batch = self.get_random_batch_from_memory(self.replay_memory_size)
         if memory_batch.shape[0] == 0:
@@ -369,6 +439,7 @@ class MinTermBfTrainingBase:
             if self.all_function_training and not self.pile_memory:
                 if (self.current_epoch % self.training_factor) == 0:
                     for step in range(self.training_each_episode):
+                        self.forget_about_freeman()
                         self.manual_train()
                         self.set_function(numpy.random.randint(low=1, high=self.number_of_all_functions))
             else:
@@ -380,6 +451,7 @@ class MinTermBfTrainingBase:
                 if self.replay_memory_size < total_memory_size:
                     if (self.current_epoch % self.training_factor) == 0:
                         for step in range(self.training_each_episode):
+                            self.forget_about_freeman()
                             self.manual_train()
 
                 if self.all_function_training:
@@ -387,5 +459,43 @@ class MinTermBfTrainingBase:
 
             self.reward_per_epoch[self.current_epoch] = self.epoch_total_reward
             self.epoch_total_reward = 0
-            self.k_vector = numpy.ones(self.two_to_power_dimension)
             self.current_epoch += 1
+
+    def train_agent_multi_process(self):
+        if not self.pile_memory:
+            print("Multiprocess training is supported with pile memory only.")
+            return
+
+        if self.current_epoch + self.training_factor > self.number_of_epochs:
+            number_of_processes = self.number_of_epochs - self.current_epoch
+        else:
+            number_of_processes = self.training_factor
+
+        processes = [None] * number_of_processes
+        return_queue = Queue()
+
+        while self.current_epoch < self.number_of_epochs and self.continue_training:
+            print("EPOCH ", self.current_epoch, "/", self.number_of_epochs)
+
+            for step in range(number_of_processes):
+                processes[step] = \
+                    Process(target=self.reinforcement_learn_step_multi_process_wrapper,
+                            args=(return_queue, self.n_epoch_rl_steps))
+
+            for step in range(number_of_processes):
+                processes[step].start()
+
+            for step in range(number_of_processes):
+                processes[step].join()
+
+            while not return_queue.empty():
+                result = return_queue.get()
+                self.save_memory_bulk(result[0], result[1])
+
+            total_memory_size = self.pile_memory_positive_reward_index + self.pile_memory_zero_reward_index
+
+            if self.replay_memory_size < total_memory_size:
+                for step in range(self.training_each_episode):
+                    self.manual_train()
+
+            self.current_epoch += number_of_processes
