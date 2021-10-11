@@ -1,6 +1,6 @@
 import numpy
 import math
-import boolean_function_generator
+from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
 
 
 def monsetup(dimension):
@@ -32,7 +32,7 @@ def monsetup(dimension):
 def q_matrix_generator(function, dimension):
     q_matrix = \
         numpy.matmul(monsetup(dimension),
-                     numpy.diag(boolean_function_generator.boolean_function_generator(function, dimension)))
+                     numpy.diag(boolean_function_generator(function, dimension)))
 
     return q_matrix
 

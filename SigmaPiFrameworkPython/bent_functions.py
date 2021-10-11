@@ -1,6 +1,6 @@
-import monsetup as ms
+from SigmaPiFrameworkPython.monsetup import q_matrix_generator
 import numpy as np
-import monomial_exclusion_linear_programming_nn as mnn
+import SigmaPiFrameworkPython.monomial_exclusion_linear_programming_nn as mnn
 
 
 def all_same(items):
@@ -18,14 +18,14 @@ def find_bent_functions(dimension):
     bent_function_list = []
 
     for function_iterator in range(number_of_functions+1):
-        spectrum = abs(np.sum(ms.q_matrix_generator(function_iterator, dimension), 1))
+        spectrum = abs(np.sum(q_matrix_generator(function_iterator, dimension), 1))
         if all_same(spectrum) and spectrum[0] > 0:
             bent_function_list.append(function_iterator)
 
     return np.array(bent_function_list)
 
 
-def create_bent_data_set(dimension, data_folder="/home/oytun/Projects/research/SigmaPiFramework/dimension_4/spectrum/",
+def create_bent_data_set(dimension, data_folder="/home/oytun/Projects/research/SigmaPiFrameworkMatlab/dimension_4/spectrum/",
                          input_file_format="%d.input", output_file_format="%d.output"):
 
     bent_function_list = find_bent_functions(dimension)

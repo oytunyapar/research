@@ -1,5 +1,5 @@
-import monsetup
-import boolean_function_generator as bf
+import SigmaPiFrameworkPython.monsetup as monsetup
+from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
 import os
 import pandas
 
@@ -8,10 +8,8 @@ import numpy
 import itertools
 from scipy.optimize import linprog
 
-import tensorflow as tf
-from tensorflow.keras import Model
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten, Activation
+from tensorflow.keras.layers import Dense
 
 
 def linprog_result(function, dimension):
@@ -132,7 +130,7 @@ def create_and_save_dataset_spectrum(spectrum, input_file_name, output_file_name
 
 
 def read_data_set(functions, dimension,
-                  data_folder="/home/oytun/Projects/research/SigmaPiFramework/dimension_4/spectrum/",
+                  data_folder="/home/oytun/Projects/research/SigmaPiFrameworkMatlab/dimension_4/spectrum/",
                   input_file_format="%d.input", output_file_format="%d.output"):
     number_of_functions = numpy.size(functions)
     number_of_variables = 2**dimension
@@ -164,11 +162,11 @@ def read_data_set(functions, dimension,
 
 
 def monomial_exclusion_linear_programming_nn_function(function, dimension):
-    input_data, output_data = linprog_result(function,dimension)
+    input_data, output_data = linprog_result(function, dimension)
 
-    function = bf.boolean_function_generator(function, dimension)
+    function = boolean_function_generator(function, dimension)
     train_ds, output_data = create_dataset_f(function, input_data, output_data)
-    train_ds, output_data = create_dataset_f(function,input_data, output_data)
+    train_ds, output_data = create_dataset_f(function, input_data, output_data)
 
     Input_Layer_Size = 2*(2**dimension)
     First_Hidden_Layer_Size = 2**dimension

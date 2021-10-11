@@ -1,8 +1,7 @@
-import tensorflow as tf
 import monsetup
 from tensorflow.keras import Model
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten, Activation
+from tensorflow.keras.layers import Dense
 import numpy
 
 DIMENSION = 4

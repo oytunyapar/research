@@ -5,8 +5,8 @@ four_dimension_encoder_decoder_tf1.py
 .vscode/
 .idea/
 *~
-SigmaPiFramework/dimension_*
-SigmaPiFramework/python_matlab_check.m
+SigmaPiFrameworkMatlab/dimension_*
+SigmaPiFrameworkMatlab/python_matlab_check.m
 *.txt
 *.input
 *.output

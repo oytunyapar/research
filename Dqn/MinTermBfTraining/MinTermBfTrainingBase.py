@@ -1,6 +1,6 @@
 import numpy
-import monsetup
-import boolean_function_generator
+from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
+from SigmaPiFrameworkPython.monsetup import monsetup, q_matrix_generator
 import signal
 import math
 from multiprocessing import Process, Queue
@@ -28,9 +28,9 @@ class MinTermBfTrainingBase:
         else:
             self.training_each_episode = self.dimension
 
-        self.function_vector = boolean_function_generator.boolean_function_generator(function, dimension)
-        self.d_matrix = monsetup.monsetup(dimension)
-        self.q_matrix = monsetup.q_matrix_generator(function, self.dimension)
+        self.function_vector = boolean_function_generator(function, dimension)
+        self.d_matrix = monsetup(dimension)
+        self.q_matrix = q_matrix_generator(function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
 
         self.q_matrix_representation = q_matrix_representation
@@ -63,7 +63,7 @@ class MinTermBfTrainingBase:
         self.current_rl_step = 0
         self.number_of_epochs = number_of_epochs
 
-        self.replay_memory_size = self.n_epoch_rl_steps * self.two_to_power_dimension * 2
+        self.replay_memory_size = self.n_epoch_rl_steps * self.two_to_power_dimension
         self.training_factor = self.two_to_power_dimension
         self.memory_window_size = self.replay_memory_size * 4
 
@@ -121,8 +121,8 @@ class MinTermBfTrainingBase:
             return
 
         self.function = function
-        self.function_vector = boolean_function_generator.boolean_function_generator(function, self.dimension)
-        self.q_matrix = monsetup.q_matrix_generator(function, self.dimension)
+        self.function_vector = boolean_function_generator(function, self.dimension)
+        self.q_matrix = q_matrix_generator(function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
 
         number_of_zeros = numpy.count_nonzero(self.walsh_spectrum == 0)
@@ -217,7 +217,7 @@ class MinTermBfTrainingBase:
 
     def predicted_reward(self, next_k_vector):
         next_number_of_zeros = numpy.count_nonzero(numpy.matmul(self.q_matrix, next_k_vector) == 0)
-        reward = self.two_to_power_dimension * next_number_of_zeros
+        reward = next_number_of_zeros**2
         #/ self.two_to_power_dimension
         return reward, next_number_of_zeros
 
@@ -438,8 +438,8 @@ class MinTermBfTrainingBase:
 
             if self.all_function_training and not self.pile_memory:
                 if (self.current_epoch % self.training_factor) == 0:
+                    self.forget_about_freeman()
                     for step in range(self.training_each_episode):
-                        self.forget_about_freeman()
                         self.manual_train()
                         self.set_function(numpy.random.randint(low=1, high=self.number_of_all_functions))
             else:
@@ -450,8 +450,8 @@ class MinTermBfTrainingBase:
 
                 if self.replay_memory_size < total_memory_size:
                     if (self.current_epoch % self.training_factor) == 0:
+                        self.forget_about_freeman()
                         for step in range(self.training_each_episode):
-                            self.forget_about_freeman()
                             self.manual_train()
 
                 if self.all_function_training:
