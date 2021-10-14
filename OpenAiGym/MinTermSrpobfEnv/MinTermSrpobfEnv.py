@@ -1,6 +1,7 @@
 import gym
 from gym import spaces
 
+import functools
 import numpy
 
 from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
@@ -31,19 +32,74 @@ class MinTermSrpobfEnv(gym.Env):
             self.function_representation = self.walsh_spectrum
 
         self.state_size = self.function_representation_size + self.k_vector_size
-        self.action_size = self.two_to_power_dimension + 1
+        self.action_size = 2 * self.two_to_power_dimension + 1
+
+        self.no_action_index = self.action_size - 1
+        self.increase_last_index = self.two_to_power_dimension - 1
         # Define action and observation space
         # They must be gym.spaces objects
         # Example when using discrete actions:
         self.action_space = spaces.Discrete(self.action_size)
         # Example for using image as input:
-        self.observation_space = spaces.Box(low=0, high=255, shape=(HEIGHT, WIDTH, N_CHANNELS), dtype=np.uint8)
+        self.observation_space = spaces.Discrete(self.state_size)
+
+        self.current_step = 0
+        self.steps_in_each_epoch = 3 * (self.two_to_power_dimension ** 2)
 
     def step(self, action):
+        self.current_step = self.current_step + 1
+
+        if self.no_action_index == action:
+            reward = self.reward(self.k_vector)
+            done = True
+        else:
+            if action < self.action_size:
+                selected_index = action % self.two_to_power_dimension
+                valid_action = True
+
+                if action > self.increase_last_index:
+                    if self.k_vector[selected_index] > 1:
+                        self.k_vector[selected_index] -= 1
+                    else:
+                        valid_action = False
+                else:
+                    self.k_vector[selected_index] += 1
+            else:
+                valid_action = False
+
+            if not valid_action:
+                reward = -self.two_to_power_dimension
+            else:
+                k_vector_gcd = functools.reduce(numpy.gcd, numpy.array(self.k_vector, dtype=numpy.int))
+                self.k_vector /= k_vector_gcd
+                reward = self.reward(self.k_vector)
+
+            if self.current_step > self.steps_in_each_epoch:
+                done = True
+            else:
+                done = False
+
+        observation = self.create_observation()
+        info = {}
+
         return observation, reward, done, info
 
     def reset(self):
-        return observation  # reward, done, info can't be included
+        self.current_step = 0
+        self.k_vector = numpy.ones(self.two_to_power_dimension)
+        observation = self.create_observation()
+        return observation
 
     def close(self):
         pass
+
+    def reward(self, next_k_vector):
+        next_number_of_zeros = numpy.count_nonzero(numpy.matmul(self.q_matrix, next_k_vector) == 0)
+        reward = next_number_of_zeros**2
+        return reward
+
+    def create_observation(self):
+        observation = numpy.ones([1, self.state_size])
+        observation[0, 0:self.function_representation_size] = self.function_representation
+        observation[0, self.function_representation_size:self.state_size] = self.k_vector
+        return observation
