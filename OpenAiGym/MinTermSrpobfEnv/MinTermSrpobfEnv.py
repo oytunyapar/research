@@ -41,7 +41,7 @@ class MinTermSrpobfEnv(gym.Env):
         # Example when using discrete actions:
         self.action_space = spaces.Discrete(self.action_size)
         # Example for using image as input:
-        self.observation_space = spaces.Discrete(self.state_size)
+        self.observation_space = spaces.Box(-numpy.inf, numpy.inf, [self.state_size])
 
         self.current_step = 0
         self.steps_in_each_epoch = 3 * (self.two_to_power_dimension ** 2)
@@ -99,7 +99,7 @@ class MinTermSrpobfEnv(gym.Env):
         return reward
 
     def create_observation(self):
-        observation = numpy.ones([1, self.state_size])
-        observation[0, 0:self.function_representation_size] = self.function_representation
-        observation[0, self.function_representation_size:self.state_size] = self.k_vector
+        observation = numpy.ones([self.state_size])
+        observation[0:self.function_representation_size] = self.function_representation
+        observation[self.function_representation_size:self.state_size] = self.k_vector
         return observation
