@@ -1,0 +1,15 @@
+from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv, ActionType
+act = ActionType.INCREASE
+env = MinTermSrpobfEnv(4,3,False,act)
+
+from stable_baselines3 import PPO, A2C, DQN, DDPG
+model = A2C('MlpPolicy', env, verbose=1)
+model.learn(total_timesteps=200000)
+
+obs = env.reset()
+for i in range(100):
+    action, _state = model.predict(obs, deterministic=True)
+    obs, reward, done, info = env.step(action)
+    if done:
+      print(obs)
+      obs = env.reset()
