@@ -18,7 +18,7 @@ class ActionType(Enum):
 class MinTermSrpobfEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, function, dimension, q_matrix_representation, action_type):
+    def __init__(self, function, dimension, q_matrix_representation, action_type, no_action_episode_end):
         super(MinTermSrpobfEnv, self).__init__()
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
@@ -48,13 +48,13 @@ class MinTermSrpobfEnv(gym.Env):
 
         if action_type == ActionType.INCREASE_DECREASE:
             self.steps_in_each_epoch = 3 * (self.two_to_power_dimension ** 2)
-            self.step = self.step_increase_decrease
             self.action_size = 2 * self.two_to_power_dimension + 1
             self.increase_last_index = self.two_to_power_dimension - 1
+            self.action_function = self.act_increase_decrease
         elif action_type == ActionType.INCREASE:
             self.steps_in_each_epoch = self.two_to_power_dimension ** 2
-            self.step = self.step_increase
             self.action_size = self.two_to_power_dimension + 1
+            self.action_function = self.act_increase
         else:
             raise Exception("Invalid action type")
 
@@ -64,71 +64,70 @@ class MinTermSrpobfEnv(gym.Env):
         # Example when using discrete actions:
         self.action_space = spaces.Discrete(self.action_size)
 
-    def step_increase_decrease(self, action):
+        self.no_action_episode_end = no_action_episode_end
+
+    def step_episodic_reward(self, action):
+        self.current_step = self.current_step + 1
+
+    def step(self, action):
         self.current_step = self.current_step + 1
 
         if self.no_action_index == action:
-            reward = self.reward(self.k_vector)
-            done = True
+            if self.no_action_episode_end:
+                reward = self.reward(self.k_vector)
+                done = True
+            else:
+                reward = 0
+                done = self.check_episode_end()
         else:
-            if action < self.k_vector_size * 2:
-                selected_index = action % self.k_vector_size
-                valid_action = True
+            valid_action = self.action_function(action)
 
-                if action > self.increase_last_index:
-                    if self.k_vector[selected_index] > 1:
-                        self.k_vector[selected_index] -= 1
-                    else:
-                        valid_action = False
+            if not valid_action:
+                reward = -self.two_to_power_dimension
+            else:
+                self.k_vector_gcd()
+                reward = self.reward(self.k_vector)
+
+            done = self.check_episode_end()
+
+        observation = self.create_observation()
+        info = {}
+
+        return observation, reward, done, info
+
+    def act_increase_decrease(self, action):
+        if action < self.k_vector_size * 2:
+            selected_index = action % self.k_vector_size
+            valid_action = True
+
+            if action > self.increase_last_index:
+                if self.k_vector[selected_index] > 1:
+                    self.k_vector[selected_index] -= 1
                 else:
-                    self.k_vector[selected_index] += 1
+                    valid_action = False
             else:
-                valid_action = False
+                self.k_vector[selected_index] += 1
+        else:
+            valid_action = False
 
-            if not valid_action:
-                reward = -self.two_to_power_dimension
-            else:
-                self.k_vector_gcd()
-                reward = self.reward(self.k_vector)
+        return valid_action
 
-            if self.current_step > self.steps_in_each_epoch:
-                done = True
-            else:
-                done = False
+    def act_increase(self, action):
+        if action < self.k_vector_size:
+            valid_action = True
+            self.k_vector[action] += 1
+        else:
+            valid_action = False
 
-        observation = self.create_observation()
-        info = {}
+        return valid_action
 
-        return observation, reward, done, info
-
-    def step_increase(self, action):
-        self.current_step = self.current_step + 1
-
-        if self.no_action_index == action:
-            reward = self.reward(self.k_vector)
+    def check_episode_end(self):
+        if self.current_step > self.steps_in_each_epoch:
             done = True
         else:
-            if action < self.k_vector_size:
-                valid_action = True
-                self.k_vector[action] += 1
-            else:
-                valid_action = False
+            done = False
 
-            if not valid_action:
-                reward = -self.two_to_power_dimension
-            else:
-                self.k_vector_gcd()
-                reward = self.reward(self.k_vector)
-
-            if self.current_step > self.steps_in_each_epoch:
-                done = True
-            else:
-                done = False
-
-        observation = self.create_observation()
-        info = {}
-
-        return observation, reward, done, info
+        return done
 
     def reset(self):
         self.current_step = 0
