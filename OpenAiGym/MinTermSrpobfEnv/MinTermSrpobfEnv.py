@@ -18,7 +18,7 @@ class ActionType(Enum):
 class MinTermSrpobfEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, function, dimension, q_matrix_representation, action_type, no_action_episode_end):
+    def __init__(self, function, dimension, q_matrix_representation, action_type, no_action_episode_end, episodic_reward):
         super(MinTermSrpobfEnv, self).__init__()
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
@@ -66,8 +66,8 @@ class MinTermSrpobfEnv(gym.Env):
 
         self.no_action_episode_end = no_action_episode_end
 
-    def step_episodic_reward(self, action):
-        self.current_step = self.current_step + 1
+        self.episodic_reward = episodic_reward
+        self.max_reward_in_the_episode = 0
 
     def step(self, action):
         self.current_step = self.current_step + 1
@@ -90,10 +90,21 @@ class MinTermSrpobfEnv(gym.Env):
 
             done = self.check_episode_end()
 
+        if reward > self.max_reward_in_the_episode:
+            self.max_reward_in_the_episode = reward
+
+        if self.episodic_reward:
+            if done:
+                returned_reward = self.max_reward_in_the_episode
+            else:
+                returned_reward = 0
+        else:
+            returned_reward = reward
+
         observation = self.create_observation()
         info = {}
 
-        return observation, reward, done, info
+        return observation, returned_reward, done, info
 
     def act_increase_decrease(self, action):
         if action < self.k_vector_size * 2:
@@ -131,6 +142,7 @@ class MinTermSrpobfEnv(gym.Env):
 
     def reset(self):
         self.current_step = 0
+        self.max_reward_in_the_episode = 0
         self.k_vector = numpy.ones(self.two_to_power_dimension)
         observation = self.create_observation()
         return observation

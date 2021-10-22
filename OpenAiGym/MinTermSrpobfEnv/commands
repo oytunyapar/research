@@ -1,10 +1,10 @@
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv, ActionType
-act = ActionType.INCREASE_DECREASE
-env = MinTermSrpobfEnv(4,3,False,act,False)
+act = ActionType.INCREASE
+env = MinTermSrpobfEnv(4,3,False,act,False,True)
 
 from stable_baselines3 import PPO, A2C, DQN, DDPG
 model = A2C('MlpPolicy', env, verbose=1)
-model.learn(total_timesteps=200000)
+model.learn(total_timesteps=100000)
 
 obs = env.reset()
 for i in range(100):
