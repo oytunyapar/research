@@ -9,7 +9,7 @@ policy_kwargs = dict(activation_fn=th.nn.ReLU,
                      net_arch=[dict(pi=[300, 300], vf=[300, 300])])
 
 policy_kwargs = dict(activation_fn=th.nn.ReLU,
-                     net_arch=[300, 300])
+                     net_arch=[500, 500])
 
 
 model = DQN('MlpPolicy', env,  policy_kwargs=policy_kwargs, verbose=1)
@@ -17,6 +17,9 @@ model.learn(total_timesteps=400000)
 
 import matplotlib.pyplot as plt
 plt.plot(env.cumulative_rewards_in_the_episodes)
+plt.show()
+
+plt.plot(env.max_rewards_in_the_episodes)
 plt.show()
 
 obs = env.reset()
