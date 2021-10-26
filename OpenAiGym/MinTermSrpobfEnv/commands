@@ -1,15 +1,30 @@
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv, ActionType
-act = ActionType.INCREASE
-env = MinTermSrpobfEnv(4,3,False,act,False,True)
-
+import torch as th
 from stable_baselines3 import PPO, A2C, DQN, DDPG
-model = A2C('MlpPolicy', env, verbose=1)
-model.learn(total_timesteps=100000)
+
+act = ActionType.INCREASE
+env = MinTermSrpobfEnv(4,3,False,act,False,False)
+
+policy_kwargs = dict(activation_fn=th.nn.ReLU,
+                     net_arch=[dict(pi=[300, 300], vf=[300, 300])])
+
+policy_kwargs = dict(activation_fn=th.nn.ReLU,
+                     net_arch=[300, 300])
+
+
+model = DQN('MlpPolicy', env,  policy_kwargs=policy_kwargs, verbose=1)
+model.learn(total_timesteps=400000)
+
+import matplotlib.pyplot as plt
+plt.plot(env.cumulative_rewards_in_the_episodes)
+plt.show()
 
 obs = env.reset()
 for i in range(100):
     action, _state = model.predict(obs, deterministic=True)
     obs, reward, done, info = env.step(action)
+    print(obs)
     if done:
       print(obs)
+      break
       obs = env.reset()

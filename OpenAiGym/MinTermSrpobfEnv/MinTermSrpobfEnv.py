@@ -30,6 +30,7 @@ class MinTermSrpobfEnv(gym.Env):
         self.walsh_spectrum = self.q_matrix.sum(1)
         self.k_vector_size = self.two_to_power_dimension
         self.k_vector = numpy.ones(self.two_to_power_dimension)
+        self.k_vector_element_max_value = 2 ** (dimension - 1)
         self.q_matrix_representation = q_matrix_representation
 
         if q_matrix_representation:
@@ -67,7 +68,12 @@ class MinTermSrpobfEnv(gym.Env):
         self.no_action_episode_end = no_action_episode_end
 
         self.episodic_reward = episodic_reward
+
         self.max_reward_in_the_episode = 0
+        self.max_rewards_in_the_episodes = []
+
+        self.cumulative_reward_in_the_episode = 0
+        self.cumulative_rewards_in_the_episodes = []
 
     def step(self, action):
         self.current_step = self.current_step + 1
@@ -99,6 +105,7 @@ class MinTermSrpobfEnv(gym.Env):
             else:
                 returned_reward = 0
         else:
+            self.cumulative_reward_in_the_episode += reward
             returned_reward = reward
 
         observation = self.create_observation()
@@ -121,6 +128,9 @@ class MinTermSrpobfEnv(gym.Env):
         else:
             valid_action = False
 
+        if valid_action:
+            self.apply_constraints_on_k_vector(selected_index)
+
         return valid_action
 
     def act_increase(self, action):
@@ -130,7 +140,14 @@ class MinTermSrpobfEnv(gym.Env):
         else:
             valid_action = False
 
+        if valid_action:
+            self.apply_constraints_on_k_vector(action)
+
         return valid_action
+
+    def apply_constraints_on_k_vector(self, selected_index):
+        if self.k_vector[selected_index] > self.k_vector_element_max_value:
+            self.k_vector[selected_index] -= self.k_vector_element_max_value
 
     def check_episode_end(self):
         if self.current_step > self.steps_in_each_epoch:
@@ -142,7 +159,13 @@ class MinTermSrpobfEnv(gym.Env):
 
     def reset(self):
         self.current_step = 0
+
+        self.max_rewards_in_the_episodes.append(self.max_reward_in_the_episode)
         self.max_reward_in_the_episode = 0
+
+        if not self.episodic_reward:
+            self.cumulative_rewards_in_the_episodes.append(self.cumulative_reward_in_the_episode)
+            self.cumulative_reward_in_the_episode = 0
         self.k_vector = numpy.ones(self.two_to_power_dimension)
         observation = self.create_observation()
         return observation
