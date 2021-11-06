@@ -20,14 +20,6 @@ for step in range(60000000):
 model = DQN('MlpPolicy', env,  policy_kwargs=policy_kwargs, verbose=1)
 model.learn(total_timesteps=2000000)
 
-import matplotlib.pyplot as plt
-plt.plot(env.cumulative_rewards_in_the_episodes)
-plt.show()
-
-import matplotlib.pyplot as plt
-plt.plot(env.max_rewards_in_the_episodes)
-plt.show()
-
 obs = env.reset()
 for i in range(100):
     action, _state = model.predict(obs, deterministic=True)
@@ -37,3 +29,34 @@ for i in range(100):
       print(obs)
       break
       obs = env.reset()
+
+
+from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import dqn_runner
+three_immediate_reward = dqn_runner(3,False)
+three_episode_reward = dqn_runner(3,True)
+four_immediate_reward = dqn_runner(4,False)
+four_episode_reward = dqn_runner(4,True)
+
+import json
+
+json_file_name = "four_episode_reward" + ".json"
+json_handle = json.dumps(four_episode_reward)
+f = open(json_file_name,"w")
+f.write(json_handle)
+f.close()
+
+with open(json_file_name) as json_file:
+    data = json.load(json_file)
+
+import matplotlib.pyplot as plt
+plt.plot(four_immediate_reward["4_47957_max_reward"])
+plt.show()
+Max_Reward_Immediate_Reward
+
+plt.plot(four_immediate_reward["4_47957_episode_total_reward"])
+plt.show()
+Cumulative_Reward_Immediate_Reward
+
+plt.plot(four_episode_reward["4_47957_max_reward"])
+plt.show()
+Max_Reward_Episode_Reward
