@@ -41,6 +41,10 @@ from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import r
 three_reward = random_action_runner(3)
 four_reward = random_action_runner(4)
 
+from OpenAiGym.RLAlgorithmRunners.RandomKVectorRunner.RandomKVectorRunner import random_k_vector_runner
+three_reward = random_k_vector_runner(3)
+four_reward = random_k_vector_runner(4)
+
 import json
 
 json_file_name = "four_episode_reward" + ".json"
@@ -53,7 +57,7 @@ with open(json_file_name) as json_file:
     data = json.load(json_file)
 
 import matplotlib.pyplot as plt
-plt.plot(four_reward["4_47957_max_reward"])
+plt.plot(three_reward["3_172_max_reward"])
 plt.show()
 Max_Reward
 

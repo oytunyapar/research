@@ -113,6 +113,15 @@ class MinTermSrpobfEnv(gym.Env):
 
         return observation, returned_reward, done, info
 
+    def step_without_action(self):
+        self.current_step = self.current_step + 1
+        reward = self.reward(self.k_vector)
+        if reward > self.max_reward_in_the_episode:
+            self.max_reward_in_the_episode = reward
+        done = self.check_episode_end()
+
+        return reward, done
+
     def act_increase_decrease(self, action):
         if action < self.k_vector_size * 2:
             selected_index = action % self.k_vector_size
