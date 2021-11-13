@@ -45,6 +45,8 @@ from OpenAiGym.RLAlgorithmRunners.RandomKVectorRunner.RandomKVectorRunner import
 three_reward = random_k_vector_runner(3)
 four_reward = random_k_vector_runner(4)
 
+dqn_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/Visuals/5dim/DQN",[12,13])
+
 import json
 
 json_file_name = "four_episode_reward" + ".json"
