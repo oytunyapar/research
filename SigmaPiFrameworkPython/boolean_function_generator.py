@@ -14,8 +14,8 @@ def boolean_function_generator(function, dimension):
         print("Invalid function for this dimension.\n")
         return numpy.zeros(vector_size, dtype=numpy.float32)
     
-    sign_vector = numpy.ones( vector_size, dtype=numpy.float32 )
-    for iterator in range (binary_size):
+    sign_vector = numpy.ones(vector_size, dtype=numpy.float32)
+    for iterator in range(binary_size):
         if binary_number[binary_size - iterator - 1] == '1':
             sign_vector[iterator] = -1
 
