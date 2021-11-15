@@ -32,6 +32,7 @@ for i in range(100):
 
 
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import dqn_runner
+dqn_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/Visuals/5dim/DQN",[25,36])
 three_immediate_reward = dqn_runner(3,False)
 three_episode_reward = dqn_runner(3,True)
 four_immediate_reward = dqn_runner(4,False)
