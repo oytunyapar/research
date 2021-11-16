@@ -32,13 +32,14 @@ for i in range(100):
 
 
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import dqn_runner
-dqn_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/Visuals/5dim/DQN",[39,48])
+dqn_runner(3,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/Visuals/5dim/DQN",[0,1])
 three_immediate_reward = dqn_runner(3,False)
 three_episode_reward = dqn_runner(3,True)
 four_immediate_reward = dqn_runner(4,False)
 four_episode_reward = dqn_runner(4,True)
 
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import random_action_runner
+random_action_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/5dim/RandomAction")
 three_reward = random_action_runner(3)
 four_reward = random_action_runner(4)
 

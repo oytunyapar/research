@@ -1,9 +1,10 @@
 from OpenAiGym.RLAlgorithmRunners.MinTermSrpobfEnvConstants import *
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsEquivalentClasses
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
+from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs
 
 
-def random_action_runner(dimension):
+def random_action_runner(dimension, output_directory=None):
     result_metrics = {}
     print_constant = 100000
     total_steps = number_of_steps_dictionary[dimension]
@@ -17,9 +18,14 @@ def random_action_runner(dimension):
                 env.reset()
 
             if step % print_constant == 0:
-                print("Function:" + str(function) +
+                print("Function:" + hex(function) +
                       " continues " + str(step) + "/" + str(total_steps))
 
-        result_metrics[str(dimension) + "_" + str(function) + "_max_reward"] = env.max_rewards_in_the_episodes
+        result_metrics[str(dimension) + "_" + hex(function) + "_max_reward"] = env.max_rewards_in_the_episodes
+
+        if output_directory is not None:
+            function_output_directory = output_directory + "/" + hex(function)
+
+            dump_outputs(env.max_rewards_in_the_episodes, function_output_directory, "max_rewards_in_the_episodes")
 
     return result_metrics
