@@ -30,9 +30,12 @@ for i in range(100):
       break
       obs = env.reset()
 
+envs["4_0xaba4"].calculate_weights(k)
+array([  0.,  16.,   0.,   0.,   0., -16.,   0.,   0.,   8.,   0.,   0.,
+         8.,   0.,  -8.,   8.,   0.])
 
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import dqn_runner
-dqn_runner(3,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/Visuals/5dim/DQN",[0,1])
+metrics, envs=dqn_runner(4,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/Visuals/5dim/DQN",[5,6])
 three_immediate_reward = dqn_runner(3,False)
 three_episode_reward = dqn_runner(3,True)
 four_immediate_reward = dqn_runner(4,False)

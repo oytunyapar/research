@@ -32,6 +32,7 @@ def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None
             functions = all_functions[begin_index:end_index]
 
     result_metrics = {}
+    envs = {}
     for function in functions:
         env = MinTermSrpobfEnv(function, dimension, q_matrix_representation, act,
                                no_action_episode_end, episodic_reward=episodic_reward)
@@ -40,6 +41,7 @@ def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None
         result_metrics[str(dimension) + "_" + hex(function) + "_max_reward"] = env.max_rewards_in_the_episodes
         result_metrics[str(dimension) + "_" + hex(function) + "_episode_total_reward"] =\
             env.cumulative_rewards_in_the_episodes
+        envs[str(dimension) + "_" + hex(function)] = env
 
         if output_directory is not None:
             function_output_directory = output_directory + "/" + hex(function)
@@ -48,5 +50,5 @@ def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None
             dump_outputs(env.cumulative_rewards_in_the_episodes, function_output_directory,
                          "cumulative_rewards_in_the_episodes")
 
-    return result_metrics
+    return result_metrics, envs
 

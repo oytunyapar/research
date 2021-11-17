@@ -18,7 +18,8 @@ class ActionType(Enum):
 class MinTermSrpobfEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, function, dimension, q_matrix_representation, action_type, no_action_episode_end, episodic_reward):
+    def __init__(self, function, dimension, q_matrix_representation, action_type,
+                 no_action_episode_end, episodic_reward):
         super(MinTermSrpobfEnv, self).__init__()
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
@@ -75,6 +76,9 @@ class MinTermSrpobfEnv(gym.Env):
         self.cumulative_reward_in_the_episode = 0
         self.cumulative_rewards_in_the_episodes = []
 
+        self.max_reward = 0
+        self.max_reward_k_vector = self.k_vector.copy()
+
     def step(self, action):
         self.current_step = self.current_step + 1
 
@@ -98,6 +102,10 @@ class MinTermSrpobfEnv(gym.Env):
 
         if reward > self.max_reward_in_the_episode:
             self.max_reward_in_the_episode = reward
+
+            if reward > self.max_reward:
+                self.max_reward = reward
+                self.max_reward_k_vector = self.k_vector.copy()
 
         if self.episodic_reward:
             if done:
@@ -183,9 +191,12 @@ class MinTermSrpobfEnv(gym.Env):
         pass
 
     def reward(self, next_k_vector):
-        next_number_of_zeros = numpy.count_nonzero(numpy.matmul(self.q_matrix, next_k_vector) == 0)
+        next_number_of_zeros = numpy.count_nonzero(self.calculate_weights(next_k_vector) == 0)
         reward = next_number_of_zeros**2
         return reward
+
+    def calculate_weights(self, k_vector):
+        return numpy.matmul(self.q_matrix, k_vector)
 
     def create_observation(self):
         observation = numpy.ones([self.state_size])
