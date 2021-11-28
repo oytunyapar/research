@@ -35,7 +35,7 @@ array([  0.,  16.,   0.,   0.,   0., -16.,   0.,   0.,   8.,   0.,   0.,
          8.,   0.,  -8.,   8.,   0.])
 
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import dqn_runner
-metrics, envs=dqn_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/5dim/DQN/2",[17,21])
+metrics, envs=dqn_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/5dim/DQN/2",[40,42])
 three_immediate_reward = dqn_runner(3,False)
 three_episode_reward = dqn_runner(3,True)
 four_immediate_reward = dqn_runner(4,False)
