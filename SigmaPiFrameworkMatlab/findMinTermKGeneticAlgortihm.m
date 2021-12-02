@@ -17,7 +17,8 @@ upper_bounds(1,1:number_of_variables) = number_of_variables/2;
 intcon=(1:number_of_variables);
 FitnessFunction = @(k_vector)minTermBFFitnessFunction(k_vector,q_matrix);
 
-options = optimoptions('ga','PopulationSize',10000,'MaxGenerations',200000,'UseParallel',true);
+options = optimoptions('ga','PopulationSize',numberOfPopulation(dimension),...
+    'MaxGenerations',numberOfIterations(dimension),'UseParallel',true);
 
 [x,Fval,exit_flag,output,population,scores] = ...
     ga(FitnessFunction,number_of_variables,[],[],[],[],lower_bounds,upper_bounds,[],intcon,options);
@@ -29,5 +30,24 @@ function fitness = minTermBFFitnessFunction(k_vector, q_matrix)
 coeffcients = q_matrix*k_vector';
 number_of_zeros = sum(~coeffcients);
 fitness = number_of_zeros^2;
+
+end
+
+function number_of_iterations = numberOfIterations(dimension)
+
+if dimension == 3
+    number_of_iterations = 200000;
+elseif dimension == 4
+    number_of_iterations = 1000000;
+elseif dimension == 5
+    number_of_iterations = 2000000;
+end
+
+end
+
+function number_of_population= numberOfPopulation(dimension)
+
+population_constant = 2000;
+number_of_population = population_constant * 2^dimension;
 
 end
