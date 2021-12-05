@@ -15,7 +15,7 @@ def max_reward_data_to_number_of_zeros(functions_root_directory, dimension, func
         max_reward_file_name = "max_rewards_in_the_episodes.json"
         function_string = function_to_hex_string(dimension, function)
         json_file_name =\
-            functions_root_directory + "/" + function_string + "/" +max_reward_file_name
+            functions_root_directory + "/" + function_string + "/" + max_reward_file_name
         with open(json_file_name) as json_file:
             data = json.load(json_file)
             max_zeros[function_string] = reward_to_number_of_zeros(numpy.max(data))
