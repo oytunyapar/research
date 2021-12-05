@@ -21,6 +21,10 @@ class FunctionMode(Enum):
     RANDOM = 3
 
 
+def reward_to_number_of_zeros(reward):
+    return int(numpy.sqrt(reward))
+
+
 class MinTermSrpobfEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 

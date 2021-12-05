@@ -2,6 +2,7 @@ from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import 
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
 from OpenAiGym.RLAlgorithmRunners.MinTermSrpobfEnvConstants import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs
+from OpenAiGym.RLAlgorithmRunners.Utils.StringHelperFunctions import function_to_hex_string
 import torch as th
 from stable_baselines3 import DQN
 
@@ -38,13 +39,13 @@ def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None
                                no_action_episode_end, episodic_reward=episodic_reward)
         model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
         model.learn(total_timesteps=number_of_steps_dictionary[dimension])
-        result_metrics[str(dimension) + "_" + hex(function) + "_max_reward"] = env.max_rewards_in_the_episodes
-        result_metrics[str(dimension) + "_" + hex(function) + "_episode_total_reward"] =\
+        result_metrics[str(dimension) + "_" + function_to_hex_string(dimension, function) + "_max_reward"] = env.max_rewards_in_the_episodes
+        result_metrics[str(dimension) + "_" + function_to_hex_string(dimension, function) + "_episode_total_reward"] =\
             env.cumulative_rewards_in_the_episodes
-        envs[str(dimension) + "_" + hex(function)] = env
+        envs[str(dimension) + "_" + function_to_hex_string(dimension, function)] = env
 
         if output_directory is not None:
-            function_output_directory = output_directory + "/" + hex(function)
+            function_output_directory = output_directory + "/" + function_to_hex_string(dimension, function)
 
             dump_outputs(env.max_rewards_in_the_episodes, function_output_directory, "max_rewards_in_the_episodes")
             dump_outputs(env.cumulative_rewards_in_the_episodes, function_output_directory,

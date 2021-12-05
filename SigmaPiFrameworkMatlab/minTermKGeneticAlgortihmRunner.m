@@ -8,7 +8,7 @@ max_populations = zeros(length_functions,number_of_variables);
 
 for iterator = 1:length_functions
     fprintf("Dimension:%d Function:%d/%d\n",dimension,iterator,length_functions);
-    [~,~,exit_flag,~,population,scores] = ...
+    [~,~,~,~,population,scores] = ...
         findMinTermKGeneticAlgortihm(functions(iterator), dimension);
     [max_value, max_value_index] = max(scores);
     max_scores(iterator) = max_value;

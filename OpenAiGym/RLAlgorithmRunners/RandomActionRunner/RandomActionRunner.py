@@ -2,6 +2,7 @@ from OpenAiGym.RLAlgorithmRunners.MinTermSrpobfEnvConstants import *
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsEquivalentClasses
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs
+from OpenAiGym.RLAlgorithmRunners.Utils.StringHelperFunctions import function_to_hex_string
 
 
 def random_action_runner(dimension, output_directory=None):
@@ -18,13 +19,13 @@ def random_action_runner(dimension, output_directory=None):
                 env.reset()
 
             if step % print_constant == 0:
-                print("Function:" + hex(function) +
+                print("Function:" + function_to_hex_string(dimension, function) +
                       " continues " + str(step) + "/" + str(total_steps))
 
-        result_metrics[str(dimension) + "_" + hex(function) + "_max_reward"] = env.max_rewards_in_the_episodes
+        result_metrics[str(dimension) + "_" + function_to_hex_string(dimension, function) + "_max_reward"] = env.max_rewards_in_the_episodes
 
         if output_directory is not None:
-            function_output_directory = output_directory + "/" + hex(function)
+            function_output_directory = output_directory + "/" + function_to_hex_string(dimension, function)
 
             dump_outputs(env.max_rewards_in_the_episodes, function_output_directory, "max_rewards_in_the_episodes")
 
