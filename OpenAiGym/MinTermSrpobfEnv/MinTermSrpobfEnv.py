@@ -142,7 +142,7 @@ class MinTermSrpobfEnv(gym.Env):
                     self.max_reward_k_vector = self.k_vector.copy()
             else:
                 if self.function in self.max_reward_dict.keys():
-                    if self.max_reward_dict[self.function] > reward:
+                    if reward > self.max_reward_dict[self.function]:
                         self.max_reward_dict[self.function] = reward
                         self.max_reward_k_vector_dict[self.function] = self.k_vector.tolist().copy()
                 else:
