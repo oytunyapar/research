@@ -144,10 +144,10 @@ class MinTermSrpobfEnv(gym.Env):
                 if self.function in self.max_reward_dict.keys():
                     if self.max_reward_dict[self.function] > reward:
                         self.max_reward_dict[self.function] = reward
-                        self.max_reward_k_vector_dict[self.function] = self.k_vector.copy()
+                        self.max_reward_k_vector_dict[self.function] = self.k_vector.tolist().copy()
                 else:
                     self.max_reward_dict[self.function] = reward
-                    self.max_reward_k_vector_dict[self.function] = self.k_vector.copy()
+                    self.max_reward_k_vector_dict[self.function] = self.k_vector.tolist().copy()
 
         if self.episodic_reward:
             if done:
@@ -232,7 +232,7 @@ class MinTermSrpobfEnv(gym.Env):
             self.function_each_episode.append(self.function)
 
             if self.function_mode is FunctionMode.RANDOM:
-                self.function = numpy.random.randint(self.two_to_power_dimension)
+                self.function = numpy.random.randint(self.total_number_of_functions)
             elif self.function_mode is FunctionMode.LIST:
                 self.function = self.function_list[numpy.random.randint(self.function_list_len)]
 

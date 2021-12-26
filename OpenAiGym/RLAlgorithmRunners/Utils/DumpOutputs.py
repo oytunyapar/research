@@ -4,12 +4,22 @@ from pathlib import Path
 
 
 def dump_outputs(data, output_directory, file_name_prefix):
+    dump_png(data, output_directory, file_name_prefix)
+    dump_json(data, output_directory, file_name_prefix)
+
+
+def dump_png(data, output_directory, file_name_prefix):
     if not Path(output_directory).is_dir():
         Path(output_directory).mkdir(parents=True)
 
     plt.plot(data)
     plt.savefig(output_directory + "/" + file_name_prefix + ".png")
     plt.clf()
+
+
+def dump_json(data, output_directory, file_name_prefix):
+    if not Path(output_directory).is_dir():
+        Path(output_directory).mkdir(parents=True)
 
     json_file_name = output_directory + "/" + file_name_prefix + ".json"
     json_handle = json.dumps(data)
