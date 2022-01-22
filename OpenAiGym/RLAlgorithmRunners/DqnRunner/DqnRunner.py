@@ -5,11 +5,12 @@ from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs, dump_js
 from OpenAiGym.RLAlgorithmRunners.Utils.StringHelperFunctions import function_to_hex_string
 import torch as th
 from stable_baselines3 import DQN
+import datetime
 
 policy_kwargs_dictionary = {
-    3: dict(activation_fn=th.nn.ReLU, net_arch=[250, 250]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[500, 500]),
-    5: dict(activation_fn=th.nn.ReLU, net_arch=[500, 500])
+    3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[128, 64]),
+    5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
 
@@ -55,6 +56,18 @@ def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None
     return result_metrics, envs
 
 
+def dqn_runner_equivalent_functions(dimension, output_directory=None):
+    env = MinTermSrpobfEnv(BooleanFunctionsEquivalentClasses[dimension],
+                           dimension, q_matrix_representation, act,
+                           no_action_episode_end, episodic_reward=episodic_reward)
+    model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
+    model.learn(total_timesteps=number_of_steps_dictionary_all_equivalent_functions[dimension])
+
+    dqn_runner_output_helper(output_directory, "dimension_equivalent_functions", env, model)
+
+    return env, model
+
+
 def dqn_runner_all_functions(dimension, output_directory=None):
     all_functions = (2 ** dimension) ** dimension
     env = MinTermSrpobfEnv(all_functions, dimension, q_matrix_representation, act,
@@ -62,8 +75,15 @@ def dqn_runner_all_functions(dimension, output_directory=None):
     model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
     model.learn(total_timesteps=number_of_steps_dictionary_all_functions[dimension])
 
-    if output_directory is not None:
-        function_output_directory = output_directory + "/" + str(dimension) + "dimension_all_functions"
+    dqn_runner_output_helper(output_directory, "dimension_all_functions", env, model)
+
+    return env, model
+
+
+def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model):
+    if root_directory is not None:
+        function_output_directory = root_directory + "/" + str(env.dimension) + \
+                                    dump_directory_prefix + "_" + str(datetime.datetime.now())
 
         dump_outputs(env.max_rewards_in_the_episodes, function_output_directory, "max_rewards_in_the_episodes")
         dump_outputs(env.cumulative_rewards_in_the_episodes, function_output_directory,
@@ -72,5 +92,4 @@ def dqn_runner_all_functions(dimension, output_directory=None):
         dump_json(env.function_each_episode, function_output_directory, "function_each_episode")
         dump_json(env.max_reward_dict, function_output_directory, "max_reward_dict")
         dump_json(env.max_reward_k_vector_dict, function_output_directory, "max_reward_k_vector_dict")
-
-    return env
+        model.save(function_output_directory + "/" + "model")

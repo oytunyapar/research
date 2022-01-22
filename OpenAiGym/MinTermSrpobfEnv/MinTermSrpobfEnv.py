@@ -75,14 +75,14 @@ class MinTermSrpobfEnv(gym.Env):
         self.observation_space = spaces.Box(-numpy.inf, numpy.inf, [self.state_size])
 
         self.current_step = 0
+        self.steps_in_each_epoch = ((self.two_to_power_dimension / 2) - 1) * self.two_to_power_dimension
 
         if action_type == ActionType.INCREASE_DECREASE:
-            self.steps_in_each_epoch = 3 * (self.two_to_power_dimension ** 2)
+            self.steps_in_each_epoch = 3 * self.steps_in_each_epoch
             self.action_size = 2 * self.two_to_power_dimension + 1
             self.increase_last_index = self.two_to_power_dimension - 1
             self.action_function = self.act_increase_decrease
         elif action_type == ActionType.INCREASE:
-            self.steps_in_each_epoch = self.two_to_power_dimension ** 2
             self.action_size = self.two_to_power_dimension + 1
             self.action_function = self.act_increase
         else:
