@@ -8,7 +8,7 @@ from stable_baselines3 import DQN
 import datetime
 
 policy_kwargs_dictionary = {
-    3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
+    3: dict(activation_fn=th.nn.ReLU, net_arch=[32, 16]),
     4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
@@ -63,7 +63,6 @@ def dqn_runner_equivalent_functions(dimension, output_directory=None):
     model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
     model.learn(total_timesteps=number_of_steps_dictionary_all_equivalent_functions[dimension])
 
-    env.switch_to_single_mode()
     test_results = {}
 
     for function in functions:
@@ -76,16 +75,15 @@ def dqn_runner_equivalent_functions(dimension, output_directory=None):
 
 
 def dqn_runner_all_functions(dimension, output_directory=None):
-    all_functions = (2 ** dimension) ** dimension
+    all_functions = 2 ** (2 ** dimension)
     env = MinTermSrpobfEnv(all_functions, dimension, q_matrix_representation, act,
                            no_action_episode_end, episodic_reward=episodic_reward)
     model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
     model.learn(total_timesteps=number_of_steps_dictionary_all_functions[dimension])
 
-    env.switch_to_single_mode()
     test_results = {}
 
-    for function in all_functions:
+    for function in range(all_functions):
         max_reward = dqn_runner_test_model(env, model, function)
         test_results[function] = max_reward
 
@@ -111,6 +109,8 @@ def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model, 
 
 
 def dqn_runner_test_model(env, model, function=None):
+    env.switch_to_single_mode()
+
     if function is not None:
         env.set_function(function)
 
