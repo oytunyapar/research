@@ -42,7 +42,7 @@ env = dqn_runner_all_functions(3,"/home/oytun/PycharmProjects/research/OpenAiGym
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import dqn_runner, dqn_runner_all_functions
 env4 = dqn_runner_all_functions(4,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/4dim/DQN/")
 
-from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import dqn_runner_equivalent_functions
+from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import dqn_runner_equivalent_functions, dqn_runner_test_model
 env4, model4 = dqn_runner_equivalent_functions(4,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/4dim/DQN/")
 
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import random_action_runner

@@ -9,7 +9,7 @@ import datetime
 
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[128, 64]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
@@ -57,13 +57,20 @@ def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None
 
 
 def dqn_runner_equivalent_functions(dimension, output_directory=None):
-    env = MinTermSrpobfEnv(BooleanFunctionsEquivalentClasses[dimension],
-                           dimension, q_matrix_representation, act,
+    functions = BooleanFunctionsEquivalentClasses[dimension]
+    env = MinTermSrpobfEnv(functions, dimension, q_matrix_representation, act,
                            no_action_episode_end, episodic_reward=episodic_reward)
     model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
     model.learn(total_timesteps=number_of_steps_dictionary_all_equivalent_functions[dimension])
 
-    dqn_runner_output_helper(output_directory, "dimension_equivalent_functions", env, model)
+    env.switch_to_single_mode()
+    test_results = {}
+
+    for function in functions:
+        max_reward = dqn_runner_test_model(env, model, function)
+        test_results[function] = max_reward
+
+    dqn_runner_output_helper(output_directory, "dimension_equivalent_functions", env, model, test_results)
 
     return env, model
 
@@ -75,12 +82,19 @@ def dqn_runner_all_functions(dimension, output_directory=None):
     model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
     model.learn(total_timesteps=number_of_steps_dictionary_all_functions[dimension])
 
-    dqn_runner_output_helper(output_directory, "dimension_all_functions", env, model)
+    env.switch_to_single_mode()
+    test_results = {}
+
+    for function in all_functions:
+        max_reward = dqn_runner_test_model(env, model, function)
+        test_results[function] = max_reward
+
+    dqn_runner_output_helper(output_directory, "dimension_all_functions", env, model, test_results)
 
     return env, model
 
 
-def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model):
+def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model, test_results):
     if root_directory is not None:
         function_output_directory = root_directory + "/" + str(env.dimension) + \
                                     dump_directory_prefix + "_" + str(datetime.datetime.now())
@@ -92,4 +106,19 @@ def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model):
         dump_json(env.function_each_episode, function_output_directory, "function_each_episode")
         dump_json(env.max_reward_dict, function_output_directory, "max_reward_dict")
         dump_json(env.max_reward_k_vector_dict, function_output_directory, "max_reward_k_vector_dict")
+        dump_json(test_results, function_output_directory, "test_results")
         model.save(function_output_directory + "/" + "model")
+
+
+def dqn_runner_test_model(env, model, function=None):
+    if function is not None:
+        env.set_function(function)
+
+    obs = env.reset()
+    done = False
+
+    while not done:
+        action, _state = model.predict(obs, deterministic=True)
+        obs, reward, done, info = env.step(action)
+
+    return env.max_reward_in_the_episode

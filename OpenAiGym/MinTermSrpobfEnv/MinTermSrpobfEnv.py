@@ -104,13 +104,12 @@ class MinTermSrpobfEnv(gym.Env):
         self.cumulative_reward_in_the_episode = 0
         self.cumulative_rewards_in_the_episodes = []
 
-        if self.function_mode is FunctionMode.SINGLE:
-            self.max_reward = 0
-            self.max_reward_k_vector = self.k_vector.copy()
-        else:
-            self.function_each_episode = []
-            self.max_reward_dict = {}
-            self.max_reward_k_vector_dict = {}
+        self.max_reward = 0
+        self.max_reward_k_vector = self.k_vector.copy()
+
+        self.function_each_episode = []
+        self.max_reward_dict = {}
+        self.max_reward_k_vector_dict = {}
 
     def step(self, action):
         self.current_step = self.current_step + 1
@@ -236,20 +235,24 @@ class MinTermSrpobfEnv(gym.Env):
             elif self.function_mode is FunctionMode.LIST:
                 self.function = self.function_list[numpy.random.randint(self.function_list_len)]
 
-            self.function_vector = boolean_function_generator(self.function, self.dimension)
-            self.q_matrix = q_matrix_generator(self.function, self.dimension)
-            self.walsh_spectrum = self.q_matrix.sum(1)
-
-            if self.q_matrix_representation:
-                self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
-            else:
-                self.function_representation = self.walsh_spectrum
+            self.set_function(self.function)
 
         observation = self.create_observation()
         return observation
 
     def close(self):
         pass
+
+    def set_function(self, function):
+        self.function = function % self.total_number_of_functions
+        self.function_vector = boolean_function_generator(self.function, self.dimension)
+        self.q_matrix = q_matrix_generator(self.function, self.dimension)
+        self.walsh_spectrum = self.q_matrix.sum(1)
+
+        if self.q_matrix_representation:
+            self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
+        else:
+            self.function_representation = self.walsh_spectrum
 
     def reward(self, next_k_vector):
         next_number_of_zeros = numpy.count_nonzero(self.calculate_weights(next_k_vector) == 0)
@@ -268,3 +271,6 @@ class MinTermSrpobfEnv(gym.Env):
     def k_vector_gcd(self):
         k_vector_gcd = functools.reduce(numpy.gcd, numpy.array(self.k_vector, dtype=numpy.int))
         self.k_vector /= k_vector_gcd
+
+    def switch_to_single_mode(self):
+        self.function_mode = FunctionMode.SINGLE
