@@ -1,6 +1,6 @@
 import SigmaPiFrameworkPython.monomial_setup as monomial_setup
 from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
-from SigmaPiFrameworkPython.sigma_pi_linear_programming import linear_programming_dimension_result
+from SigmaPiFrameworkPython.sigma_pi_linear_programming import monomial_exclusion_all_dimension
 from SigmaPiFrameworkPython.Utils.q_matrix_utils import q_matrix_to_dimension
 from SigmaPiFrameworkPython.Utils.boolean_function_utils import bf_to_dimension
 
@@ -77,7 +77,7 @@ def create_and_save_dataset_spectrum(spectrum, input_file_name, output_file_name
     all_output = numpy.zeros(combination_size*function_list_size, dtype=numpy.uint8)
 
     for counter in range(function_list_size):
-        input_data, output_data = linear_programming_dimension_result(function_list[counter], dimension)
+        input_data, output_data = monomial_exclusion_all_dimension(function_list[counter], dimension)
         train_ds, output_data = create_dataset_f(spectrum_list[counter], input_data, output_data)
         all_train_ds[counter*combination_size:(counter + 1)*combination_size, :] = train_ds
         all_output[counter*combination_size:(counter + 1)*combination_size] = output_data
@@ -120,7 +120,7 @@ def read_data_set(functions, dimension,
 
 
 def monomial_exclusion_linear_programming_nn_function(function, dimension):
-    input_data, output_data = linear_programming_dimension_result(function, dimension)
+    input_data, output_data = monomial_exclusion_all_dimension(function, dimension)
 
     function = boolean_function_generator(function, dimension)
     train_ds, output_data = create_dataset_f(function, input_data, output_data)
@@ -144,7 +144,7 @@ def monomial_exclusion_linear_programming_nn_function(function, dimension):
 
 def monomial_exclusion_linear_programming_nn(function, dimension):
     q_matrix = monomial_setup.q_matrix_generator(function, dimension)
-    input_data, output_data = linear_programming_dimension_result(function, dimension)
+    input_data, output_data = monomial_exclusion_all_dimension(function, dimension)
     train_ds, output_data = create_dataset(q_matrix, input_data, output_data)
 
     input_layer_size = (2**dimension)**2 + 2**dimension
