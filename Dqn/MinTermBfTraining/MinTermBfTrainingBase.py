@@ -1,6 +1,6 @@
 import numpy
 from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
-from SigmaPiFrameworkPython.monsetup import monsetup, q_matrix_generator
+from SigmaPiFrameworkPython.monomial_setup import monomial_setup, q_matrix_generator
 import signal
 import math
 from multiprocessing import Process, Queue
@@ -29,7 +29,7 @@ class MinTermBfTrainingBase:
             self.training_each_episode = self.dimension
 
         self.function_vector = boolean_function_generator(function, dimension)
-        self.d_matrix = monsetup(dimension)
+        self.d_matrix = monomial_setup(dimension)
         self.q_matrix = q_matrix_generator(function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
 

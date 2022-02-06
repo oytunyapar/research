@@ -5,7 +5,7 @@ import functools
 import numpy
 
 from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
-from SigmaPiFrameworkPython.monsetup import monsetup, q_matrix_generator
+from SigmaPiFrameworkPython.monomial_setup import monomial_setup, q_matrix_generator
 
 from enum import Enum
 
@@ -54,7 +54,7 @@ class MinTermSrpobfEnv(gym.Env):
             raise Exception("Unsupported function type")
 
         self.function_vector = boolean_function_generator(self.function, self.dimension)
-        self.d_matrix = monsetup(dimension)
+        self.d_matrix = monomial_setup(dimension)
         self.q_matrix = q_matrix_generator(self.function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
         self.k_vector_size = self.two_to_power_dimension
@@ -154,8 +154,12 @@ class MinTermSrpobfEnv(gym.Env):
             else:
                 returned_reward = 0
         else:
-            self.cumulative_reward_in_the_episode += reward
-            returned_reward = reward
+            if done:
+                returned_reward = self.max_reward_in_the_episode * self.steps_in_each_epoch
+            else:
+                returned_reward = reward
+
+            self.cumulative_reward_in_the_episode += returned_reward
 
         observation = self.create_observation()
         info = {}

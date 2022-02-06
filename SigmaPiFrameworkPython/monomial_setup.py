@@ -3,7 +3,7 @@ import math
 from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
 
 
-def monsetup(dimension):
+def monomial_setup(dimension):
     two_to_the_power_dimension = 2**dimension
     d_matrix = numpy.zeros((two_to_the_power_dimension, two_to_the_power_dimension), dtype=numpy.float32)
     for power_of_dimension_iterator in range(0, two_to_the_power_dimension):
@@ -31,7 +31,7 @@ def monsetup(dimension):
 
 def q_matrix_generator(function, dimension):
     q_matrix = \
-        numpy.matmul(monsetup(dimension),
+        numpy.matmul(monomial_setup(dimension),
                      numpy.diag(boolean_function_generator(function, dimension)))
 
     return q_matrix

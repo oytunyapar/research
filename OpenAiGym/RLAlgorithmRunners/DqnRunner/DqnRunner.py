@@ -8,8 +8,8 @@ from stable_baselines3 import DQN
 import datetime
 
 policy_kwargs_dictionary = {
-    3: dict(activation_fn=th.nn.ReLU, net_arch=[32, 16]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
+    3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[128, 64]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
@@ -60,7 +60,9 @@ def dqn_runner_equivalent_functions(dimension, output_directory=None):
     functions = BooleanFunctionsEquivalentClasses[dimension]
     env = MinTermSrpobfEnv(functions, dimension, q_matrix_representation, act,
                            no_action_episode_end, episodic_reward=episodic_reward)
-    model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
+    model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension],
+                exploration_fraction=0.9, batch_size=int(env.steps_in_each_epoch*2), verbose=0,
+                learning_rate=0.01)
     model.learn(total_timesteps=number_of_steps_dictionary_all_equivalent_functions[dimension])
 
     test_results = {}
