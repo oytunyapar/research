@@ -57,9 +57,6 @@ class MinTermSrpobfEnv(gym.Env):
         self.d_matrix = monomial_setup(dimension)
         self.q_matrix = q_matrix_generator(self.function, self.dimension)
         self.walsh_spectrum = self.q_matrix.sum(1)
-        self.k_vector_size = self.two_to_power_dimension
-        self.k_vector = numpy.ones(self.two_to_power_dimension)
-        self.k_vector_element_max_value = 2 ** (dimension - 1)
         self.q_matrix_representation = q_matrix_representation
 
         if self.q_matrix_representation:
@@ -69,12 +66,20 @@ class MinTermSrpobfEnv(gym.Env):
             self.function_representation_size = self.two_to_power_dimension
             self.function_representation = self.walsh_spectrum
 
-        self.state_size = self.function_representation_size + self.k_vector_size
-
-        # Example for using image as input:
-        self.observation_space = spaces.Box(-numpy.inf, numpy.inf, [self.state_size])
-
         self.current_step = 0
+
+        self.max_reward = 0
+        self.max_reward_in_the_episode = 0
+        self.max_rewards_in_the_episodes = []
+        self.max_reward_dict = {}
+
+        self.cumulative_reward_in_the_episode = 0
+        self.cumulative_rewards_in_the_episodes = []
+
+        self.function_each_episode = []
+
+        self.episodic_reward = episodic_reward
+
         self.steps_in_each_epoch = ((self.two_to_power_dimension / 2) - 1) * self.two_to_power_dimension
 
         if action_type == ActionType.INCREASE_DECREASE:
@@ -96,19 +101,16 @@ class MinTermSrpobfEnv(gym.Env):
 
         self.no_action_episode_end = no_action_episode_end
 
-        self.episodic_reward = episodic_reward
+        self.k_vector_size = self.two_to_power_dimension
+        self.k_vector = numpy.ones(self.two_to_power_dimension)
+        self.k_vector_element_max_value = 2 ** (dimension - 1)
 
-        self.max_reward_in_the_episode = 0
-        self.max_rewards_in_the_episodes = []
+        self.state_size = self.function_representation_size + self.k_vector_size
 
-        self.cumulative_reward_in_the_episode = 0
-        self.cumulative_rewards_in_the_episodes = []
+        # Example for using image as input:
+        self.observation_space = spaces.Box(-numpy.inf, numpy.inf, [self.state_size])
 
-        self.max_reward = 0
         self.max_reward_k_vector = self.k_vector.copy()
-
-        self.function_each_episode = []
-        self.max_reward_dict = {}
         self.max_reward_k_vector_dict = {}
 
     def step(self, action):
@@ -229,8 +231,6 @@ class MinTermSrpobfEnv(gym.Env):
             self.cumulative_rewards_in_the_episodes.append(self.cumulative_reward_in_the_episode)
             self.cumulative_reward_in_the_episode = 0
 
-        self.k_vector = numpy.ones(self.two_to_power_dimension)
-
         if self.function_mode is not FunctionMode.SINGLE:
             self.function_each_episode.append(self.function)
 
@@ -240,6 +240,8 @@ class MinTermSrpobfEnv(gym.Env):
                 self.function = self.function_list[numpy.random.randint(self.function_list_len)]
 
             self.set_function(self.function)
+
+        self.k_vector = numpy.ones(self.two_to_power_dimension)
 
         observation = self.create_observation()
         return observation
