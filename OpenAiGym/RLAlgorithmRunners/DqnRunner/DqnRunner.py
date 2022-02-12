@@ -1,17 +1,34 @@
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsEquivalentClasses
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
+from OpenAiGym.MinTermLpSrpobfEnv.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
 from OpenAiGym.RLAlgorithmRunners.MinTermSrpobfEnvConstants import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs, dump_json
 from OpenAiGym.RLAlgorithmRunners.Utils.StringHelperFunctions import function_to_hex_string
 import torch as th
 from stable_baselines3 import DQN
 import datetime
+from enum import Enum
 
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     4: dict(activation_fn=th.nn.ReLU, net_arch=[128, 64]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
+
+
+class KeyType(Enum):
+    K_VECTOR = 1
+    MONOMIAL_SET = 2
+
+
+def env_creator(function, dimension, key_type):
+    if key_type == KeyType.K_VECTOR:
+        return MinTermSrpobfEnv(function, dimension, q_matrix_representation,
+                                act, no_action_episode_end, episodic_reward=episodic_reward)
+    elif key_type == KeyType.MONOMIAL_SET:
+        return MinTermLpSrpobfEnv(function, dimension, q_matrix_representation, episodic_reward=episodic_reward)
+    else:
+        raise Exception("Unsupported env type")
 
 
 def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None):
@@ -56,12 +73,11 @@ def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None
     return result_metrics, envs
 
 
-def dqn_runner_equivalent_functions(dimension, output_directory=None):
+def dqn_runner_equivalent_functions(dimension, output_directory=None, key_type=KeyType.K_VECTOR):
     functions = BooleanFunctionsEquivalentClasses[dimension]
-    env = MinTermSrpobfEnv(functions, dimension, q_matrix_representation, act,
-                           no_action_episode_end, episodic_reward=episodic_reward)
+    env = env_creator(functions, dimension, key_type)
     model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension],
-                exploration_fraction=0.9, batch_size=int(env.steps_in_each_epoch*2), verbose=0,
+                exploration_fraction=0.9, batch_size=int(env.steps_in_each_epoch*2), verbose=1,
                 learning_rate=0.01)
     model.learn(total_timesteps=number_of_steps_dictionary_all_equivalent_functions[dimension])
 
@@ -76,10 +92,9 @@ def dqn_runner_equivalent_functions(dimension, output_directory=None):
     return env, model
 
 
-def dqn_runner_all_functions(dimension, output_directory=None):
+def dqn_runner_all_functions(dimension, output_directory=None, key_type=KeyType.K_VECTOR):
     all_functions = 2 ** (2 ** dimension)
-    env = MinTermSrpobfEnv(all_functions, dimension, q_matrix_representation, act,
-                           no_action_episode_end, episodic_reward=episodic_reward)
+    env = env_creator(all_functions, dimension, key_type)
     model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
     model.learn(total_timesteps=number_of_steps_dictionary_all_functions[dimension])
 
@@ -105,7 +120,7 @@ def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model, 
 
         dump_json(env.function_each_episode, function_output_directory, "function_each_episode")
         dump_json(env.max_reward_dict, function_output_directory, "max_reward_dict")
-        dump_json(env.max_reward_k_vector_dict, function_output_directory, "max_reward_k_vector_dict")
+        dump_json(env.max_reward_key_dict, function_output_directory, "max_reward_" + env.key_name + "_dict")
         dump_json(test_results, function_output_directory, "test_results")
         model.save(function_output_directory + "/" + "model")
 

@@ -78,6 +78,8 @@ class MinTermSrpobfEnvBase(gym.Env):
         self.observation_space = spaces.Box(-numpy.inf, numpy.inf, [self.state_size])
 
     def update_episode_reward_statistics(self, reward):
+        self.cumulative_reward_in_the_episode += reward
+
         if reward > self.max_reward_in_the_episode:
             self.max_reward_in_the_episode = reward
 
