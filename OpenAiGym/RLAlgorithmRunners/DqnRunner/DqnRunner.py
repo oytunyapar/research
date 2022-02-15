@@ -11,7 +11,7 @@ from enum import Enum
 
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[128, 64]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
@@ -76,10 +76,18 @@ def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None
 def dqn_runner_equivalent_functions(dimension, output_directory=None, key_type=KeyType.K_VECTOR):
     functions = BooleanFunctionsEquivalentClasses[dimension]
     env = env_creator(functions, dimension, key_type)
-    model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension],
+    '''model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension],
                 exploration_fraction=0.9, batch_size=int(env.steps_in_each_epoch*2), verbose=1,
-                learning_rate=0.01)
-    model.learn(total_timesteps=number_of_steps_dictionary_all_equivalent_functions[dimension])
+                learning_rate=0.01)'''
+    time_steps = number_of_steps_dictionary_all_equivalent_functions[dimension]
+    buffer_factor = 128
+    batch_factor = 32
+    model = DQN('MlpPolicy', env,
+                policy_kwargs=policy_kwargs_dictionary[dimension],
+                verbose=1,
+                batch_size=env.steps_in_each_epoch * batch_factor,
+                buffer_size=int(time_steps/buffer_factor))
+    model.learn(total_timesteps=time_steps)
 
     test_results = {}
 
@@ -134,8 +142,15 @@ def dqn_runner_test_model(env, model, function=None):
     obs = env.reset()
     done = False
 
+    actions = []
+
     while not done:
         action, _state = model.predict(obs, deterministic=True)
+        actions.append(action)
         obs, reward, done, info = env.step(action)
 
-    return env.max_reward_in_the_episode
+    return env.max_reward_in_the_episode, actions
+
+
+def dqn_load_model(output_directory, model_package_name="model.zip"):
+    return DQN.load(output_directory + "/" + model_package_name)
