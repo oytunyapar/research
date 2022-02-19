@@ -11,7 +11,7 @@ from enum import Enum
 
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[128, 64]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
@@ -73,48 +73,65 @@ def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None
     return result_metrics, envs
 
 
-def dqn_runner_equivalent_functions(dimension, output_directory=None, key_type=KeyType.K_VECTOR):
-    functions = BooleanFunctionsEquivalentClasses[dimension]
+def dqn_runner_functions(functions,
+                         dimension,
+                         time_steps,
+                         output_directory=None,
+                         output_folder_prefix=None,
+                         key_type=KeyType.K_VECTOR,
+                         model=None):
     env = env_creator(functions, dimension, key_type)
     '''model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension],
                 exploration_fraction=0.9, batch_size=int(env.steps_in_each_epoch*2), verbose=1,
                 learning_rate=0.01)'''
-    time_steps = number_of_steps_dictionary_all_equivalent_functions[dimension]
+
     buffer_factor = 128
     batch_factor = 32
-    model = DQN('MlpPolicy', env,
-                policy_kwargs=policy_kwargs_dictionary[dimension],
-                verbose=1,
-                batch_size=env.steps_in_each_epoch * batch_factor,
-                buffer_size=int(time_steps/buffer_factor))
+
+    if model is None:
+        model = DQN('MlpPolicy', env,
+                    policy_kwargs=policy_kwargs_dictionary[dimension],
+                    verbose=1,
+                    batch_size=env.steps_in_each_epoch * batch_factor,
+                    buffer_size=int(time_steps/buffer_factor))
+    else:
+        model.set_env(env)
+
     model.learn(total_timesteps=time_steps)
 
     test_results = {}
 
     for function in functions:
-        max_reward = dqn_runner_test_model(env, model, function)
+        max_reward, _ = dqn_runner_test_model(env, model, function)
         test_results[function] = max_reward
 
-    dqn_runner_output_helper(output_directory, "dimension_equivalent_functions", env, model, test_results)
+    dqn_runner_output_helper(output_directory, output_folder_prefix, env, model, test_results)
 
     return env, model
 
 
-def dqn_runner_all_functions(dimension, output_directory=None, key_type=KeyType.K_VECTOR):
+def dqn_runner_equivalent_functions(dimension, output_directory=None, key_type=KeyType.K_VECTOR, model=None):
+    functions = BooleanFunctionsEquivalentClasses[dimension]
+    time_steps = number_of_steps_dictionary_all_equivalent_functions[dimension]
+    return dqn_runner_functions(functions,
+                                dimension,
+                                time_steps,
+                                output_directory,
+                                "dimension_equivalent_functions",
+                                key_type,
+                                model)
+
+
+def dqn_runner_all_functions(dimension, output_directory=None, key_type=KeyType.K_VECTOR, model=None):
     all_functions = 2 ** (2 ** dimension)
-    env = env_creator(all_functions, dimension, key_type)
-    model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension], verbose=1)
-    model.learn(total_timesteps=number_of_steps_dictionary_all_functions[dimension])
-
-    test_results = {}
-
-    for function in range(all_functions):
-        max_reward = dqn_runner_test_model(env, model, function)
-        test_results[function] = max_reward
-
-    dqn_runner_output_helper(output_directory, "dimension_all_functions", env, model, test_results)
-
-    return env, model
+    time_steps = number_of_steps_dictionary_all_functions[dimension]
+    return dqn_runner_functions(all_functions,
+                                dimension,
+                                time_steps,
+                                output_directory,
+                                "dimension_all_functions",
+                                key_type,
+                                model)
 
 
 def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model, test_results):
