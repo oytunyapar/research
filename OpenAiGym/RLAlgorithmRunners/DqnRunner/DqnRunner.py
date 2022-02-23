@@ -107,7 +107,9 @@ def dqn_runner_functions(functions,
         max_reward, _ = dqn_runner_test_model(env, model, function)
         test_results[function] = max_reward
 
-    dqn_runner_output_helper(output_directory, output_folder_prefix, env, model, test_results)
+    performance_results = dqn_runner_model_performance(env, model, list(range(0, env.total_number_of_functions)))
+
+    dqn_runner_output_helper(output_directory, output_folder_prefix, env, model, test_results, performance_results)
 
     return env, model
 
@@ -136,7 +138,7 @@ def dqn_runner_all_functions(dimension, output_directory=None, key_type=KeyType.
                                 model)
 
 
-def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model, test_results):
+def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model, test_results, performance_results):
     if root_directory is not None:
         function_output_directory = root_directory + "/" + str(env.dimension) + \
                                     dump_directory_prefix + "_" + str(datetime.datetime.now())
@@ -149,6 +151,7 @@ def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model, 
         dump_json(env.max_reward_dict, function_output_directory, "max_reward_dict")
         dump_json(env.max_reward_key_dict, function_output_directory, "max_reward_" + env.key_name + "_dict")
         dump_json(test_results, function_output_directory, "test_results")
+        dump_json(performance_results, function_output_directory, "performance_results")
         model.save(function_output_directory + "/" + "model")
 
 
@@ -172,7 +175,7 @@ def dqn_runner_test_model(env, model, function=None):
 
 
 def dqn_runner_model_performance(env, model, functions):
-    functions_unique = numpy.unique(functions)
+    functions_unique = numpy.unique(functions).tolist()
 
     performance = {}
     precision = 2
@@ -187,6 +190,17 @@ def dqn_runner_model_performance(env, model, functions):
         performance[function] = [theoretical_no_zeroes - no_zeroes, round(no_zeroes/theoretical_no_zeroes, precision)]
 
     return performance
+
+
+def dqn_runner_model_overall_performance(performance):
+    no_of_functions = len(performance.keys())
+    sum_of_zero_percentage = 0
+    precision = 2
+
+    for _, value in performance.items():
+        sum_of_zero_percentage += value[1]
+
+    return round(sum_of_zero_percentage/no_of_functions, precision)
 
 
 def dqn_load_model(output_directory, model_package_name="model.zip"):

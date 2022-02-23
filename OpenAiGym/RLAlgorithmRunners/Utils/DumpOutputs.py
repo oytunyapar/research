@@ -26,3 +26,13 @@ def dump_json(data, output_directory, file_name_prefix):
     f = open(json_file_name, "w")
     f.write(json_handle)
     f.close()
+
+
+def load_json(output_directory, file_name_prefix):
+    json_file_name = output_directory + "/" + file_name_prefix + ".json"
+
+    f = open(json_file_name)
+    data = json.load(f)
+    f.close()
+
+    return data
