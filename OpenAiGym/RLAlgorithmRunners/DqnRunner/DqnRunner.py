@@ -1,17 +1,19 @@
-from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsEquivalentClasses
+from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import *
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
 from OpenAiGym.MinTermLpSrpobfEnv.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
 from OpenAiGym.RLAlgorithmRunners.MinTermSrpobfEnvConstants import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs, dump_json
 from OpenAiGym.RLAlgorithmRunners.Utils.StringHelperFunctions import function_to_hex_string
+from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
 import torch as th
 from stable_baselines3 import DQN
 import datetime
+import numpy
 from enum import Enum
 
 policy_kwargs_dictionary = {
-    3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[128, 64]),
+    3: dict(activation_fn=th.nn.ReLU, net_arch=[16, 8]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
@@ -167,6 +169,24 @@ def dqn_runner_test_model(env, model, function=None):
         obs, reward, done, info = env.step(action)
 
     return env.max_reward_in_the_episode, actions
+
+
+def dqn_runner_model_performance(env, model, functions):
+    functions_unique = numpy.unique(functions)
+
+    performance = {}
+    precision = 2
+    for function in functions_unique:
+        reward, _ = dqn_runner_test_model(env, model, function)
+        no_zeroes = env.reward_to_number_of_zeros(reward)
+        dimension = env.dimension
+
+        theoretical_no_zeroes = \
+            BooleanFunctionsWalshSpectrumNoZeroes[dimension][str(walsh_spectrum_compact(function, dimension))]
+
+        performance[function] = [theoretical_no_zeroes - no_zeroes, round(no_zeroes/theoretical_no_zeroes, precision)]
+
+    return performance
 
 
 def dqn_load_model(output_directory, model_package_name="model.zip"):

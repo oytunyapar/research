@@ -2,7 +2,7 @@ import SigmaPiFrameworkPython.monomial_setup as monomial_setup
 from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
 from SigmaPiFrameworkPython.sigma_pi_linear_programming import monomial_exclusion_all_dimension
 from SigmaPiFrameworkPython.Utils.q_matrix_utils import q_matrix_to_dimension
-from SigmaPiFrameworkPython.Utils.boolean_function_utils import bf_to_dimension
+from SigmaPiFrameworkPython.Utils.boolean_function_utils import bf_to_dimension, get_functions_from_walsh_spectrum
 
 import os
 import pandas
@@ -67,7 +67,7 @@ def create_dataset_f(function_vector, input_data, output_data):
 
 
 def create_and_save_dataset_spectrum(spectrum, input_file_name, output_file_name):
-    function_list, spectrum_list = monomial_setup.get_functions_from_spectrum(spectrum)
+    function_list, spectrum_list = get_functions_from_walsh_spectrum(spectrum)
 
     dimension = int(math.log2(numpy.size(spectrum)))
 

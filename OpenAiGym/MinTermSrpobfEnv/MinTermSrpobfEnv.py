@@ -11,10 +11,6 @@ class ActionType(Enum):
     INCREASE_DECREASE = 2
 
 
-def reward_to_number_of_zeros(reward):
-    return int(numpy.sqrt(reward))
-
-
 class MinTermSrpobfEnv(MinTermSrpobfEnvBase):
     metadata = {'render.modes': ['human']}
 
@@ -146,6 +142,9 @@ class MinTermSrpobfEnv(MinTermSrpobfEnvBase):
         next_number_of_zeros = numpy.count_nonzero(self.calculate_weights(next_k_vector) == 0)
         reward = next_number_of_zeros**2
         return reward
+
+    def reward_to_number_of_zeros(self, reward):
+        return int(numpy.sqrt(reward))
 
     def calculate_weights(self, k_vector):
         return numpy.matmul(self.q_matrix, k_vector)

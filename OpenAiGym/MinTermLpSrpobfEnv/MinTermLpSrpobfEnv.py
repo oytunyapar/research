@@ -57,4 +57,5 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         else:
             return 0
 
-
+    def reward_to_number_of_zeros(self, reward):
+        return int(numpy.sqrt(reward))
