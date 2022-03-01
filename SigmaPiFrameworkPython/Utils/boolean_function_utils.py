@@ -55,3 +55,10 @@ def get_functions_from_walsh_spectrum(spectrum):
             spectrum_list.append(function_spectrum_raw)
 
     return numpy.array(function_list), numpy.array(spectrum_list)
+
+
+def get_complement_function_list(dimension, functions):
+    number_of_functions = 2**(2**dimension)
+    all_functions = list(range(number_of_functions))
+    unique_functions = (numpy.unique(functions) % number_of_functions).tolist()
+    return list(set(all_functions) - set(unique_functions))

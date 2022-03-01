@@ -12,7 +12,7 @@ import numpy
 from enum import Enum
 
 policy_kwargs_dictionary = {
-    3: dict(activation_fn=th.nn.ReLU, net_arch=[16, 8]),
+    3: dict(activation_fn=th.nn.ReLU, net_arch=[32, 16]),
     4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
@@ -101,15 +101,11 @@ def dqn_runner_functions(functions,
 
     model.learn(total_timesteps=time_steps)
 
-    test_results = {}
+    training_data_test_results = dqn_runner_model_performance(env, model, functions)
+    performance_results = dqn_runner_model_performance(env, model, get_complement_function_list(dimension, functions))
 
-    for function in functions:
-        max_reward, _ = dqn_runner_test_model(env, model, function)
-        test_results[function] = max_reward
-
-    performance_results = dqn_runner_model_performance(env, model, list(range(0, env.total_number_of_functions)))
-
-    dqn_runner_output_helper(output_directory, output_folder_prefix, env, model, test_results, performance_results)
+    dqn_runner_output_helper(output_directory, output_folder_prefix, env, model,
+                             training_data_test_results, performance_results)
 
     return env, model
 
@@ -138,7 +134,8 @@ def dqn_runner_all_functions(dimension, output_directory=None, key_type=KeyType.
                                 model)
 
 
-def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model, test_results, performance_results):
+def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model,
+                             training_data_test_results, performance_results):
     if root_directory is not None:
         function_output_directory = root_directory + "/" + str(env.dimension) + \
                                     dump_directory_prefix + "_" + str(datetime.datetime.now())
@@ -150,7 +147,7 @@ def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model, 
         dump_json(env.function_each_episode, function_output_directory, "function_each_episode")
         dump_json(env.max_reward_dict, function_output_directory, "max_reward_dict")
         dump_json(env.max_reward_key_dict, function_output_directory, "max_reward_" + env.key_name + "_dict")
-        dump_json(test_results, function_output_directory, "test_results")
+        dump_json(training_data_test_results, function_output_directory, "training_data_test_results")
         dump_json(performance_results, function_output_directory, "performance_results")
         model.save(function_output_directory + "/" + "model")
 
@@ -194,13 +191,16 @@ def dqn_runner_model_performance(env, model, functions):
 
 def dqn_runner_model_overall_performance(performance):
     no_of_functions = len(performance.keys())
-    sum_of_zero_percentage = 0
-    precision = 2
+    precision = 4
+
+    percentages = [None] * no_of_functions
+    index_counter = 0
 
     for _, value in performance.items():
-        sum_of_zero_percentage += value[1]
+        percentages[index_counter] = value[1]
+        index_counter += 1
 
-    return round(sum_of_zero_percentage/no_of_functions, precision)
+    return round(numpy.mean(percentages), precision), round(numpy.std(percentages), precision)
 
 
 def dqn_load_model(output_directory, model_package_name="model.zip"):
