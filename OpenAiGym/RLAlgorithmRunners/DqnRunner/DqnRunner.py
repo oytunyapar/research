@@ -1,36 +1,19 @@
-from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import *
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
-from OpenAiGym.MinTermLpSrpobfEnv.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
 from OpenAiGym.RLAlgorithmRunners.MinTermSrpobfEnvConstants import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs, dump_json
-from OpenAiGym.RLAlgorithmRunners.Utils.StringHelperFunctions import function_to_hex_string
+from OpenAiGym.RLAlgorithmRunners.Utils.EnvironmentHelperFunctions import env_creator, KeyType
+from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
 import torch as th
 from stable_baselines3 import DQN
 import datetime
 import numpy
-from enum import Enum
 
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[32, 16]),
     4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
-
-
-class KeyType(Enum):
-    K_VECTOR = 1
-    MONOMIAL_SET = 2
-
-
-def env_creator(function, dimension, key_type):
-    if key_type == KeyType.K_VECTOR:
-        return MinTermSrpobfEnv(function, dimension, q_matrix_representation,
-                                act, no_action_episode_end, episodic_reward=episodic_reward)
-    elif key_type == KeyType.MONOMIAL_SET:
-        return MinTermLpSrpobfEnv(function, dimension, q_matrix_representation, episodic_reward=episodic_reward)
-    else:
-        raise Exception("Unsupported env type")
 
 
 def dqn_runner(dimension, output_directory=None, function_begin_end_indexes=None):
@@ -173,34 +156,13 @@ def dqn_runner_test_model(env, model, function=None):
 
 def dqn_runner_model_performance(env, model, functions):
     functions_unique = numpy.unique(functions).tolist()
-
     performance = {}
-    precision = 2
+
     for function in functions_unique:
         reward, _ = dqn_runner_test_model(env, model, function)
-        no_zeroes = env.reward_to_number_of_zeros(reward)
-        dimension = env.dimension
-
-        theoretical_no_zeroes = \
-            BooleanFunctionsWalshSpectrumNoZeroes[dimension][str(walsh_spectrum_compact(function, dimension))]
-
-        performance[function] = [theoretical_no_zeroes - no_zeroes, round(no_zeroes/theoretical_no_zeroes, precision)]
+        performance[function] = reward_performance(env, reward)
 
     return performance
-
-
-def dqn_runner_model_overall_performance(performance):
-    no_of_functions = len(performance.keys())
-    precision = 4
-
-    percentages = [None] * no_of_functions
-    index_counter = 0
-
-    for _, value in performance.items():
-        percentages[index_counter] = value[1]
-        index_counter += 1
-
-    return round(numpy.mean(percentages), precision), round(numpy.std(percentages), precision)
 
 
 def dqn_load_model(output_directory, model_package_name="model.zip"):

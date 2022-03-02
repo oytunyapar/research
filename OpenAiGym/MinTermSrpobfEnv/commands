@@ -18,7 +18,7 @@ from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
 dimension = 3
 two_to_power_dimension = 2**dimension
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
-time_steps=20000000
+time_steps=200
 root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/" + str(dimension) + "dim/DQN/"
 output_prefix="dimension_functions_random_range_0_to_256_size_192"
 env,model= dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET)
