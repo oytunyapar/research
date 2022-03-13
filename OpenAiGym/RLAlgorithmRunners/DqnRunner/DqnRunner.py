@@ -10,8 +10,8 @@ import datetime
 import numpy
 
 policy_kwargs_dictionary = {
-    3: dict(activation_fn=th.nn.ReLU, net_arch=[32, 16]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
+    3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 

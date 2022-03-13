@@ -15,23 +15,41 @@ env,model= dqn_runner_equivalent_functions(4,"/home/oytun/PycharmProjects/resear
 
 import random
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
-dimension = 3
+dimension = 4
 two_to_power_dimension = 2**dimension
-functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
-time_steps=200
+time_steps=3000000
 root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/" + str(dimension) + "dim/DQN/"
-output_prefix="dimension_functions_random_range_0_to_256_size_192"
+output_prefix="dimension_functions_random_range_0_to_65536_size_49152"
+functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
 env,model= dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET)
 
+from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
+dimension = 3
+two_to_power_dimension = 2**dimension
+time_steps=12000000
+output_prefix="dimension_all_functions"
+root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/" + str(dimension) + "dim/RandomAction/"
+functions = list(range(0, 2**two_to_power_dimension))
+env = random_action_runner(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET)
 
-env,model= dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET,model)
+from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
+dimension = 4
+n=20
+output_prefix="dimension_all_functions"
+root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/" + str(dimension) + "dim/RandomAction/"
+env = random_action_runner_n_times(dimension, n, root_dir, output_prefix, KeyType.MONOMIAL_SET)
+
+env,model = dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET,model)
 
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
+from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 
-dimension = 4
-dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/DQN/4dimension_functions_random_range_0_to_65536_size_49152_2022-02-27 19:12:41.178066"
+dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/3dim/RandomAction/3dimension_all_functions_2022-03-13 21:18:01.589770"
 perf = load_json(dir,"performance_results")
-mean,dev = dqn_runner_model_overall_performance(perf)
+mean_p,dev_p = runner_overall_performance(perf)
+
+train = load_json(dir,"training_data_test_results")
+mean_t,dev_t = runner_overall_performance(train)
 
 functions = load_json(dir,"function_each_episode")
 functions = numpy.unique(functions).tolist()

@@ -58,8 +58,8 @@ class MinTermSrpobfEnvBase(gym.Env):
 
         self.current_step = 0
 
-        self.max_reward = 0
-        self.max_reward_in_the_episode = 0
+        self.max_reward = -1
+        self.max_reward_in_the_episode = -1
         self.max_rewards_in_the_episodes = []
         self.max_reward_dict = {}
 
@@ -123,7 +123,7 @@ class MinTermSrpobfEnvBase(gym.Env):
         self.current_step = 0
 
         self.max_rewards_in_the_episodes.append(self.max_reward_in_the_episode)
-        self.max_reward_in_the_episode = 0
+        self.max_reward_in_the_episode = -1
 
         if not self.episodic_reward:
             self.cumulative_rewards_in_the_episodes.append(self.cumulative_reward_in_the_episode)

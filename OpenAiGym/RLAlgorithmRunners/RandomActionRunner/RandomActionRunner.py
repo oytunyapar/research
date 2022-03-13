@@ -6,20 +6,46 @@ import datetime
 
 def random_action_runner(functions,
                          dimension,
-                         time_steps,
+                         epochs,
+                         env=None,
                          output_directory=None,
                          output_folder_prefix=None,
-                         key_type=KeyType.K_VECTOR):
-    env = env_creator(functions, dimension, key_type)
-    print_constant = 10000
+                         key_type=KeyType.K_VECTOR,
+                         print_epochs=False):
+    if env is None:
+        env = env_creator(functions, dimension, key_type)
 
-    for step in range(time_steps):
-        observation, returned_reward, done, info = env.step(env.action_space.sample())
-        if done:
-            env.reset()
+    print_constant = 100
 
-        if step % print_constant == 0:
-            print("Step " + str(step) + "/" + str(time_steps))
+    for epoch in range(epochs):
+        done = False
+        while not done:
+            _, _, done, _ = env.step(env.action_space.sample())
+        
+        env.reset()
+
+        if epoch % print_constant == 0 and print_epochs:
+            print("Epoch:" + str(epoch + 1) + "/" + str(epochs))
+
+    random_action_runner_output_helper(output_directory, output_folder_prefix, env)
+
+    return env
+
+
+def random_action_runner_n_times(dimension,
+                                 n_times,
+                                 output_directory=None,
+                                 output_folder_prefix=None,
+                                 key_type=KeyType.K_VECTOR
+                                 ):
+    all_functions = 2**(2**dimension)
+    env = env_creator([0], dimension, key_type)
+
+    for times in range(n_times):
+        for function in range(all_functions):
+            env.set_function(function)
+            env = random_action_runner(function, dimension, 1, env=env, key_type=key_type)
+        print("Times:" + str(times + 1) + "/" + str(n_times))
 
     random_action_runner_output_helper(output_directory, output_folder_prefix, env)
 
