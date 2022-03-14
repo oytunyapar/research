@@ -26,20 +26,10 @@ def walsh_spectrum_compact(function, dimension):
     return dict(zip(ws_unique, counts))
 
 
-def get_functions_from_walsh_spectrum(spectrum):
-    spectrum_size = numpy.size(spectrum)
-
-    dimension = math.log2(spectrum_size)
-    if not dimension.is_integer():
-        print("Sizes of absolute spectrum is not power of two")
-        return
-
-    dimension = int(dimension)
+def get_functions_from_walsh_spectrum(equivalence_class, dimension):
     number_of_functions = 2**(2**dimension)
 
-    spectrum = spectrum.flatten()
-    spectrum = numpy.abs(spectrum)
-    spectrum = numpy.sort(spectrum)
+    spectrum = walsh_spectrum_compact(equivalence_class, dimension)
 
     function_list = []
     spectrum_list = []
@@ -47,10 +37,9 @@ def get_functions_from_walsh_spectrum(spectrum):
     for function_iterator in range(number_of_functions):
         q_matrix = q_matrix_generator(function_iterator, dimension)
         function_spectrum_raw = numpy.sum(q_matrix, axis=1)
-        function_spectrum = numpy.abs(function_spectrum_raw)
-        function_spectrum = numpy.sort(function_spectrum)
+        function_spectrum = walsh_spectrum_compact(function_iterator, dimension)
 
-        if (function_spectrum == spectrum).all():
+        if function_spectrum == spectrum:
             function_list.append(function_iterator)
             spectrum_list.append(function_spectrum_raw)
 

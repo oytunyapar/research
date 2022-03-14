@@ -66,10 +66,8 @@ def create_dataset_f(function_vector, input_data, output_data):
     return train_ds, output_data
 
 
-def create_and_save_dataset_spectrum(spectrum, input_file_name, output_file_name):
-    function_list, spectrum_list = get_functions_from_walsh_spectrum(spectrum)
-
-    dimension = int(math.log2(numpy.size(spectrum)))
+def create_and_save_dataset_spectrum(equivalence_class, dimension, input_file_name, output_file_name):
+    function_list, spectrum_list = get_functions_from_walsh_spectrum(equivalence_class)
 
     function_list_size = len(function_list)
     combination_size = 2**(2**dimension)

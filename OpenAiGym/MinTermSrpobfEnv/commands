@@ -15,7 +15,7 @@ env,model= dqn_runner_equivalent_functions(4,"/home/oytun/PycharmProjects/resear
 
 import random
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
-dimension = 4
+dimension = 3
 two_to_power_dimension = 2**dimension
 time_steps=3000000
 root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/" + str(dimension) + "dim/DQN/"
@@ -44,7 +44,7 @@ env,model = dqn_runner_functions(functions, dimension, time_steps, root_dir, out
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 
-dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/3dim/RandomAction/3dimension_all_functions_2022-03-13 21:18:01.589770"
+dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/4dimension_all_functions_2022-03-14 03:08:51.547127"
 perf = load_json(dir,"performance_results")
 mean_p,dev_p = runner_overall_performance(perf)
 
@@ -68,3 +68,5 @@ three_reward = random_k_vector_runner(3)
 four_reward = random_k_vector_runner(4)
 
 dqn_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/Visuals/5dim/DQN",[12,13])
+
+from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
