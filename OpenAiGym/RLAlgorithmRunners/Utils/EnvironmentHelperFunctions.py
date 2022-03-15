@@ -18,3 +18,12 @@ def env_creator(function, dimension, key_type):
         return MinTermLpSrpobfEnv(function, dimension, q_matrix_representation, episodic_reward=episodic_reward)
     else:
         raise Exception("Unsupported env type")
+
+
+def get_env_name(key_type):
+    if key_type == KeyType.K_VECTOR:
+        return "MinTermSrpobfEnv"
+    elif key_type == KeyType.MONOMIAL_SET:
+        return "MinTermLpSrpobfEnv"
+    else:
+        raise Exception("Unsupported env type")

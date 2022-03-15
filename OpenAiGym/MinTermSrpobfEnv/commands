@@ -33,18 +33,29 @@ functions = list(range(0, 2**two_to_power_dimension))
 env = random_action_runner(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET)
 
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
-dimension = 4
-n=20
-output_prefix="dimension_all_functions"
-root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/" + str(dimension) + "dim/RandomAction/"
-env = random_action_runner_n_times(dimension, n, root_dir, output_prefix, KeyType.MONOMIAL_SET)
+dimension = 3
+n=1
+output_prefix="all_functions"
+root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
+env = random_action_runner_n_times(list(range(2**(2**dimension))), dimension, n, root_dir, output_prefix, KeyType.MONOMIAL_SET)
+
+
+from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
+import random
+monte_carlo_times=10
+n_times=1
+dimension = 3
+two_to_power_dimension = 2**dimension
+functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
+output_folder_label="function_75_percent"
+dir = random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dimension, output_folder_label, KeyType.MONOMIAL_SET)
 
 env,model = dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET,model)
 
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 
-dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/4dimension_all_functions_2022-03-14 03:08:51.547127"
+dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/3dim/DQN/3dimension_functions_except_eq_43_2022-03-14 22:54:53.827981"
 perf = load_json(dir,"performance_results")
 mean_p,dev_p = runner_overall_performance(perf)
 
