@@ -43,8 +43,8 @@ env = random_action_runner_n_times(list(range(2**(2**dimension))), dimension, n,
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 import random
 monte_carlo_times=10
-n_times=1
-dimension = 3
+n_times=10
+dimension = 4
 two_to_power_dimension = 2**dimension
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
 output_folder_label="function_75_percent"
@@ -67,17 +67,5 @@ functions = numpy.unique(functions).tolist()
 model=dqn_load_model(dir)
 env = env_creator(functions, dimension, KeyType.MONOMIAL_SET)
 
-
-from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import random_action_runner
-random_action_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/5dim/RandomAction/2")
-three_reward = random_action_runner(3)
-four_reward = random_action_runner(4)
-
-from OpenAiGym.RLAlgorithmRunners.RandomKVectorRunner.RandomKVectorRunner import random_k_vector_runner
-random_k_vector_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/5dim/RandomKVector")
-three_reward = random_k_vector_runner(3)
-four_reward = random_k_vector_runner(4)
-
-dqn_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/Visuals/5dim/DQN",[12,13])
 
 from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
