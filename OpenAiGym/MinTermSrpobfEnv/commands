@@ -17,7 +17,7 @@ import random
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
 dimension = 3
 two_to_power_dimension = 2**dimension
-time_steps=3000000
+time_steps=300
 root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/" + str(dimension) + "dim/DQN/"
 output_prefix="dimension_functions_random_range_0_to_65536_size_49152"
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
@@ -43,8 +43,8 @@ env = random_action_runner_n_times(list(range(2**(2**dimension))), dimension, n,
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 import random
 monte_carlo_times=10
-n_times=10
-dimension = 4
+n_times=1
+dimension = 3
 two_to_power_dimension = 2**dimension
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
 output_folder_label="function_75_percent"

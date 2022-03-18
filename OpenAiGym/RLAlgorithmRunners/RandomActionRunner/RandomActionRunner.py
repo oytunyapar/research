@@ -62,6 +62,9 @@ def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dime
     if len(complement_functions) > 0:
         test_mode = True
 
+    parameters_dict = {"monte_carlo_times": monte_carlo_times, "n_times": n_times, "dimension": dimension,
+                       "functions": functions}
+
     mean_variance_dict = {"perf_mean_train": 0, "perf_deviance_train": 0, "perf_mean_test": 0, "perf_deviance_test": 0,
                           "perf_mean": 0, "perf_deviance": 0}
 
@@ -97,6 +100,7 @@ def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dime
 
     mean_variance_dict.update((key, value / monte_carlo_times) for key, value in mean_variance_dict.items())
     dump_json(mean_variance_dict, root_directory, "mean_variance")
+    dump_json(parameters_dict, root_directory, "parameters")
     return root_directory
 
 

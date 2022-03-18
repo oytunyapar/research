@@ -65,6 +65,11 @@ def dqn_runner_functions(functions,
                          output_folder_prefix=None,
                          key_type=KeyType.K_VECTOR,
                          model=None):
+
+    parameters_dict = {"time_steps": time_steps,
+                       "net_arch": policy_kwargs_dictionary[dimension]["net_arch"],
+                       "dimension": dimension, "functions": functions}
+
     env = env_creator(functions, dimension, key_type)
     '''model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension],
                 exploration_fraction=0.9, batch_size=int(env.steps_in_each_epoch*2), verbose=1,
@@ -88,7 +93,7 @@ def dqn_runner_functions(functions,
     performance_results = dqn_runner_model_performance(env, model, get_complement_function_list(dimension, functions))
 
     dqn_runner_output_helper(output_directory, output_folder_prefix, env, model,
-                             training_data_test_results, performance_results)
+                             training_data_test_results, performance_results, parameters_dict)
 
     return env, model
 
@@ -118,7 +123,7 @@ def dqn_runner_all_functions(dimension, output_directory=None, key_type=KeyType.
 
 
 def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model,
-                             training_data_test_results, performance_results):
+                             training_data_test_results, performance_results, parameters_dict):
     if root_directory is not None:
         function_output_directory = root_directory + "/" + str(env.dimension) + \
                                     dump_directory_prefix + "_" + str(datetime.datetime.now())
@@ -132,6 +137,7 @@ def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model,
         dump_json(env.max_reward_key_dict, function_output_directory, "max_reward_" + env.key_name + "_dict")
         dump_json(training_data_test_results, function_output_directory, "training_data_test_results")
         dump_json(performance_results, function_output_directory, "performance_results")
+        dump_json(parameters_dict, function_output_directory, "parameters")
         model.save(function_output_directory + "/" + "model")
 
 
