@@ -1,12 +1,11 @@
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
 from OpenAiGym.RLAlgorithmRunners.MinTermSrpobfEnvConstants import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs, dump_json
-from OpenAiGym.RLAlgorithmRunners.Utils.EnvironmentHelperFunctions import env_creator, KeyType
+from OpenAiGym.RLAlgorithmRunners.Utils.EnvironmentHelperFunctions import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
 import torch as th
 from stable_baselines3 import DQN
-import datetime
 import numpy
 
 policy_kwargs_dictionary = {
@@ -89,11 +88,11 @@ def dqn_runner_functions(functions,
 
     model.learn(total_timesteps=time_steps)
 
-    training_data_test_results = dqn_runner_model_performance(env, model, functions)
-    performance_results = dqn_runner_model_performance(env, model, get_complement_function_list(dimension, functions))
+    training_data_performance_results = dqn_runner_model_performance(env, model, functions)
+    test_data_performance_results = dqn_runner_model_performance(env, model, get_complement_function_list(dimension, functions))
 
     dqn_runner_output_helper(output_directory, output_folder_prefix, env, model,
-                             training_data_test_results, performance_results, parameters_dict)
+                             training_data_performance_results, test_data_performance_results, parameters_dict)
 
     return env, model
 
@@ -122,23 +121,29 @@ def dqn_runner_all_functions(dimension, output_directory=None, key_type=KeyType.
                                 model)
 
 
-def dqn_runner_output_helper(root_directory, dump_directory_prefix, env, model,
-                             training_data_test_results, performance_results, parameters_dict):
-    if root_directory is not None:
-        function_output_directory = root_directory + "/" + str(env.dimension) + \
-                                    dump_directory_prefix + "_" + str(datetime.datetime.now())
-
-        dump_outputs(env.max_rewards_in_the_episodes, function_output_directory, "max_rewards_in_the_episodes")
-        dump_outputs(env.cumulative_rewards_in_the_episodes, function_output_directory,
+def dqn_runner_output_helper(root_directory, output_folder_label, env, model,
+                             training_data_performance_results, test_data_performance_results, parameters_dict):
+    output_directory = get_test_output_directory(root_directory, output_folder_label, "DQN", env)
+    if output_directory is not None:
+        dump_outputs(env.max_rewards_in_the_episodes, output_directory, "max_rewards_in_the_episodes")
+        dump_outputs(env.cumulative_rewards_in_the_episodes, output_directory,
                      "cumulative_rewards_in_the_episodes")
 
-        dump_json(env.function_each_episode, function_output_directory, "function_each_episode")
-        dump_json(env.max_reward_dict, function_output_directory, "max_reward_dict")
-        dump_json(env.max_reward_key_dict, function_output_directory, "max_reward_" + env.key_name + "_dict")
-        dump_json(training_data_test_results, function_output_directory, "training_data_test_results")
-        dump_json(performance_results, function_output_directory, "performance_results")
-        dump_json(parameters_dict, function_output_directory, "parameters")
-        model.save(function_output_directory + "/" + "model")
+        dump_json(env.function_each_episode, output_directory, "function_each_episode")
+        dump_json(env.max_reward_dict, output_directory, "max_reward_dict")
+        dump_json(env.max_reward_key_dict, output_directory, "max_reward_" + env.key_name + "_dict")
+        dump_json(training_data_performance_results, output_directory, "training_data_test_results")
+        dump_json(test_data_performance_results, output_directory, "performance_results")
+
+        perf_mean_train, perf_deviance_train = runner_overall_performance(training_data_performance_results)
+        perf_mean_test, perf_deviance_test = runner_overall_performance(test_data_performance_results)
+        performance_mean_variance = {"perf_mean_train": perf_mean_train, "perf_deviance_train": perf_deviance_train,
+                                     "perf_mean_test": perf_mean_test, "perf_deviance_test": perf_deviance_test}
+
+        dump_json(performance_mean_variance, output_directory, "performance_mean_variance")
+
+        dump_json(parameters_dict, output_directory, "parameters")
+        model.save(output_directory + "/" + "model")
 
 
 def dqn_runner_test_model(env, model, function=None):

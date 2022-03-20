@@ -1,4 +1,5 @@
 from enum import Enum
+import datetime
 
 from OpenAiGym.MinTermLpSrpobfEnv.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
@@ -20,10 +21,19 @@ def env_creator(function, dimension, key_type):
         raise Exception("Unsupported env type")
 
 
-def get_env_name(key_type):
+def get_env_name_from_key_type(key_type):
     if key_type == KeyType.K_VECTOR:
         return "MinTermSrpobfEnv"
     elif key_type == KeyType.MONOMIAL_SET:
         return "MinTermLpSrpobfEnv"
     else:
         raise Exception("Unsupported env type")
+
+
+def get_test_output_directory(root_directory, output_folder_label, algorithm, env):
+    output_directory = None
+    if root_directory is not None and output_folder_label is not None:
+        output_directory = root_directory + "/" + \
+                           type(env).__name__ + "/Data/" + str(env.dimension) + "dim/" + algorithm + "/" + \
+                           str(datetime.datetime.now()) + "_" + output_folder_label
+    return output_directory

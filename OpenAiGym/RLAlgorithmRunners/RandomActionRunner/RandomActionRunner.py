@@ -1,5 +1,5 @@
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
-from OpenAiGym.RLAlgorithmRunners.Utils.EnvironmentHelperFunctions import env_creator, KeyType, get_env_name
+from OpenAiGym.RLAlgorithmRunners.Utils.EnvironmentHelperFunctions import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
 import datetime
@@ -65,11 +65,11 @@ def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dime
     parameters_dict = {"monte_carlo_times": monte_carlo_times, "n_times": n_times, "dimension": dimension,
                        "functions": functions}
 
-    mean_variance_dict = {"perf_mean_train": 0, "perf_deviance_train": 0, "perf_mean_test": 0, "perf_deviance_test": 0,
+    performance_mean_variance = {"perf_mean_train": 0, "perf_deviance_train": 0, "perf_mean_test": 0, "perf_deviance_test": 0,
                           "perf_mean": 0, "perf_deviance": 0}
 
     root_directory = str(Path.home()) + "/PycharmProjects/research/OpenAiGym/" + \
-                     get_env_name(key_type) + "/Data/" + str(dimension) + "dim/RandomAction/" + \
+                     get_env_name_from_key_type(key_type) + "/Data/" + str(dimension) + "dim/RandomAction/" + \
                      str(datetime.datetime.now()) + "_" + "Monte_Carlo"
 
     if output_folder_label is not None:
@@ -86,20 +86,21 @@ def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dime
             perf_mean_train, perf_deviance_train = runner_overall_performance(perf_train)
             perf_mean_test, perf_deviance_test = runner_overall_performance(perf_test)
 
-            mean_variance_dict["perf_mean_train"] += perf_mean_train
-            mean_variance_dict["perf_deviance_train"] += perf_deviance_train
-            mean_variance_dict["perf_mean_test"] += perf_mean_test
-            mean_variance_dict["perf_deviance_test"] += perf_deviance_test
+            performance_mean_variance["perf_mean_train"] += perf_mean_train
+            performance_mean_variance["perf_deviance_train"] += perf_deviance_train
+            performance_mean_variance["perf_mean_test"] += perf_mean_test
+            performance_mean_variance["perf_deviance_test"] += perf_deviance_test
         else:
             _, perf = random_action_monte_carlo_runner_impl(functions, dimension, n_times, key_type, output_directory)
             perf_mean, perf_deviance = runner_overall_performance(perf)
-            mean_variance_dict["perf_mean"] += perf_mean
-            mean_variance_dict["perf_deviance"] += perf_deviance
+            performance_mean_variance["perf_mean"] += perf_mean
+            performance_mean_variance["perf_deviance"] += perf_deviance
 
         print("Monte Carlo times:" + str(times + 1) + "/" + str(monte_carlo_times))
 
-    mean_variance_dict.update((key, value / monte_carlo_times) for key, value in mean_variance_dict.items())
-    dump_json(mean_variance_dict, root_directory, "mean_variance")
+    performance_mean_variance.update((key, value / monte_carlo_times)
+                                     for key, value in performance_mean_variance.items())
+    dump_json(performance_mean_variance, root_directory, "performance_mean_variance")
     dump_json(parameters_dict, root_directory, "parameters")
     return root_directory
 
@@ -111,10 +112,8 @@ def random_action_monte_carlo_runner_impl(functions, dimension, n_times, key_typ
 
 
 def random_action_runner_output_helper(root_directory, output_folder_label, env):
-    if root_directory is not None and output_folder_label is not None:
-        output_directory = root_directory + "/" + \
-                           type(env).__name__ + "/Data/" + str(env.dimension) + "dim/RandomAction/" + \
-                           str(datetime.datetime.now()) + "_" + output_folder_label
+    output_directory = get_test_output_directory(root_directory, output_folder_label, "RandomAction", env)
+    if output_directory is not None:
         random_action_runner_output(output_directory, env)
 
 

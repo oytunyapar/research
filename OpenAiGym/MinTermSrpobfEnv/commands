@@ -1,48 +1,18 @@
-from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv, ActionType
 from stable_baselines3 import PPO, A2C, DQN, DDPG
-
-from OpenAiGym.MinTermLpSrpobfEnv.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
-
-
-from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import dqn_runner
-metrics, envs=dqn_runner(5,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/5dim/DQN/2",[42,48])
-
-from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
-env4, model4 = dqn_runner_equivalent_functions(4,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/4dim/DQN/")
-env = dqn_runner_equivalent_functions(3,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermSrpobfEnv/Data/3dim/DQN/")
-
-env,model= dqn_runner_equivalent_functions(4,"/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/DQN/", KeyType.MONOMIAL_SET)
 
 import random
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
 dimension = 3
 two_to_power_dimension = 2**dimension
 time_steps=300
-root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/" + str(dimension) + "dim/DQN/"
-output_prefix="dimension_functions_random_range_0_to_65536_size_49152"
+root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
+output_prefix="functions_range_0_to_65536_size_49152"
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
 env,model= dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET)
 
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
-dimension = 3
-two_to_power_dimension = 2**dimension
-time_steps=12000000
-output_prefix="dimension_all_functions"
-root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/" + str(dimension) + "dim/RandomAction/"
-functions = list(range(0, 2**two_to_power_dimension))
-env = random_action_runner(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET)
-
-from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
-dimension = 3
-n=1
-output_prefix="all_functions"
-root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
-env = random_action_runner_n_times(list(range(2**(2**dimension))), dimension, n, root_dir, output_prefix, KeyType.MONOMIAL_SET)
-
-
-from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 import random
-monte_carlo_times=10
+monte_carlo_times=3
 n_times=1
 dimension = 3
 two_to_power_dimension = 2**dimension
@@ -54,8 +24,8 @@ env,model = dqn_runner_functions(functions, dimension, time_steps, root_dir, out
 
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
+dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/2022-03-18 18:16:29.927266_Monte_Carlo_function_75_percent/9/training"
 
-dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/3dim/DQN/3dimension_functions_except_eq_43_2022-03-14 22:54:53.827981"
 perf = load_json(dir,"performance_results")
 mean_p,dev_p = runner_overall_performance(perf)
 
