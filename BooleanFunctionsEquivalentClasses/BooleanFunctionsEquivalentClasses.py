@@ -14,8 +14,11 @@ BooleanFunctionsEquivalentClasses =\
 
 BooleanFunctionsEquivalentClassesWalshSpectrum =\
     {
-        2: {0x1: {4: 1, 0: 3}, 0x2: {2: 4}},
-        3: {0xaa: {8: 1, 0: 7}, 0xab: {6: 1, 2: 7}, 0xac: {4: 4, 0: 4}},
+        2: {0x1: {4: 1, 0: 3},
+            0x2: {2: 4}},
+        3: {0xaa: {8: 1, 0: 7},
+            0xab: {6: 1, 2: 7},
+            0xac: {4: 4, 0: 4}},
         4: {0xaa55: {16: 1, 0: 15},
             0xab55: {14: 1, 2: 15},
             0xbb55: {12: 1, 4: 7, 0: 8},
@@ -60,9 +63,27 @@ BooleanFunctionsEquivalentClassesWalshSpectrum =\
             0xdcfdda51: {}, 0x68ad9b51: {}, 0x688ddb51: {}}
     }
 
+BooleanFunctionsWalshSpectrumEquivalentClass =\
+    {
+        2: {"{4: 1, 0: 3}": 0x1,
+            "{2: 4}": 0x2},
+        3: {"{8: 1, 0: 7}": 0xaa,
+            "{6: 1, 2: 7}": 0xab,
+            "{4: 4, 0: 4}": 0xac},
+        4: {"{16: 1, 0: 15}": 0xaa55,
+            "{14: 1, 2: 15}": 0xab55,
+            "{12: 1, 4: 7, 0: 8}": 0xbb55,
+            "{10: 1, 6: 3, 2: 12}": 0xaba5,
+            "{8: 4, 0: 12}": 0xaaff,
+            "{8: 2, 4: 8, 0: 6}": 0xaba4,
+            "{6: 6, 2: 10}": 0xab12,
+            "{4: 16}": 0xac90}
+    }
+
 BooleanFunctionsWalshSpectrumNoZeroes =\
     {
-        2: {"{4: 1, 0: 3}": 3, "{2: 4}": 1},
+        2: {"{4: 1, 0: 3}": 3,
+            "{2: 4}": 1},
         3: {"{8: 1, 0: 7}": 7,
             "{6: 1, 2: 7}": 4,
             "{4: 4, 0: 4}": 5},

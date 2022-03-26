@@ -2,8 +2,8 @@ import gym
 from gym import spaces
 import numpy
 
-from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
-from SigmaPiFrameworkPython.monomial_setup import monomial_setup, q_matrix_generator
+from SigmaPiFrameworkPython.BooleanFunctionGenerator import boolean_function_generator
+from SigmaPiFrameworkPython.MonomialSetup import monomial_setup, q_matrix_generator
 
 from enum import Enum
 

@@ -1,7 +1,7 @@
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
 from OpenAiGym.RLAlgorithmRunners.Utils.EnvironmentHelperFunctions import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
-from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
+from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 import datetime
 from pathlib import Path
 

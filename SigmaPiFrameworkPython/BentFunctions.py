@@ -1,6 +1,6 @@
-from SigmaPiFrameworkPython.monomial_setup import q_matrix_generator
+from SigmaPiFrameworkPython.MonomialSetup import q_matrix_generator
 import numpy as np
-import SigmaPiFrameworkPython.monomial_exclusion_linear_programming_nn as mnn
+import SigmaPiFrameworkPython.MonomialExclusionLinearProgrammingNN as mnn
 
 
 def all_same(items):

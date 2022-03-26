@@ -1,4 +1,4 @@
-import monomial_setup
+import MonomialSetup
 from tensorflow.keras import Model
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
@@ -15,7 +15,7 @@ Output_Layer_Size = Input_Layer_Size
 train_ds = numpy.zeros((2**(2**DIMENSION), (2**DIMENSION)**2), dtype=numpy.float32)
 
 for iterator in range(2**(2**DIMENSION)):
-    train_ds[iterator, :] = numpy.reshape(monomial_setup.q_matrix_generator(iterator, DIMENSION), (1, (2 ** DIMENSION) ** 2))
+    train_ds[iterator, :] = numpy.reshape(MonomialSetup.q_matrix_generator(iterator, DIMENSION), (1, (2 ** DIMENSION) ** 2))
 
 model = Sequential()
 model.add(Dense(First_Hidden_Layer_Size, activation='relu', input_dim=Input_Layer_Size, name="First"))

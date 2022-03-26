@@ -2,13 +2,16 @@ from stable_baselines3 import PPO, A2C, DQN, DDPG
 
 import random
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
-dimension = 3
+dimension = 4
 two_to_power_dimension = 2**dimension
-time_steps=300
+time_steps=24000000
 root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
 output_prefix="functions_range_0_to_65536_size_49152"
-functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
+
 env,model= dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET)
+
+
+#functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
 
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 import random
@@ -24,7 +27,7 @@ env,model = dqn_runner_functions(functions, dimension, time_steps, root_dir, out
 
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
-dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/2022-03-18 18:16:29.927266_Monte_Carlo_function_75_percent/9/training"
+dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
 
 perf = load_json(dir,"performance_results")
 mean_p,dev_p = runner_overall_performance(perf)

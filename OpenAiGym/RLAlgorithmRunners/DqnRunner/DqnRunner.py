@@ -3,7 +3,7 @@ from OpenAiGym.RLAlgorithmRunners.MinTermSrpobfEnvConstants import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs, dump_json
 from OpenAiGym.RLAlgorithmRunners.Utils.EnvironmentHelperFunctions import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
-from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
+from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 import torch as th
 from stable_baselines3 import DQN
 import numpy
@@ -132,8 +132,8 @@ def dqn_runner_output_helper(root_directory, output_folder_label, env, model,
         dump_json(env.function_each_episode, output_directory, "function_each_episode")
         dump_json(env.max_reward_dict, output_directory, "max_reward_dict")
         dump_json(env.max_reward_key_dict, output_directory, "max_reward_" + env.key_name + "_dict")
-        dump_json(training_data_performance_results, output_directory, "training_data_test_results")
-        dump_json(test_data_performance_results, output_directory, "performance_results")
+        dump_json(training_data_performance_results, output_directory, "training_data_performance_results")
+        dump_json(test_data_performance_results, output_directory, "test_data_performance_results")
 
         perf_mean_train, perf_deviance_train = runner_overall_performance(training_data_performance_results)
         perf_mean_test, perf_deviance_test = runner_overall_performance(test_data_performance_results)
@@ -141,6 +141,11 @@ def dqn_runner_output_helper(root_directory, output_folder_label, env, model,
                                      "perf_mean_test": perf_mean_test, "perf_deviance_test": perf_deviance_test}
 
         dump_json(performance_mean_variance, output_directory, "performance_mean_variance")
+
+        dump_json(runner_equivalence_class_performance(training_data_performance_results),
+                  output_directory, "training_data_performance_results_equivalence_classes")
+        dump_json(runner_equivalence_class_performance(test_data_performance_results),
+                  output_directory, "test_data_performance_results_equivalence_classes")
 
         dump_json(parameters_dict, output_directory, "parameters")
         model.save(output_directory + "/" + "model")

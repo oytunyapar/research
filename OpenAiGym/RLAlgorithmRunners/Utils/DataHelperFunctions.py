@@ -1,7 +1,7 @@
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsEquivalentClasses
 from OpenAiGym.RLAlgorithmRunners.Utils.StringHelperFunctions import function_to_hex_string
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsWalshSpectrumNoZeroes
-from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
+from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 import json
 import numpy
 
@@ -52,3 +52,24 @@ def runner_overall_performance(performance):
         index_counter += 1
 
     return round(numpy.mean(percentages), precision), round(numpy.std(percentages), precision)
+
+
+def runner_equivalence_class_performance(performance, dimension):
+    equivalence_classes = all_equivalence_classes_hex_string(dimension)
+    equivalence_class_seperated_performances = {}
+    equivalence_class_seperated_overall_performances = {}
+
+    for equivalence_class in equivalence_classes:
+        equivalence_class_seperated_performances[equivalence_class] = {}
+        equivalence_class_seperated_overall_performances[equivalence_class] = [0, 0]
+
+    for key, value in performance.items():
+        equivalence_class_seperated_performances[
+            function_to_equivalence_class_hex_string(int(key), dimension)][int(key)] = value
+
+    for key, value in equivalence_class_seperated_performances.items():
+        perf_mean, perf_std = runner_overall_performance(value)
+        equivalence_class_seperated_overall_performances[key][0] = perf_mean
+        equivalence_class_seperated_overall_performances[key][1] = perf_std
+
+    return equivalence_class_seperated_overall_performances

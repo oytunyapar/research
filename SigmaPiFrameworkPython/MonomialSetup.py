@@ -1,6 +1,6 @@
 import numpy
 import math
-from SigmaPiFrameworkPython.boolean_function_generator import boolean_function_generator
+from SigmaPiFrameworkPython.BooleanFunctionGenerator import boolean_function_generator
 
 
 def monomial_setup(dimension):

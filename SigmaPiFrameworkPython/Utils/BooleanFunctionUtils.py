@@ -1,6 +1,7 @@
 import numpy
 import math
-from SigmaPiFrameworkPython.monomial_setup import q_matrix_generator
+from SigmaPiFrameworkPython.MonomialSetup import q_matrix_generator
+from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import *
 
 
 def bf_to_dimension(function_vector):
@@ -24,6 +25,18 @@ def walsh_spectrum_compact(function, dimension):
     counts = numpy.flip(counts).tolist()
 
     return dict(zip(ws_unique, counts))
+
+
+def function_to_equivalence_class(function, dimension):
+    return BooleanFunctionsWalshSpectrumEquivalentClass[dimension][str(walsh_spectrum_compact(function, dimension))]
+
+
+def function_to_equivalence_class_hex_string(function, dimension):
+    return hex(function_to_equivalence_class(function, dimension))
+
+
+def all_equivalence_classes_hex_string(dimension):
+    return [hex(equivalence_class) for equivalence_class in BooleanFunctionsEquivalentClasses[dimension]]
 
 
 def get_functions_from_walsh_spectrum(equivalence_class, dimension):

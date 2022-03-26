@@ -1,4 +1,4 @@
-from SigmaPiFrameworkPython import monomial_setup as monomial_setup
+from SigmaPiFrameworkPython import MonomialSetup as monomial_setup
 
 import itertools
 
