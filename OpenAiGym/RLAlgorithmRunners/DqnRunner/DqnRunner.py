@@ -142,9 +142,9 @@ def dqn_runner_output_helper(root_directory, output_folder_label, env, model,
 
         dump_json(performance_mean_variance, output_directory, "performance_mean_variance")
 
-        dump_json(runner_equivalence_class_performance(training_data_performance_results),
+        dump_json(runner_equivalence_class_performance(training_data_performance_results, env.dimension),
                   output_directory, "training_data_performance_results_equivalence_classes")
-        dump_json(runner_equivalence_class_performance(test_data_performance_results),
+        dump_json(runner_equivalence_class_performance(test_data_performance_results, env.dimension),
                   output_directory, "test_data_performance_results_equivalence_classes")
 
         dump_json(parameters_dict, output_directory, "parameters")
