@@ -63,7 +63,9 @@ def dqn_runner_functions(functions,
                          output_directory=None,
                          output_folder_prefix=None,
                          key_type=KeyType.K_VECTOR,
-                         model=None):
+                         model=None,
+                         test_functions=None,
+                         ):
 
     parameters_dict = {"time_steps": time_steps,
                        "net_arch": policy_kwargs_dictionary[dimension]["net_arch"],
@@ -89,7 +91,10 @@ def dqn_runner_functions(functions,
     model.learn(total_timesteps=time_steps)
 
     training_data_performance_results = dqn_runner_model_performance(env, model, functions)
-    test_data_performance_results = dqn_runner_model_performance(env, model, get_complement_function_list(dimension, functions))
+
+    test_data_performance_results = {}
+    if test_functions is not None:
+        test_data_performance_results = dqn_runner_model_performance(env, model, test_functions)
 
     dqn_runner_output_helper(output_directory, output_folder_prefix, env, model,
                              training_data_performance_results, test_data_performance_results, parameters_dict)

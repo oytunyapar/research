@@ -2,16 +2,16 @@ from stable_baselines3 import PPO, A2C, DQN, DDPG
 
 import random
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
-dimension = 4
+dimension = 3
 two_to_power_dimension = 2**dimension
-time_steps=24000000
+time_steps=300
 root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
+functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
+test_functions = None
 output_prefix="functions_range_0_to_65536_size_49152"
 
-env,model= dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET)
-
-
-#functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
+env,model= dqn_runner_functions(functions,
+dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_functions=test_functions)
 
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 import random
@@ -41,4 +41,4 @@ model=dqn_load_model(dir)
 env = env_creator(functions, dimension, KeyType.MONOMIAL_SET)
 
 
-from SigmaPiFrameworkPython.Utils.boolean_function_utils import *
+from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *

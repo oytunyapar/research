@@ -1,6 +1,4 @@
-from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsEquivalentClasses
 from OpenAiGym.RLAlgorithmRunners.Utils.StringHelperFunctions import function_to_hex_string
-from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsWalshSpectrumNoZeroes
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 import json
 import numpy
@@ -42,6 +40,10 @@ def reward_performance(env, reward, function=None):
 
 def runner_overall_performance(performance):
     no_of_functions = len(performance.keys())
+
+    if no_of_functions == 0:
+        return float('inf'), float('inf')
+
     precision = 4
 
     percentages = [None] * no_of_functions

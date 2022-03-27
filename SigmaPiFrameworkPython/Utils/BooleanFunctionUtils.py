@@ -1,6 +1,7 @@
 import numpy
 import math
-from SigmaPiFrameworkPython.MonomialSetup import q_matrix_generator
+import random
+from SigmaPiFrameworkPython.MonomialSetup import q_matrix_generator, monomial_setup
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import *
 
 
@@ -14,12 +15,12 @@ def bf_to_dimension(function_vector):
     return dimension, function_vector_size
 
 
-def walsh_spectrum(function, dimension):
-    return q_matrix_generator(function, dimension).sum(1).astype(int)
+def walsh_spectrum(function, dimension, hadamard_matrix=None):
+    return q_matrix_generator(function, dimension, hadamard_matrix).sum(1).astype(int)
 
 
-def walsh_spectrum_compact(function, dimension):
-    ws = numpy.abs(walsh_spectrum(function, dimension))
+def walsh_spectrum_compact(function, dimension, hadamard_matrix=None):
+    ws = numpy.abs(walsh_spectrum(function, dimension, hadamard_matrix))
     ws_unique, counts = numpy.unique(ws, return_counts=True)
     ws_unique = numpy.flip(ws_unique).tolist()
     counts = numpy.flip(counts).tolist()
@@ -39,33 +40,58 @@ def all_equivalence_classes_hex_string(dimension):
     return [hex(equivalence_class) for equivalence_class in BooleanFunctionsEquivalentClasses[dimension]]
 
 
-def get_equivalence_class_samples(dimension, sample_size):
+def get_random_sample_of_functions(dimension, sample_size):
     number_of_functions = 2 ** (2 ** dimension)
     min_sample_size = 1
     max_sample_size = number_of_functions
 
+    sample_size = int(sample_size)
+
     if min_sample_size > sample_size or sample_size > max_sample_size:
         print("Invalid sample size:" + str(sample_size) +
               " Min:" + str(min_sample_size) + " Max:" + str(max_sample_size))
-        return None
+        raise Exception("Invalid sample size")
+
+    return random.sample(range(0, number_of_functions), sample_size)
+
+
+def get_equivalence_class_samples(dimension, sample_size):
+    functions = get_random_sample_of_functions(dimension, sample_size)
 
     sampled_functions = {}
-    finished_map = {}
     equivalence_class_strings = all_equivalence_classes_hex_string(dimension)
 
     for equivalence_class_string in equivalence_class_strings:
         sampled_functions[equivalence_class_string] = []
-        finished_map[equivalence_class_string] = False
 
-    for function in range(number_of_functions):
+    for function in functions:
         equivalence_class_string = function_to_equivalence_class_hex_string(function, dimension)
-        if len(sampled_functions[equivalence_class_string]) < sample_size:
-            sampled_functions[equivalence_class_string].append(function)
-        else:
-            finished_map[equivalence_class_string] = True
+        sampled_functions[equivalence_class_string].append(function)
 
-        if all(value for value in finished_map.values()):
-            break
+    return sampled_functions
+
+
+def get_compact_ws_key_equivalence_classes(dimension, iterations):
+    functions = get_random_sample_of_functions(dimension, iterations)
+    ws_keys = set()
+    hadamard_matrix = monomial_setup(dimension)
+    for function in functions:
+        ws_keys.add(str(walsh_spectrum_compact(function, dimension, hadamard_matrix)))
+
+    return ws_keys
+
+
+def get_equivalence_class_samples_compact_ws_key(dimension, sample_size):
+    functions = get_random_sample_of_functions(dimension, sample_size)
+    sampled_functions = {}
+    hadamard_matrix = monomial_setup(dimension)
+
+    for function in functions:
+        function_walsh_spectrum = str(walsh_spectrum_compact(function, dimension, hadamard_matrix))
+        if function_walsh_spectrum in sampled_functions.keys():
+            sampled_functions[function_walsh_spectrum].append(function)
+        else:
+            sampled_functions[function_walsh_spectrum] = [function]
 
     return sampled_functions
 

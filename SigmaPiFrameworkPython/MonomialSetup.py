@@ -29,9 +29,10 @@ def monomial_setup(dimension):
     return d_matrix
 
 
-def q_matrix_generator(function, dimension):
-    q_matrix = \
-        numpy.matmul(monomial_setup(dimension),
-                     numpy.diag(boolean_function_generator(function, dimension)))
+def q_matrix_generator(function, dimension, hadamard_matrix=None):
+    if hadamard_matrix is None:
+        q_matrix = numpy.matmul(monomial_setup(dimension), numpy.diag(boolean_function_generator(function, dimension)))
+    else:
+        q_matrix = numpy.matmul(hadamard_matrix, numpy.diag(boolean_function_generator(function, dimension)))
 
     return q_matrix
