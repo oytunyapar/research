@@ -41,7 +41,7 @@ class MinTermSrpobfEnvBase(gym.Env):
 
         self.function_vector = boolean_function_generator(self.function, self.dimension)
         self.d_matrix = monomial_setup(dimension)
-        self.q_matrix = q_matrix_generator(self.function, self.dimension)
+        self.q_matrix = q_matrix_generator(self.function, self.dimension, self.d_matrix)
         self.walsh_spectrum = self.q_matrix.sum(1)
         self.q_matrix_representation = q_matrix_representation
 
@@ -102,7 +102,7 @@ class MinTermSrpobfEnvBase(gym.Env):
     def set_function(self, function):
         self.function = function % self.total_number_of_functions
         self.function_vector = boolean_function_generator(self.function, self.dimension)
-        self.q_matrix = q_matrix_generator(self.function, self.dimension)
+        self.q_matrix = q_matrix_generator(self.function, self.dimension, self.d_matrix)
         self.walsh_spectrum = self.q_matrix.sum(1)
 
         if self.q_matrix_representation:
