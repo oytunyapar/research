@@ -33,7 +33,7 @@ def reward_performance(env, reward, function=None):
     dimension = env.dimension
 
     theoretical_no_zeroes = \
-        BooleanFunctionsWalshSpectrumNoZeroes[dimension][str(walsh_spectrum_compact(function, dimension))]
+        BooleanFunctionsWalshSpectrumNoZeroes[dimension][str(walsh_spectrum_compact(function, dimension, env.d_matrix))]
 
     return [theoretical_no_zeroes - no_zeroes, round(no_zeroes / theoretical_no_zeroes, precision)]
 

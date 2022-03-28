@@ -99,15 +99,17 @@ def get_equivalence_class_samples_compact_ws_key(dimension, sample_size):
 def get_functions_from_walsh_spectrum(equivalence_class, dimension, sample_size=None):
     number_of_functions = 2**(2**dimension)
 
-    spectrum = walsh_spectrum_compact(equivalence_class, dimension)
+    hadamard_matrix = monomial_setup(dimension)
+
+    spectrum = walsh_spectrum_compact(equivalence_class, dimension, hadamard_matrix)
 
     function_list = []
     spectrum_list = []
 
     for function_iterator in range(number_of_functions):
-        q_matrix = q_matrix_generator(function_iterator, dimension)
+        q_matrix = q_matrix_generator(function_iterator, dimension, hadamard_matrix)
         function_spectrum_raw = numpy.sum(q_matrix, axis=1)
-        function_spectrum = walsh_spectrum_compact(function_iterator, dimension)
+        function_spectrum = walsh_spectrum_compact(function_iterator, dimension, hadamard_matrix)
 
         if function_spectrum == spectrum:
             function_list.append(function_iterator)

@@ -2,13 +2,15 @@ from stable_baselines3 import PPO, A2C, DQN, DDPG
 
 import random
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
-dimension = 3
+dimension = 4
 two_to_power_dimension = 2**dimension
-time_steps=300
+time_steps=24000000
 root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
-functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
-test_functions = None
-output_prefix="functions_range_0_to_65536_size_49152"
+eq_class = 0xab12
+test_functions, _ = get_functions_from_walsh_spectrum(eq_class, dimension)
+test_functions = test_functions.tolist()
+functions = get_complement_function_list(dimension, test_functions)
+output_prefix="functions_" + hex(eq_class) + "_absent"
 
 env,model= dqn_runner_functions(functions,
 dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_functions=test_functions)
