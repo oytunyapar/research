@@ -6,7 +6,7 @@ dimension = 4
 two_to_power_dimension = 2**dimension
 time_steps=24000000
 root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
-eq_class = 0xab12
+eq_class = 0xaaff
 test_functions, _ = get_functions_from_walsh_spectrum(eq_class, dimension)
 test_functions = test_functions.tolist()
 functions = get_complement_function_list(dimension, test_functions)
@@ -17,8 +17,8 @@ dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_funct
 
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 import random
-monte_carlo_times=3
-n_times=1
+monte_carlo_times=10
+n_times=[3]
 dimension = 3
 two_to_power_dimension = 2**dimension
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
@@ -27,9 +27,10 @@ dir = random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, di
 
 env,model = dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET,model)
 
-from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
+from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
 dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
+functions = load_json(dir,"parameters")["functions"]
 
 perf = load_json(dir,"performance_results")
 mean_p,dev_p = runner_overall_performance(perf)
@@ -37,8 +38,6 @@ mean_p,dev_p = runner_overall_performance(perf)
 train = load_json(dir,"training_data_test_results")
 mean_t,dev_t = runner_overall_performance(train)
 
-functions = load_json(dir,"function_each_episode")
-functions = numpy.unique(functions).tolist()
 model=dqn_load_model(dir)
 env = env_creator(functions, dimension, KeyType.MONOMIAL_SET)
 

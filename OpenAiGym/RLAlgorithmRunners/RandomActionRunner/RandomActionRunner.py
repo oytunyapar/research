@@ -4,6 +4,7 @@ from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 import datetime
 from pathlib import Path
+import warnings
 
 
 def random_action_runner(functions,
@@ -37,11 +38,13 @@ def random_action_runner(functions,
 def random_action_runner_n_times(functions,
                                  dimension,
                                  n_times,
+                                 env,
                                  output_directory=None,
                                  output_folder_label=None,
                                  key_type=KeyType.K_VECTOR
                                  ):
-    env = env_creator([0], dimension, key_type)
+    if env is None:
+        env = env_creator([0], dimension, key_type)
 
     for times in range(n_times):
         for function in functions:
@@ -56,59 +59,104 @@ def random_action_runner_n_times(functions,
 
 def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dimension,
                                      output_folder_label=None, key_type=KeyType.K_VECTOR):
+    warnings.filterwarnings("ignore")
+
     complement_functions = get_complement_function_list(dimension, functions)
+
+    environments = dict.fromkeys(list(range(monte_carlo_times)), None)
+    test_environments = None
 
     test_mode = False
     if len(complement_functions) > 0:
+        test_environments = dict.fromkeys(list(range(monte_carlo_times)), None)
         test_mode = True
 
-    parameters_dict = {"monte_carlo_times": monte_carlo_times, "n_times": n_times, "dimension": dimension,
+    performance_mean_variance = {"perf_mean_train": 0, "perf_deviance_train": 0, "perf_mean_test": 0,
+                                 "perf_deviance_test": 0, "perf_mean": 0, "perf_deviance": 0}
+
+    n_time_points = process_n_times_array(n_times)
+
+    parameters_dict = {"monte_carlo_times": monte_carlo_times, "n_times": 0, "dimension": dimension,
                        "functions": functions}
 
-    performance_mean_variance = {"perf_mean_train": 0, "perf_deviance_train": 0, "perf_mean_test": 0, "perf_deviance_test": 0,
-                          "perf_mean": 0, "perf_deviance": 0}
+    for time_point in n_time_points:
+        parameters_dict["n_times"] += time_point
 
-    root_directory = str(Path.home()) + "/PycharmProjects/research/OpenAiGym/" + \
-                     get_env_name_from_key_type(key_type) + "/Data/" + str(dimension) + "dim/RandomAction/" + \
-                     str(datetime.datetime.now()) + "_" + "Monte_Carlo"
+        root_directory = str(Path.home()) + "/PycharmProjects/research/OpenAiGym/" +\
+                         get_env_name_from_key_type(key_type) + "/Data/" + str(dimension) +\
+                         "dim/RandomAction/" + str(datetime.datetime.now()) + "_" + "Monte_Carlo"
 
-    if output_folder_label is not None:
-        root_directory = root_directory + "_" + output_folder_label
+        if output_folder_label is not None:
+            root_directory = root_directory + "_" + output_folder_label
 
-    for times in range(monte_carlo_times):
-        output_directory = root_directory + "/" + str(times)
-        if test_mode:
-            _, perf_train = random_action_monte_carlo_runner_impl(functions, dimension, n_times,
-                                                                  key_type, output_directory + "/training")
-            _, perf_test = random_action_monte_carlo_runner_impl(complement_functions, dimension, n_times,
-                                                                 key_type, output_directory + "/test")
+        for times in range(monte_carlo_times):
+            output_directory = root_directory + "/" + str(times)
+            if test_mode:
+                env = random_action_monte_carlo_statistics(functions, dimension, time_point,
+                                                           output_directory + "/training", key_type,
+                                                           performance_mean_variance, "perf_mean_train",
+                                                           "perf_deviance_train", environments[times])
+                environments[times] = env
 
-            perf_mean_train, perf_deviance_train = runner_overall_performance(perf_train)
-            perf_mean_test, perf_deviance_test = runner_overall_performance(perf_test)
+                env = random_action_monte_carlo_statistics(functions, dimension, time_point,
+                                                           output_directory + "/test", key_type,
+                                                           performance_mean_variance, "perf_mean_test",
+                                                           "perf_deviance_test", test_environments[times])
+                test_environments[times] = env
+            else:
+                env = random_action_monte_carlo_statistics(functions, dimension, time_point, output_directory,
+                                                           key_type, performance_mean_variance, "perf_mean",
+                                                           "perf_deviance", environments[times])
+                environments[times] = env
 
-            performance_mean_variance["perf_mean_train"] += perf_mean_train
-            performance_mean_variance["perf_deviance_train"] += perf_deviance_train
-            performance_mean_variance["perf_mean_test"] += perf_mean_test
-            performance_mean_variance["perf_deviance_test"] += perf_deviance_test
-        else:
-            _, perf = random_action_monte_carlo_runner_impl(functions, dimension, n_times, key_type, output_directory)
-            perf_mean, perf_deviance = runner_overall_performance(perf)
-            performance_mean_variance["perf_mean"] += perf_mean
-            performance_mean_variance["perf_deviance"] += perf_deviance
+            print("Monte Carlo times:" + str(times + 1) + "/" + str(monte_carlo_times))
 
-        print("Monte Carlo times:" + str(times + 1) + "/" + str(monte_carlo_times))
+        performance_mean_variance.update((key, value / monte_carlo_times)
+                                         for key, value in performance_mean_variance.items())
+        dump_json(performance_mean_variance, root_directory, "performance_mean_variance")
+        dump_json(parameters_dict, root_directory, "parameters")
 
-    performance_mean_variance.update((key, value / monte_carlo_times)
-                                     for key, value in performance_mean_variance.items())
-    dump_json(performance_mean_variance, root_directory, "performance_mean_variance")
-    dump_json(parameters_dict, root_directory, "parameters")
+        performance_mean_variance.update((key, 0)
+                                         for key, value in performance_mean_variance.items())
+
+    warnings.filterwarnings("default")
+
     return root_directory
 
 
-def random_action_monte_carlo_runner_impl(functions, dimension, n_times, key_type, output_directory):
-    env = random_action_runner_n_times(functions, dimension, n_times, key_type=key_type)
-    performance_results = random_action_runner_output(output_directory, env)
-    return env, performance_results
+def process_n_times_array(n_times):
+    len_n_times = len(n_times)
+    if len_n_times == 0:
+        raise Exception("process_n_times_array list is empty")
+
+    n_times_processed = numpy.unique(list(map(abs, n_times))).tolist()
+    len_n_times = len(n_times_processed)
+
+    result = len_n_times * [None]
+    subtraction_value = n_times_processed[0]
+    result[0] = subtraction_value
+
+    for index in range(1, len_n_times):
+        result[index] = n_times_processed[index] - subtraction_value
+        subtraction_value = n_times_processed[index]
+
+    return result
+
+
+def random_action_monte_carlo_statistics(functions, dimension, n_times, output_directory, key_type,
+                                         performance_mean_variance, mean_key, deviance_key, input_env):
+    output_env, perf = random_action_monte_carlo_impl(functions, dimension, n_times,
+                                                      key_type, output_directory, input_env)
+    perf_mean, perf_deviance = runner_overall_performance(perf)
+    performance_mean_variance[mean_key] += perf_mean
+    performance_mean_variance[deviance_key] += perf_deviance
+    return output_env
+
+
+def random_action_monte_carlo_impl(functions, dimension, n_times, key_type, output_directory, input_env):
+    output_env = random_action_runner_n_times(functions, dimension, n_times, input_env, key_type=key_type)
+    performance_results = random_action_runner_output(output_directory, output_env)
+    return output_env, performance_results
 
 
 def random_action_runner_output_helper(root_directory, output_folder_label, env):
