@@ -71,9 +71,6 @@ def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dime
         test_environments = dict.fromkeys(list(range(monte_carlo_times)), None)
         test_mode = True
 
-    performance_mean_variance = {"perf_mean_train": 0, "perf_deviance_train": 0, "perf_mean_test": 0,
-                                 "perf_deviance_test": 0, "perf_mean": 0, "perf_deviance": 0}
-
     n_time_points = process_n_times_array(n_times)
 
     parameters_dict = {"monte_carlo_times": monte_carlo_times, "n_times": 0, "dimension": dimension,
@@ -92,32 +89,25 @@ def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dime
         for times in range(monte_carlo_times):
             output_directory = root_directory + "/" + str(times)
             if test_mode:
-                env = random_action_monte_carlo_statistics(functions, dimension, time_point,
-                                                           output_directory + "/training", key_type,
-                                                           performance_mean_variance, "perf_mean_train",
-                                                           "perf_deviance_train", environments[times])
+                env = random_action_monte_carlo_impl(functions, dimension, time_point,
+                                                     output_directory + "/training", key_type,
+                                                     environments[times])
                 environments[times] = env
 
-                env = random_action_monte_carlo_statistics(functions, dimension, time_point,
-                                                           output_directory + "/test", key_type,
-                                                           performance_mean_variance, "perf_mean_test",
-                                                           "perf_deviance_test", test_environments[times])
+                env = random_action_monte_carlo_impl(functions, dimension, time_point,
+                                                     output_directory + "/test", key_type,
+                                                     test_environments[times])
                 test_environments[times] = env
             else:
-                env = random_action_monte_carlo_statistics(functions, dimension, time_point, output_directory,
-                                                           key_type, performance_mean_variance, "perf_mean",
-                                                           "perf_deviance", environments[times])
+                env = random_action_monte_carlo_impl(functions, dimension, time_point, output_directory,
+                                                     key_type, environments[times])
                 environments[times] = env
 
             print("Monte Carlo times:" + str(times + 1) + "/" + str(monte_carlo_times))
 
-        performance_mean_variance.update((key, value / monte_carlo_times)
-                                         for key, value in performance_mean_variance.items())
-        dump_json(performance_mean_variance, root_directory, "performance_mean_variance")
         dump_json(parameters_dict, root_directory, "parameters")
-
-        performance_mean_variance.update((key, 0)
-                                         for key, value in performance_mean_variance.items())
+        monte_carlo_overall_performance_average(root_directory, test_mode, monte_carlo_times)
+        monte_carlo_equivalence_class_performance_average(root_directory, test_mode, monte_carlo_times, dimension)
 
     warnings.filterwarnings("default")
 
@@ -143,20 +133,10 @@ def process_n_times_array(n_times):
     return result
 
 
-def random_action_monte_carlo_statistics(functions, dimension, n_times, output_directory, key_type,
-                                         performance_mean_variance, mean_key, deviance_key, input_env):
-    output_env, perf = random_action_monte_carlo_impl(functions, dimension, n_times,
-                                                      key_type, output_directory, input_env)
-    perf_mean, perf_deviance = runner_overall_performance(perf)
-    performance_mean_variance[mean_key] += perf_mean
-    performance_mean_variance[deviance_key] += perf_deviance
-    return output_env
-
-
-def random_action_monte_carlo_impl(functions, dimension, n_times, key_type, output_directory, input_env):
+def random_action_monte_carlo_impl(functions, dimension, n_times, output_directory, key_type, input_env):
     output_env = random_action_runner_n_times(functions, dimension, n_times, input_env, key_type=key_type)
-    performance_results = random_action_runner_output(output_directory, output_env)
-    return output_env, performance_results
+    random_action_runner_output(output_directory, output_env)
+    return output_env
 
 
 def random_action_runner_output_helper(root_directory, output_folder_label, env):
@@ -175,5 +155,100 @@ def random_action_runner_output(output_directory, env):
         performance_results[function] = reward_performance(env, reward, function)
 
     dump_json(performance_results, output_directory, "performance_results")
+    dump_json(runner_equivalence_class_performance(performance_results, env.dimension), output_directory,
+              "performance_mean_variance_equivalence_classes")
 
-    return performance_results
+    perf_mean, perf_deviance = runner_overall_performance(performance_results)
+    performance_mean_variance = {"perf_mean": perf_mean, "perf_deviance": perf_deviance}
+    dump_json(performance_mean_variance, output_directory, "performance_mean_variance")
+
+
+def monte_carlo_overall_performance_average(root_directory, test_mode, monte_carlo_times):
+    performance_mean_variance = {"perf_mean_train": 0, "perf_deviance_train": 0, "perf_mean_test": 0,
+                                 "perf_deviance_test": 0, "perf_mean": 0, "perf_deviance": 0}
+    if monte_carlo_times <= 0:
+        raise Exception("Monte carlo times variable is abnormal.")
+
+    for monte_carlo_directory in range(monte_carlo_times):
+        if not test_mode:
+            monte_carlo_performance_accumulator(root_directory + "/" + str(monte_carlo_directory),
+                                                "performance_mean_variance", performance_mean_variance,
+                                                "perf_mean", "perf_deviance")
+        else:
+            monte_carlo_performance_accumulator(root_directory + "/" + str(monte_carlo_directory) + "/training",
+                                                "performance_mean_variance", performance_mean_variance,
+                                                "perf_mean_train", "perf_deviance_train")
+            monte_carlo_performance_accumulator(root_directory + "/" + str(monte_carlo_directory) + "/test",
+                                                "performance_mean_variance", performance_mean_variance,
+                                                "perf_mean_test", "perf_deviance_test")
+
+    performance_mean_variance.update((key, value / monte_carlo_times)
+                                     for key, value in performance_mean_variance.items())
+    dump_json(performance_mean_variance, root_directory, "performance_mean_variance")
+
+
+def monte_carlo_performance_accumulator(root_directory, json_file, performance_mean_variance, mean_key, deviance_key):
+    local_performance_mean_variance = load_json(root_directory, json_file)
+    performance_mean_variance[mean_key] += local_performance_mean_variance["perf_mean"]
+    performance_mean_variance[deviance_key] += local_performance_mean_variance["perf_deviance"]
+
+
+def monte_carlo_equivalence_class_performance_average(root_directory, test_mode, monte_carlo_times, dimension):
+    equivalence_class_keys = all_equivalence_classes_hex_string(dimension)
+    equivalence_class_performance_mean_variance = {}
+    equivalence_class_performance_mean_variance_test = {}
+    equivalence_class_performance_average_factor = {}
+    equivalence_class_performance_average_factor_test = {}
+    for equivalence_class_key in equivalence_class_keys:
+        equivalence_class_performance_mean_variance[equivalence_class_key] = [0, 0]
+        equivalence_class_performance_mean_variance_test[equivalence_class_key] = [0, 0]
+        equivalence_class_performance_average_factor[equivalence_class_key] = 0
+        equivalence_class_performance_average_factor_test[equivalence_class_key] = 0
+
+    if monte_carlo_times <= 0:
+        raise Exception("Monte carlo times variable is abnormal.")
+
+    for monte_carlo_directory in range(monte_carlo_times):
+        if not test_mode:
+            monte_carlo_equivalence_class_accumulator(root_directory + "/" + str(monte_carlo_directory),
+                                                      "performance_mean_variance_equivalence_classes",
+                                                      equivalence_class_performance_mean_variance,
+                                                      equivalence_class_performance_average_factor)
+        else:
+            monte_carlo_equivalence_class_accumulator(root_directory + "/" + str(monte_carlo_directory) + "/training",
+                                                      "performance_mean_variance_equivalence_classes",
+                                                      equivalence_class_performance_mean_variance,
+                                                      equivalence_class_performance_average_factor)
+            monte_carlo_equivalence_class_accumulator(root_directory + "/" + str(monte_carlo_directory) + "/test",
+                                                      "performance_mean_variance_equivalence_classes",
+                                                      equivalence_class_performance_mean_variance_test,
+                                                      equivalence_class_performance_average_factor_test)
+
+    for key in equivalence_class_keys:
+        factor = equivalence_class_performance_average_factor[key]
+        if factor > 0:
+            equivalence_class_performance_mean_variance[key][0] /= factor
+            equivalence_class_performance_mean_variance[key][1] /= factor
+
+        if test_mode:
+            factor = equivalence_class_performance_average_factor_test[key]
+            if factor > 0:
+                equivalence_class_performance_mean_variance_test[key][0] /= factor
+                equivalence_class_performance_mean_variance_test[key][1] /= factor
+
+    dump_json(equivalence_class_performance_mean_variance, root_directory,
+              "equivalence_class_performance_mean_variance")
+    if test_mode:
+        dump_json(equivalence_class_performance_mean_variance_test, root_directory,
+                  "equivalence_class_performance_mean_variance_test")
+
+
+def monte_carlo_equivalence_class_accumulator(root_directory, json_file, equivalence_class_performance_mean_variance,
+                                              equivalence_class_performance_average_factor):
+    local_equivalence_class_mean_variance = load_json(root_directory, json_file)
+
+    for key in equivalence_class_performance_mean_variance.keys():
+        if key in local_equivalence_class_mean_variance and 1 >= local_equivalence_class_mean_variance[key][0] >= 0:
+            equivalence_class_performance_mean_variance[key][0] += local_equivalence_class_mean_variance[key][0]
+            equivalence_class_performance_mean_variance[key][1] += local_equivalence_class_mean_variance[key][1]
+            equivalence_class_performance_average_factor[key] += 1

@@ -6,7 +6,14 @@ dimension = 4
 two_to_power_dimension = 2**dimension
 time_steps=24000000
 root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
-eq_class = 0xaaff
+
+from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
+dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
+functions = load_json(dir,"parameters")["functions"]
+output_prefix="_functions_range_0_to_65536_size_49152"
+test_functions = get_complement_function_list(dimension, functions)
+
+eq_class = 0xaa55
 test_functions, _ = get_functions_from_walsh_spectrum(eq_class, dimension)
 test_functions = test_functions.tolist()
 functions = get_complement_function_list(dimension, test_functions)
@@ -17,8 +24,8 @@ dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_funct
 
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 import random
-monte_carlo_times=10
-n_times=[3]
+monte_carlo_times=1
+n_times=[1,2]
 dimension = 3
 two_to_power_dimension = 2**dimension
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
@@ -43,3 +50,25 @@ env = env_creator(functions, dimension, KeyType.MONOMIAL_SET)
 
 
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
+
+
+for i in range(10):
+    dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/2022-04-12 21:58:20.301758_Monte_Carlo_function_75_percent"
+
+    output_directory = dir + "/" + str(i) + "/training"
+    performance_results = load_json(output_directory, "performance_results")
+    dump_json(runner_equivalence_class_performance(performance_results, 4), output_directory,
+              "performance_mean_variance_equivalence_classes")
+
+    perf_mean, perf_deviance = runner_overall_performance(performance_results)
+    performance_mean_variance = {"perf_mean": perf_mean, "perf_deviance": perf_deviance}
+    dump_json(performance_mean_variance, output_directory, "performance_mean_variance")
+
+    output_directory = dir + "/" + str(i) + "/test"
+    performance_results_test = load_json(output_directory, "performance_results")
+    dump_json(runner_equivalence_class_performance(performance_results_test, 4), output_directory,
+              "performance_mean_variance_equivalence_classes")
+
+    perf_mean, perf_deviance = runner_overall_performance(performance_results_test)
+    performance_mean_variance = {"perf_mean": perf_mean, "perf_deviance": perf_deviance}
+    dump_json(performance_mean_variance, output_directory, "performance_mean_variance")
