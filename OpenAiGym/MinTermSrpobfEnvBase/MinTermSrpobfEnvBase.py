@@ -14,11 +14,17 @@ class FunctionMode(Enum):
     RANDOM = 3
 
 
+class FunctionRepresentationType(Enum):
+    Q_MATRIX = 1
+    WALSH_SPECTRUM = 2
+    SPECTRUM = 3
+
+
 class MinTermSrpobfEnvBase(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, function, dimension,
-                 q_matrix_representation, episodic_reward):
+                 function_representation_type, episodic_reward):
         super(MinTermSrpobfEnvBase, self).__init__()
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
@@ -43,14 +49,16 @@ class MinTermSrpobfEnvBase(gym.Env):
         self.d_matrix = monomial_setup(dimension)
         self.q_matrix = q_matrix_generator(self.function, self.dimension, self.d_matrix)
         self.walsh_spectrum = self.q_matrix.sum(1)
-        self.q_matrix_representation = q_matrix_representation
+        self.spectrum = self.walsh_spectrum * (2 ** -self.dimension)
+        self.function_representation_type = function_representation_type
+        self.function_representation = None
 
-        if self.q_matrix_representation:
+        if self.function_representation_type == FunctionRepresentationType.Q_MATRIX:
             self.function_representation_size = self.two_to_power_dimension ** 2
-            self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
         else:
             self.function_representation_size = self.two_to_power_dimension
-            self.function_representation = self.walsh_spectrum
+
+        self.update_represented_function()
 
         self.key_name = ""
         self.key_size = 0
@@ -99,16 +107,24 @@ class MinTermSrpobfEnvBase(gym.Env):
     def close(self):
         pass
 
+    def update_represented_function(self):
+        if self.function_representation_type == FunctionRepresentationType.Q_MATRIX:
+            self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
+        elif self.function_representation_type == FunctionRepresentationType.WALSH_SPECTRUM:
+            self.function_representation = self.walsh_spectrum
+        elif self.function_representation_type == FunctionRepresentationType.SPECTRUM:
+            self.function_representation = self.spectrum
+        else:
+            raise Exception("Undefined function representation type.")
+
     def set_function(self, function):
         self.function = function % self.total_number_of_functions
         self.function_vector = boolean_function_generator(self.function, self.dimension)
         self.q_matrix = q_matrix_generator(self.function, self.dimension, self.d_matrix)
         self.walsh_spectrum = self.q_matrix.sum(1)
+        self.spectrum = self.walsh_spectrum * (2 ** -self.dimension)
 
-        if self.q_matrix_representation:
-            self.function_representation = self.q_matrix.reshape(1, self.function_representation_size)
-        else:
-            self.function_representation = self.walsh_spectrum
+        self.update_represented_function()
 
     def create_observation(self):
         observation = numpy.ones([self.state_size])

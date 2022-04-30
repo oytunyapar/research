@@ -10,8 +10,11 @@ root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
 dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
 functions = load_json(dir,"parameters")["functions"]
-output_prefix="_functions_range_0_to_65536_size_49152"
+output_prefix="functions_range_0_to_65536_size_49152"
 test_functions = get_complement_function_list(dimension, functions)
+
+env,model= dqn_runner_functions(functions,
+dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_functions=test_functions)
 
 eq_class = 0xaa55
 test_functions, _ = get_functions_from_walsh_spectrum(eq_class, dimension)
@@ -53,7 +56,7 @@ from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 
 
 for i in range(10):
-    dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/2022-04-12 21:58:20.301758_Monte_Carlo_function_75_percent"
+    dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/2022-03-18 18:16:29.927266_Monte_Carlo_function_75_percent"
 
     output_directory = dir + "/" + str(i) + "/training"
     performance_results = load_json(output_directory, "performance_results")
@@ -72,3 +75,8 @@ for i in range(10):
     perf_mean, perf_deviance = runner_overall_performance(performance_results_test)
     performance_mean_variance = {"perf_mean": perf_mean, "perf_deviance": perf_deviance}
     dump_json(performance_mean_variance, output_directory, "performance_mean_variance")
+
+dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/2022-03-18 18:16:29.927266_Monte_Carlo_function_75_percent"
+from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
+monte_carlo_overall_performance_average(dir, True, 10)
+monte_carlo_equivalence_class_performance_average(dir, True, 10,4)
