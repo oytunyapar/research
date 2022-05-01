@@ -73,8 +73,7 @@ def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dime
 
     n_time_points = process_n_times_array(n_times)
 
-    parameters_dict = {"monte_carlo_times": monte_carlo_times, "n_times": 0, "dimension": dimension,
-                       "functions": functions}
+    parameters_dict = {"monte_carlo_times": monte_carlo_times, "n_times": 0, "functions": functions}
 
     for time_point in n_time_points:
         parameters_dict["n_times"] += time_point
@@ -105,9 +104,10 @@ def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dime
 
             print("Monte Carlo times:" + str(times + 1) + "/" + str(monte_carlo_times))
 
-        dump_json(parameters_dict, root_directory, "parameters")
-        monte_carlo_overall_performance_average(root_directory, test_mode, monte_carlo_times)
-        monte_carlo_equivalence_class_performance_average(root_directory, test_mode, monte_carlo_times, dimension)
+        if monte_carlo_times > 0:
+            dump_json(environments[0].env_specific_configuration() | parameters_dict, root_directory, "parameters")
+            monte_carlo_overall_performance_average(root_directory, test_mode, monte_carlo_times)
+            monte_carlo_equivalence_class_performance_average(root_directory, test_mode, monte_carlo_times, dimension)
 
     warnings.filterwarnings("default")
 

@@ -152,3 +152,6 @@ class MinTermSrpobfEnv(MinTermSrpobfEnvBase):
     def k_vector_gcd(self):
         k_vector_gcd = functools.reduce(numpy.gcd, numpy.array(self.key, dtype=numpy.int))
         self.key /= k_vector_gcd
+
+    def env_specific_configuration(self):
+        return super.env_specific_configuration() | {"action_type": str(self.action_type)}

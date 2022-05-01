@@ -5,6 +5,8 @@ import numpy
 from SigmaPiFrameworkPython.BooleanFunctionGenerator import boolean_function_generator
 from SigmaPiFrameworkPython.MonomialSetup import monomial_setup, q_matrix_generator
 
+from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import dump_outputs, dump_json
+
 from enum import Enum
 
 
@@ -165,3 +167,15 @@ class MinTermSrpobfEnvBase(gym.Env):
 
     def switch_to_single_mode(self):
         self.function_mode = FunctionMode.SINGLE
+
+    def env_specific_configuration(self):
+        return {"dimension": self.dimension, "function_representation_type": str(self.function_representation_type),
+                "function_mode": str(self.function_mode), "key_name": self.key_name,
+                "episodic_reward": str(self.episodic_reward)}
+
+    def dump_env_statistics(self, output_directory):
+        dump_outputs(self.max_rewards_in_the_episodes, output_directory, "max_rewards_in_the_episodes")
+        dump_outputs(self.cumulative_rewards_in_the_episodes, output_directory, "cumulative_rewards_in_the_episodes")
+        dump_json(self.function_each_episode, output_directory, "function_each_episode")
+        dump_json(self.max_reward_dict, output_directory, "max_reward_dict")
+        dump_json(self.max_reward_key_dict, output_directory, "max_reward_" + self.key_name + "_dict")

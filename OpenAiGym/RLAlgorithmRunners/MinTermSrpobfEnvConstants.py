@@ -1,7 +1,7 @@
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import ActionType
 from OpenAiGym.MinTermSrpobfEnvBase.MinTermSrpobfEnvBase import FunctionRepresentationType
 
-function_representation_type = FunctionRepresentationType.SPECTRUM
+function_representation_type = FunctionRepresentationType.WALSH_SPECTRUM
 no_action_episode_end = False
 act = ActionType.INCREASE
 number_of_steps_dictionary = {3: 50000, 4: 2000000, 5: 4000000}

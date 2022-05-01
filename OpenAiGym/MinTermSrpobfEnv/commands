@@ -1,6 +1,6 @@
 from stable_baselines3 import PPO, A2C, DQN, DDPG
 
-import random
+
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
 dimension = 4
 two_to_power_dimension = 2**dimension
@@ -15,6 +15,21 @@ test_functions = get_complement_function_list(dimension, functions)
 
 env,model= dqn_runner_functions(functions,
 dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_functions=test_functions)
+
+
+from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
+dimension = 3
+two_to_power_dimension = 2**dimension
+time_steps=600
+root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
+from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
+dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/3dim/DQN/2022-04-30 19:20:36.990712_functions_range_0_to_256_size_192"
+functions = load_json(dir,"parameters")["functions"]
+test_functions = get_complement_function_list(dimension, functions)
+output_prefix="functions_range_0_to_256_size_192"
+
+import random
+functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
 
 eq_class = 0xaa55
 test_functions, _ = get_functions_from_walsh_spectrum(eq_class, dimension)
@@ -34,8 +49,6 @@ two_to_power_dimension = 2**dimension
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
 output_folder_label="function_75_percent"
 dir = random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dimension, output_folder_label, KeyType.MONOMIAL_SET)
-
-env,model = dqn_runner_functions(functions, dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET,model)
 
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *

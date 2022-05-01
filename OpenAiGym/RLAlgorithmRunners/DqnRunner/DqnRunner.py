@@ -23,14 +23,14 @@ def dqn_runner_functions(functions,
                          test_functions=None,
                          ):
 
-    parameters_dict = {"time_steps": time_steps,
-                       "net_arch": policy_kwargs_dictionary[dimension]["net_arch"],
-                       "dimension": dimension, "functions": functions}
-
     env = env_creator(functions, dimension, key_type)
     '''model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension],
                 exploration_fraction=0.9, batch_size=int(env.steps_in_each_epoch*2), verbose=1,
                 learning_rate=0.01)'''
+
+    parameters_dict = env.env_specific_configuration() | {"time_steps": time_steps,
+                                                          "net_arch": policy_kwargs_dictionary[dimension]["net_arch"],
+                                                          "functions": functions, "test_functions": test_functions}
 
     buffer_factor = 128
     batch_factor = 32
@@ -86,13 +86,8 @@ def dqn_runner_output_helper(root_directory, output_folder_label, env, model,
                              training_data_performance_results, test_data_performance_results, parameters_dict):
     output_directory = get_test_output_directory(root_directory, output_folder_label, "DQN", env)
     if output_directory is not None:
-        dump_outputs(env.max_rewards_in_the_episodes, output_directory, "max_rewards_in_the_episodes")
-        dump_outputs(env.cumulative_rewards_in_the_episodes, output_directory,
-                     "cumulative_rewards_in_the_episodes")
+        env.dump_env_statistics(output_directory)
 
-        dump_json(env.function_each_episode, output_directory, "function_each_episode")
-        dump_json(env.max_reward_dict, output_directory, "max_reward_dict")
-        dump_json(env.max_reward_key_dict, output_directory, "max_reward_" + env.key_name + "_dict")
         dump_json(training_data_performance_results, output_directory, "training_data_performance_results")
         dump_json(test_data_performance_results, output_directory, "test_data_performance_results")
 
