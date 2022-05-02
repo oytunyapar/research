@@ -11,7 +11,7 @@ def random_k_vector_runner(dimension, output_directory=None):
     print_constant = 100000
     total_steps = number_of_steps_dictionary[dimension]
     for function in BooleanFunctionsEquivalentClasses[dimension]:
-        env = MinTermSrpobfEnv(function, dimension, q_matrix_representation, act,
+        env = MinTermSrpobfEnv(function, dimension, function_representation_type, act,
                                no_action_episode_end, episodic_reward=True)
 
         for step in range(number_of_steps_dictionary[dimension]):
@@ -24,7 +24,8 @@ def random_k_vector_runner(dimension, output_directory=None):
                 print("Function:" + function_to_hex_string(dimension, function) +
                       " continues " + str(step) + "/" + str(total_steps))
 
-        result_metrics[str(dimension) + "_" + function_to_hex_string(dimension, function) + "_max_reward"] = env.max_rewards_in_the_episodes
+        result_metrics[str(dimension) + "_" + function_to_hex_string(dimension, function) + "_max_reward"]\
+            = env.max_rewards_in_the_episodes
 
         if output_directory is not None:
             function_output_directory = output_directory + "/" + function_to_hex_string(dimension, function)
