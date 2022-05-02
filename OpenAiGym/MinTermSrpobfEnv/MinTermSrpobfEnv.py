@@ -15,12 +15,12 @@ class MinTermSrpobfEnv(MinTermSrpobfEnvBase):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, function, dimension,
-                 q_matrix_representation,
+                 function_representation_type,
                  action_type,
                  no_action_episode_end,
                  episodic_reward):
 
-        super(MinTermSrpobfEnv, self).__init__(function, dimension, q_matrix_representation, episodic_reward)
+        super(MinTermSrpobfEnv, self).__init__(function, dimension, function_representation_type, episodic_reward)
         self.steps_in_each_epoch = ((self.two_to_power_dimension / 2) - 1) * self.two_to_power_dimension
 
         self.key_name = "k_vector"
