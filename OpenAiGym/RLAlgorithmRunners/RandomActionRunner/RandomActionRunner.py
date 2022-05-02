@@ -2,8 +2,6 @@ from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
 from OpenAiGym.RLAlgorithmRunners.Utils.EnvironmentHelperFunctions import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
-import datetime
-from pathlib import Path
 import warnings
 
 
@@ -57,7 +55,7 @@ def random_action_runner_n_times(functions,
     return env
 
 
-def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dimension,
+def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dimension, output_directory=None,
                                      output_folder_label=None, key_type=KeyType.K_VECTOR):
     warnings.filterwarnings("ignore")
 
@@ -78,40 +76,42 @@ def random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dime
     for time_point in n_time_points:
         parameters_dict["n_times"] += time_point
 
-        root_directory = str(Path.home()) + "/PycharmProjects/research/OpenAiGym/" +\
-                         get_env_name_from_key_type(key_type) + "/Data/" + str(dimension) +\
-                         "dim/RandomAction/" + str(datetime.datetime.now()) + "_" + "Monte_Carlo"
-
         if output_folder_label is not None:
-            root_directory = root_directory + "_" + output_folder_label
+            current_output_folder_label = output_folder_label + "_" + "Monte_Carlo"
+        else:
+            current_output_folder_label = "Monte_Carlo"
+
+        monte_carlo_output_directory =\
+            get_experiment_output_directory(output_directory, current_output_folder_label, "RandomAction",
+                                            env_creator(functions, dimension, key_type))
 
         for times in range(monte_carlo_times):
-            output_directory = root_directory + "/" + str(times)
+            current_output_directory = monte_carlo_output_directory + "/" + str(times)
             if test_mode:
                 env = random_action_monte_carlo_impl(functions, dimension, time_point,
-                                                     output_directory + "/training", key_type,
-                                                     environments[times])
+                                                     current_output_directory + "/training",
+                                                     key_type, environments[times])
                 environments[times] = env
 
                 env = random_action_monte_carlo_impl(functions, dimension, time_point,
-                                                     output_directory + "/test", key_type,
-                                                     test_environments[times])
+                                                     current_output_directory + "/test",
+                                                     key_type, test_environments[times])
                 test_environments[times] = env
             else:
-                env = random_action_monte_carlo_impl(functions, dimension, time_point, output_directory,
+                env = random_action_monte_carlo_impl(functions, dimension, time_point, current_output_directory,
                                                      key_type, environments[times])
                 environments[times] = env
 
             print("Monte Carlo times:" + str(times + 1) + "/" + str(monte_carlo_times))
 
         if monte_carlo_times > 0:
-            dump_json(environments[0].env_specific_configuration() | parameters_dict, root_directory, "parameters")
-            monte_carlo_overall_performance_average(root_directory, test_mode, monte_carlo_times)
-            monte_carlo_equivalence_class_performance_average(root_directory, test_mode, monte_carlo_times, dimension)
+            dump_json(environments[0].env_specific_configuration() | parameters_dict,
+                      monte_carlo_output_directory, "parameters")
+            monte_carlo_overall_performance_average(monte_carlo_output_directory, test_mode, monte_carlo_times)
+            monte_carlo_equivalence_class_performance_average(monte_carlo_output_directory, test_mode,
+                                                              monte_carlo_times, dimension)
 
     warnings.filterwarnings("default")
-
-    return root_directory
 
 
 def process_n_times_array(n_times):
@@ -140,7 +140,7 @@ def random_action_monte_carlo_impl(functions, dimension, n_times, output_directo
 
 
 def random_action_runner_output_helper(root_directory, output_folder_label, env):
-    output_directory = get_test_output_directory(root_directory, output_folder_label, "RandomAction", env)
+    output_directory = get_experiment_output_directory(root_directory, output_folder_label, "RandomAction", env)
     if output_directory is not None:
         random_action_runner_output(output_directory, env)
 

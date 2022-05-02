@@ -84,7 +84,7 @@ def dqn_runner_all_functions(dimension, output_directory=None, key_type=KeyType.
 
 def dqn_runner_output_helper(root_directory, output_folder_label, env, model,
                              training_data_performance_results, test_data_performance_results, parameters_dict):
-    output_directory = get_test_output_directory(root_directory, output_folder_label, "DQN", env)
+    output_directory = get_experiment_output_directory(root_directory, output_folder_label, "DQN", env)
     if output_directory is not None:
         env.dump_env_statistics(output_directory)
 

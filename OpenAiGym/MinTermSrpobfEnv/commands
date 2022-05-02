@@ -5,10 +5,10 @@ from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
 dimension = 4
 two_to_power_dimension = 2**dimension
 time_steps=24000000
-root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
+root_dir="/home/oytun/PycharmProjects/research/Data/OpenAiGym/"
 
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
-dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
+dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
 functions = load_json(dir,"parameters")["functions"]
 output_prefix="functions_range_0_to_65536_size_49152"
 test_functions = get_complement_function_list(dimension, functions)
@@ -21,15 +21,19 @@ from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
 dimension = 3
 two_to_power_dimension = 2**dimension
 time_steps=600
-root_dir="/home/oytun/PycharmProjects/research/OpenAiGym/"
+root_dir="/home/oytun/PycharmProjects/research"
+
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
-dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/3dim/DQN/2022-04-30 19:20:36.990712_functions_range_0_to_256_size_192"
+dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/3dim/DQN/2022-05-01 13:57:15.831306_functions_range_0_to_256_size_192"
 functions = load_json(dir,"parameters")["functions"]
-test_functions = get_complement_function_list(dimension, functions)
-output_prefix="functions_range_0_to_256_size_192"
 
 import random
+dimension = 3
+two_to_power_dimension = 2**dimension
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
+
+test_functions = get_complement_function_list(dimension, functions)
+output_prefix="functions_range_0_to_256_size_192"
 
 eq_class = 0xaa55
 test_functions, _ = get_functions_from_walsh_spectrum(eq_class, dimension)
@@ -42,17 +46,18 @@ dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_funct
 
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 import random
-monte_carlo_times=1
+root_dir="/home/oytun/PycharmProjects/research"
+monte_carlo_times=2
 n_times=[1,2]
 dimension = 3
 two_to_power_dimension = 2**dimension
 functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
 output_folder_label="function_75_percent"
-dir = random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dimension, output_folder_label, KeyType.MONOMIAL_SET)
+random_action_monte_carlo_runner(monte_carlo_times, n_times, functions, dimension, root_dir, output_folder_label, KeyType.MONOMIAL_SET)
 
 from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
 from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
-dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
+dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
 functions = load_json(dir,"parameters")["functions"]
 
 perf = load_json(dir,"performance_results")
@@ -69,7 +74,7 @@ from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 
 
 for i in range(10):
-    dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/2022-03-18 18:16:29.927266_Monte_Carlo_function_75_percent"
+    dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/RandomAction/2022-03-18 18:16:29.927266_Monte_Carlo_function_75_percent"
 
     output_directory = dir + "/" + str(i) + "/training"
     performance_results = load_json(output_directory, "performance_results")
@@ -89,7 +94,7 @@ for i in range(10):
     performance_mean_variance = {"perf_mean": perf_mean, "perf_deviance": perf_deviance}
     dump_json(performance_mean_variance, output_directory, "performance_mean_variance")
 
-dir = "/home/oytun/PycharmProjects/research/OpenAiGym/MinTermLpSrpobfEnv/Data/4dim/RandomAction/2022-03-18 18:16:29.927266_Monte_Carlo_function_75_percent"
+dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/RandomAction/2022-03-18 18:16:29.927266_Monte_Carlo_function_75_percent"
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 monte_carlo_overall_performance_average(dir, True, 10)
 monte_carlo_equivalence_class_performance_average(dir, True, 10,4)
