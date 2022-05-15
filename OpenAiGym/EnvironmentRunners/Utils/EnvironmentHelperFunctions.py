@@ -3,7 +3,7 @@ import datetime
 
 from OpenAiGym.MinTermLpSrpobfEnv.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
 from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
-from OpenAiGym.RLAlgorithmRunners.MinTermSrpobfEnvConstants import *
+from OpenAiGym.EnvironmentRunners.MinTermSrpobfEnvConstants import *
 
 
 class KeyType(Enum):

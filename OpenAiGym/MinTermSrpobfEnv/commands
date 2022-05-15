@@ -1,6 +1,3 @@
-from stable_baselines3 import PPO, A2C, DQN, DDPG
-
-
 from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
 dimension = 4
 two_to_power_dimension = 2**dimension
@@ -13,17 +10,17 @@ functions = load_json(dir,"parameters")["functions"]
 output_prefix="functions_range_0_to_65536_size_49152"
 test_functions = get_complement_function_list(dimension, functions)
 
-env,model= dqn_runner_functions(functions,
-dimension, time_steps, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_functions=test_functions)
+env,model= rl_runner_functions(functions,
+dimension, time_steps, RLModelType.RL_PPO, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_functions=test_functions)
 
 
-from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
+from OpenAiGym.EnvironmentRunners.RLRunner.RLRunner import *
 dimension = 3
 two_to_power_dimension = 2**dimension
-time_steps=600
+time_steps=400000
 root_dir="/home/oytun/PycharmProjects/research"
 
-from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
+from OpenAiGym.EnvironmentRunners.Utils.DumpOutputs import *
 dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/3dim/DQN/2022-05-01 13:57:15.831306_functions_range_0_to_256_size_192"
 functions = load_json(dir,"parameters")["functions"]
 

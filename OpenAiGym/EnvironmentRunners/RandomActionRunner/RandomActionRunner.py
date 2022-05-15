@@ -1,6 +1,6 @@
-from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
-from OpenAiGym.RLAlgorithmRunners.Utils.EnvironmentHelperFunctions import *
-from OpenAiGym.RLAlgorithmRunners.Utils.DataHelperFunctions import *
+from OpenAiGym.EnvironmentRunners.Utils.DumpOutputs import *
+from OpenAiGym.EnvironmentRunners.Utils.EnvironmentHelperFunctions import *
+from OpenAiGym.EnvironmentRunners.Utils.DataHelperFunctions import *
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 import warnings
 
