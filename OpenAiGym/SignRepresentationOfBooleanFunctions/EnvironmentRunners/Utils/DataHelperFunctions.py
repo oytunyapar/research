@@ -1,4 +1,4 @@
-from OpenAiGym.EnvironmentRunners.Utils.StringHelperFunctions import function_to_hex_string
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.StringHelperFunctions import function_to_hex_string
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 import json
 import numpy

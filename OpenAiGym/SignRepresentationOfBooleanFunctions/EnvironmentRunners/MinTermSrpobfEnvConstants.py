@@ -1,5 +1,5 @@
-from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import ActionType
-from OpenAiGym.MinTermSrpobfEnvBase.MinTermSrpobfEnvBase import FunctionRepresentationType
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnv.MinTermSrpobfEnv import ActionType
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase.MinTermSrpobfEnvBase import FunctionRepresentationType
 
 function_representation_type = FunctionRepresentationType.WALSH_SPECTRUM
 no_action_episode_end = False

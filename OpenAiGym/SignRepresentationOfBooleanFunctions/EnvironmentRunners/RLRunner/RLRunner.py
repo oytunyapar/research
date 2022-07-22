@@ -1,6 +1,6 @@
-from OpenAiGym.EnvironmentRunners.Utils.DumpOutputs import dump_json
-from OpenAiGym.EnvironmentRunners.Utils.EnvironmentHelperFunctions import *
-from OpenAiGym.EnvironmentRunners.Utils.DataHelperFunctions import *
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.DumpOutputs import dump_json
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.EnvironmentHelperFunctions import *
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.DataHelperFunctions import *
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 import torch as th
 from stable_baselines3 import DQN, PPO, A2C
@@ -17,7 +17,7 @@ class RLModelType(Enum):
 
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[8, 8]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
@@ -30,8 +30,11 @@ def rl_create_model(model_type, env, time_steps):
         model = DQN('MlpPolicy', env,
                     policy_kwargs=policy_kwargs_dictionary[env.dimension],
                     verbose=1,
+                    exploration_final_eps=0.3,
+                    exploration_fraction=0.8,
                     batch_size=env.steps_in_each_epoch * batch_factor,
-                    buffer_size=int(time_steps/buffer_factor))
+                    buffer_size=int(time_steps/buffer_factor),
+                    learning_rate=0.01)
     elif model_type is RLModelType.RL_PPO:
         model = PPO('MlpPolicy', make_vec_env(lambda: env, n_envs=4),
                     policy_kwargs=policy_kwargs_dictionary[env.dimension],
@@ -60,9 +63,6 @@ def rl_runner_functions(functions,
                         ):
 
     env = env_creator(functions, dimension, key_type)
-    '''model = DQN('MlpPolicy', env, policy_kwargs=policy_kwargs_dictionary[dimension],
-                exploration_fraction=0.9, batch_size=int(env.steps_in_each_epoch*2), verbose=1,
-                learning_rate=0.01)'''
 
     parameters_dict = env.env_specific_configuration() | {"time_steps": time_steps,
                                                           "net_arch": policy_kwargs_dictionary[dimension]["net_arch"],

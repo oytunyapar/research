@@ -1,4 +1,4 @@
-from OpenAiGym.MinTermSrpobfEnvBase.MinTermSrpobfEnvBase import MinTermSrpobfEnvBase
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase.MinTermSrpobfEnvBase import MinTermSrpobfEnvBase
 from SigmaPiFrameworkPython.SigmaPiLinearProgramming import monomial_exclusion
 from SigmaPiFrameworkPython.Utils.CombinationUtils import binary_vector_to_combination
 

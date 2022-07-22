@@ -1,17 +1,40 @@
-from OpenAiGym.RLAlgorithmRunners.DqnRunner.DqnRunner import *
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.RLRunner.RLRunner import *
 dimension = 4
 two_to_power_dimension = 2**dimension
-time_steps=24000000
-root_dir="/home/oytun/PycharmProjects/research/Data/OpenAiGym/"
+time_steps=600000
+root_dir="/home/oytun/PycharmProjects/research"
 
-from OpenAiGym.RLAlgorithmRunners.Utils.DumpOutputs import *
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.DumpOutputs import *
 dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
 functions = load_json(dir,"parameters")["functions"]
 output_prefix="functions_range_0_to_65536_size_49152"
-test_functions = get_complement_function_list(dimension, functions)
 
+from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
+functions, _ = get_functions_from_walsh_spectrum(0xac90, dimension)
+functions = functions.tolist()
+functions = [0xac90]
+output_prefix="function_0xac90"
+test_functions=None
+
+time_steps=5000
 env,model= rl_runner_functions(functions,
-dimension, time_steps, RLModelType.RL_PPO, root_dir, output_prefix, KeyType.MONOMIAL_SET, test_functions=test_functions)
+dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
+test_functions=test_functions)
+
+time_steps=1000000
+env,model= rl_runner_functions(functions,
+dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
+test_functions=test_functions)
+
+time_steps=2000000
+env,model= rl_runner_functions(functions,
+dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
+test_functions=test_functions)
+
+time_steps=4000000
+env,model= rl_runner_functions(functions,
+dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
+test_functions=test_functions)
 
 
 from OpenAiGym.EnvironmentRunners.RLRunner.RLRunner import *

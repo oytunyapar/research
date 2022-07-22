@@ -1,9 +1,9 @@
 from enum import Enum
 import datetime
 
-from OpenAiGym.MinTermLpSrpobfEnv.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
-from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
-from OpenAiGym.EnvironmentRunners.MinTermSrpobfEnvConstants import *
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermLpSrpobfEnv.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.MinTermSrpobfEnvConstants import *
 
 
 class KeyType(Enum):

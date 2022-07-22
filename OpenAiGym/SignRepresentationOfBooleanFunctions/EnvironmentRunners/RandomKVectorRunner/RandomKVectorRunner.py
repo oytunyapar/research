@@ -1,9 +1,9 @@
-from OpenAiGym.EnvironmentRunners.MinTermSrpobfEnvConstants import *
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.MinTermSrpobfEnvConstants import *
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsEquivalentClasses
-from OpenAiGym.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
 import numpy as np
-from OpenAiGym.EnvironmentRunners.Utils.DumpOutputs import dump_outputs
-from OpenAiGym.EnvironmentRunners.Utils.StringHelperFunctions import function_to_hex_string
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.DumpOutputs import dump_outputs
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.StringHelperFunctions import function_to_hex_string
 
 
 def random_k_vector_runner(dimension, output_directory=None):
