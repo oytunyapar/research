@@ -2,7 +2,7 @@ from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.MinTermSr
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import BooleanFunctionsEquivalentClasses
 from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
 import numpy as np
-from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.DumpOutputs import dump_outputs
+from OpenAiGym.Utils.DumpOutputs import dump_outputs
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.StringHelperFunctions import function_to_hex_string
 
 
