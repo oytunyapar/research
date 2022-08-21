@@ -7,7 +7,7 @@ import decimal
 class ValueAdjustingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, root_limits):
+    def __init__(self, root_limits, stop_action_enabled=False):
         super(ValueAdjustingEnv, self).__init__()
 
         self.number_of_roots = 2
@@ -23,13 +23,24 @@ class ValueAdjustingEnv(gym.Env):
 
         self.length_of_equation_coefficients = len(self.equation_coefficients)
 
-        self.steps_in_each_epoch = 300
+        self.current_epoch = 0
+        self.steps_in_each_epoch = 600
         self.current_step = 0
 
         self.action_factor = 10 ** -self.decimal_precision
         self.action_size = 2
         self.action_increase = 0
         self.action_decrease = 1
+        self.action_stop = 2
+        self.stop_action_enabled = stop_action_enabled
+
+        if self.stop_action_enabled:
+            self.action_size += 1
+            self.current_value_reset_factor = 1
+            self.current_value_reset_factor_increase_epoch_factor = 30000
+            self.target_action_occurrence = 0
+        else:
+            self.current_value_reset_factor = self.steps_in_each_epoch / 3
 
         self.state_size = self.length_of_equation_coefficients + 1
         self._create_action_and_observation_space()
@@ -88,15 +99,22 @@ class ValueAdjustingEnv(gym.Env):
 
     def reset_current_value(self):
         selected_root = numpy.random.choice(self.roots)
+
+        if self.stop_action_enabled:
+            if self.current_epoch % self.current_value_reset_factor_increase_epoch_factor == 0 and \
+                    self.current_value_reset_factor < 20:
+                self.current_value_reset_factor += 1
+
         current_value_limits = [selected_root,
                                 selected_root + numpy.random.choice([1, -1]) *
-                                self.steps_in_each_epoch/3 * self.action_factor]
+                                self.current_value_reset_factor * self.action_factor]
 
         self.current_value = round(numpy.random.uniform(current_value_limits[0], current_value_limits[1], 1)[0],
                                    self.decimal_precision)
 
     def reset(self):
         self.current_step = 0
+        self.current_epoch += 1
         self.create_equation()
         self.reset_current_value()
 
@@ -105,16 +123,20 @@ class ValueAdjustingEnv(gym.Env):
     def step(self, action):
         self.current_step += 1
 
+        action_stop = False
+
         if action == self.action_increase:
             self.current_value += self.action_factor
         elif action == self.action_decrease:
             self.current_value -= self.action_factor
+        elif action == self.action_stop:
+            action_stop = True
         else:
             raise Exception("Unknown action!")
 
         observation = self.create_observation()
-        reward = self.reward()
-        done = self.check_episode_end()
+        reward = self.reward(action_stop)
+        done = self.check_episode_end(action_stop)
 
         info = {}
 
@@ -133,14 +155,20 @@ class ValueAdjustingEnv(gym.Env):
 
         return target_root, target_distance
 
-    def reward(self):
+    def reward(self, stop_action_received):
         target_root, target_distance = self.minimum_distance_from_roots()
 
         if self.previous_distance > target_distance:
-            if self.current_value == target_root:
-                reward = 2 * self.action_factor
+            reward = self.action_factor
+        elif self.previous_distance == target_distance:
+            if stop_action_received:
+                if self.current_value == target_root:
+                    reward = 100 * self.action_factor
+                    self.target_action_occurrence += 1
+                else:
+                    reward = -self.action_factor
             else:
-                reward = self.action_factor
+                reward = 0
         else:
             reward = -self.action_factor
 
@@ -148,5 +176,11 @@ class ValueAdjustingEnv(gym.Env):
 
         return reward
 
-    def check_episode_end(self):
-        return self.current_step > self.steps_in_each_epoch or self.equation_calculate(self.current_value) == 0
+    def check_episode_end(self, stop_action_received):
+        if self.current_step > self.steps_in_each_epoch:
+            return True
+
+        if self.stop_action_enabled:
+            return stop_action_received
+        else:
+            return self.equation_calculate(self.current_value) == 0

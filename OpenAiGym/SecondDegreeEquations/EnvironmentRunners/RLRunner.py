@@ -6,13 +6,13 @@ from OpenAiGym.SecondDegreeEquations.Environments.ValueAdjustingEnv import Value
 
 
 def rl_create_model(env, time_steps):
-    batch_factor = 32
-    buffer_factor = 128
+    batch_factor = 64
+    buffer_factor = 8
 
     model = DQN('MlpPolicy', env,
-                policy_kwargs=dict(activation_fn=th.nn.ReLU, net_arch=[16, 8]),
+                policy_kwargs=dict(activation_fn=th.nn.ReLU, net_arch=[24, 16]),
                 verbose=1,
-                exploration_final_eps=0.3,
+                exploration_final_eps=0.4,
                 exploration_fraction=0.8,
                 batch_size=env.steps_in_each_epoch * batch_factor,
                 buffer_size=int(time_steps / buffer_factor),
@@ -23,7 +23,7 @@ def rl_create_model(env, time_steps):
 
 def rl_runner(root_limits, time_steps, output_directory=None, output_folder_prefix=None, model=None):
 
-    env = ValueAdjustingEnv(root_limits)
+    env = ValueAdjustingEnv(root_limits, True)
 
     if model is None:
         model = rl_create_model(env, time_steps)

@@ -1,7 +1,7 @@
 import functools
 import numpy
 
-from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase.MinTermSrpobfEnvBase import MinTermSrpobfEnvBase
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase import MinTermSrpobfEnvBase
 
 from enum import Enum
 

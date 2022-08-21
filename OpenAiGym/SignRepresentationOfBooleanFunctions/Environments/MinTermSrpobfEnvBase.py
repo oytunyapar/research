@@ -83,9 +83,9 @@ class MinTermSrpobfEnvBase(gym.Env):
 
         self.episodic_reward = episodic_reward
 
-    def _create_action_and_observation_space(self):
+    def _create_action_and_observation_space(self, limit_low=-numpy.inf, limit_high=numpy.inf, dtype=numpy.float32):
         self.action_space = spaces.Discrete(self.action_size)
-        self.observation_space = spaces.Box(-numpy.inf, numpy.inf, [self.state_size])
+        self.observation_space = spaces.Box(limit_low, limit_high, [self.state_size], dtype)
 
     def update_episode_reward_statistics(self, reward):
         self.cumulative_reward_in_the_episode += reward

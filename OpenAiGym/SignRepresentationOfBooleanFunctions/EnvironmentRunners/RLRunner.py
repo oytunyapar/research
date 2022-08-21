@@ -17,7 +17,7 @@ class RLModelType(Enum):
 
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[8, 8]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
@@ -30,11 +30,10 @@ def rl_create_model(model_type, env, time_steps):
         model = DQN('MlpPolicy', env,
                     policy_kwargs=policy_kwargs_dictionary[env.dimension],
                     verbose=1,
-                    exploration_final_eps=0.3,
-                    exploration_fraction=0.8,
+                    exploration_final_eps=0.1,
+                    exploration_fraction=0.7,
                     batch_size=env.steps_in_each_epoch * batch_factor,
-                    buffer_size=int(time_steps/buffer_factor),
-                    learning_rate=0.01)
+                    buffer_size=int(time_steps/buffer_factor))
     elif model_type is RLModelType.RL_PPO:
         model = PPO('MlpPolicy', make_vec_env(lambda: env, n_envs=4),
                     policy_kwargs=policy_kwargs_dictionary[env.dimension],

@@ -1,7 +1,11 @@
 from OpenAiGym.SecondDegreeEquations.EnvironmentRunners.RLRunner import *
-time_steps=600000
+time_steps=3000000
 root_dir="/home/oytun/PycharmProjects/research"
 output_prefix="random"
-root_limits=[-20,20]
+root_limits=[-10,10]
 
 env,model= rl_runner(root_limits, time_steps, root_dir, output_prefix)
+
+rl_runner_test_model(env, model)
+env.roots
+env.current_value

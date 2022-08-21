@@ -1,8 +1,44 @@
-from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.RLRunner.RLRunner import *
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.RLRunner import *
 dimension = 4
 two_to_power_dimension = 2**dimension
-time_steps=600000
+time_steps=4000
 root_dir="/home/oytun/PycharmProjects/research"
+output_prefix="bent_functions_75_percentage"
+
+from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
+functions, _ = get_functions_from_walsh_spectrum(0xac90, dimension)
+functions = functions.tolist()
+
+import random
+training_functions = random.sample(functions, int(len(functions)*0.75))
+test_functions = list(set(functions) - set(training_functions))
+
+env,model= rl_runner_functions(training_functions,
+dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
+test_functions=test_functions)
+
+output_prefix="functions_75_percentage"
+training_functions = random.sample(range(0, 2**two_to_power_dimension), int(2**two_to_power_dimension*0.75))
+test_functions = get_complement_function_list(dimension, training_functions)
+
+model=model,
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.EnvironmentHelperFunctions import *
+env = env_creator(functions, dimension, KeyType.MONOMIAL_SET)
+
+dir  = ""
+
+from OpenAiGym.Utils.DumpOutputs import *
+training_functions = load_json(dir,"parameters")["functions"]
+test_functions = list(set(functions) - set(training_functions))
+
+model = rl_load_model(dir)
+
+env,model= rl_runner_functions(training_functions,
+dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET, model=model,
+test_functions=test_functions)
+
+
+
 
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.DumpOutputs import *
 dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
@@ -21,29 +57,13 @@ env,model= rl_runner_functions(functions,
 dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
 test_functions=test_functions)
 
-time_steps=1000000
-env,model= rl_runner_functions(functions,
-dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
-test_functions=test_functions)
-
-time_steps=2000000
-env,model= rl_runner_functions(functions,
-dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
-test_functions=test_functions)
-
-time_steps=4000000
-env,model= rl_runner_functions(functions,
-dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
-test_functions=test_functions)
-
-
 from OpenAiGym.EnvironmentRunners.RLRunner.RLRunner import *
 dimension = 3
 two_to_power_dimension = 2**dimension
 time_steps=400000
 root_dir="/home/oytun/PycharmProjects/research"
 
-from OpenAiGym.EnvironmentRunners.Utils.DumpOutputs import *
+from OpenAiGym.Utils.DumpOutputs import *
 dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/3dim/DQN/2022-05-01 13:57:15.831306_functions_range_0_to_256_size_192"
 functions = load_json(dir,"parameters")["functions"]
 
@@ -118,3 +138,9 @@ dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4d
 from OpenAiGym.RLAlgorithmRunners.RandomActionRunner.RandomActionRunner import *
 monte_carlo_overall_performance_average(dir, True, 10)
 monte_carlo_equivalence_class_performance_average(dir, True, 10,4)
+
+
+obs, vec = model.policy.obs_to_tensor(env.reset())
+a = numpy.argsort(model.q_net(obs).flatten().tolist())
+
+all(numpy.isin(numpy.where(numpy.array([0,1,1,0]) == 1)[0], numpy.where(numpy.array([0,1,1,1]) == 1)[0]))

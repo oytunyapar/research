@@ -1,4 +1,4 @@
-from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase.MinTermSrpobfEnvBase import MinTermSrpobfEnvBase
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase import *
 from SigmaPiFrameworkPython.SigmaPiLinearProgramming import monomial_exclusion
 from SigmaPiFrameworkPython.Utils.CombinationUtils import binary_vector_to_combination
 
@@ -22,7 +22,11 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
 
         self.max_reward_key = self.key.copy()
 
-        super(MinTermLpSrpobfEnv, self)._create_action_and_observation_space()
+        if q_matrix_representation:
+            super(MinTermLpSrpobfEnv, self)._create_action_and_observation_space(-1, 1, dtype=numpy.int)
+        else:
+            super(MinTermLpSrpobfEnv, self)._create_action_and_observation_space(-self.two_to_power_dimension,
+                                                                                 self.two_to_power_dimension)
 
     def reset_key(self):
         self.key = numpy.zeros(self.key_size)
@@ -50,7 +54,11 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
 
     def reward(self, next_key):
         next_number_of_zeroed_monomials = numpy.count_nonzero(next_key == 1)
-        reward = next_number_of_zeroed_monomials ** 2
+
+        if self.function_representation_type == FunctionRepresentationType.Q_MATRIX:
+            reward = next_number_of_zeroed_monomials / self.two_to_power_dimension
+        else:
+            reward = next_number_of_zeroed_monomials ** 2
 
         if reward > self.max_reward_in_the_episode:
             return reward
@@ -58,4 +66,7 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
             return 0
 
     def reward_to_number_of_zeros(self, reward):
-        return int(numpy.sqrt(reward))
+        if self.function_representation_type == FunctionRepresentationType.Q_MATRIX:
+            return int(numpy.ceil(reward * self.two_to_power_dimension))
+        else:
+            return int(numpy.sqrt(reward))

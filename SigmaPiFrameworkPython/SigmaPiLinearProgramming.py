@@ -6,24 +6,24 @@ import numpy
 from scipy.optimize import linprog
 
 
-def monomial_exclusion_all_dimension(function, dimension):
+def monomial_exclusion_all_subsets(function, dimension):
     q_matrix = monomial_setup.q_matrix_generator(function, dimension)
     size = 2 ** dimension
     main_list = range(0, size)
 
-    input_data = numpy.zeros([2 ** size, size], dtype=numpy.uint8)
-    output_data = numpy.zeros(2 ** size, dtype=numpy.uint8)
+    input_data = numpy.zeros([2 ** size - 1, size], dtype=numpy.uint8)
+    output_data = numpy.zeros(2 ** size - 1, dtype=numpy.uint8)
 
     iterations = 0
 
-    for iterator in range(0, size + 1):
+    for iterator in range(1, size + 1):
         current_combinations = list(itertools.combinations(main_list, iterator))
         for combination in current_combinations:
 
             for index in combination:
                 input_data[iterations, index] = 1
 
-            if monomial_exclusion(q_matrix, size, combination):
+            if monomial_exclusion(q_matrix, size, numpy.array(combination)):
                 output_data[iterations] = 1
 
             iterations = iterations + 1

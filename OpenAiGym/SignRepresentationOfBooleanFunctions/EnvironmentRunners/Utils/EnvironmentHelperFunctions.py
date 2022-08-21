@@ -1,8 +1,8 @@
 from enum import Enum
 import datetime
 
-from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermLpSrpobfEnv.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
-from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnv.MinTermSrpobfEnv import MinTermSrpobfEnv
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermLpSrpobfEnv import MinTermLpSrpobfEnv
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnv import MinTermSrpobfEnv
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.MinTermSrpobfEnvConstants import *
 
 

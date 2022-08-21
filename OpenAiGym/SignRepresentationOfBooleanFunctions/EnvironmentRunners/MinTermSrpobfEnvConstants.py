@@ -1,7 +1,7 @@
-from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnv.MinTermSrpobfEnv import ActionType
-from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase.MinTermSrpobfEnvBase import FunctionRepresentationType
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnv import ActionType
+from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase import FunctionRepresentationType
 
-function_representation_type = FunctionRepresentationType.WALSH_SPECTRUM
+function_representation_type = FunctionRepresentationType.Q_MATRIX
 no_action_episode_end = False
 act = ActionType.INCREASE
 number_of_steps_dictionary = {3: 50000, 4: 2000000, 5: 4000000}
