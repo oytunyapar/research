@@ -19,7 +19,7 @@ def binary_vector_to_int(binary_vector):
         result += item * (2 ** power)
         power += 1
 
-    return result
+    return int(result)
 
 
 def int_to_binary_vector(value, precision):
@@ -57,3 +57,41 @@ def get_eliminated_subsets_size_dict(subsets, subset_elimination):
             del eliminated_subsets_size_dict[dic_key]
 
     return eliminated_subsets_size_dict
+
+
+def check_if_binary_vector_includes(superset, subset):
+    subset_1_indices = numpy.where(subset == 1)[0]
+    superset_1_indices = numpy.where(superset == 1)[0]
+    includes = all(numpy.isin(subset_1_indices, superset_1_indices))
+
+    if includes:
+        return True, list(set(superset_1_indices) - set(subset_1_indices))
+    else:
+        return False, numpy.empty([0])
+
+
+def check_superset_inclusion(eliminated_subsets_size_dict):
+    keys = eliminated_subsets_size_dict.keys()
+    result = {}
+    for key in keys:
+        if key + 1 in keys:
+            supersets = eliminated_subsets_size_dict[key + 1]
+            subsets = eliminated_subsets_size_dict[key]
+
+            list_of_dicts = []
+
+            for subset in subsets:
+                current_key = binary_vector_to_int(subset)
+                subset_superset_relation = {current_key: numpy.empty([0, 2], dtype=numpy.int32)}
+                for superset in supersets:
+                    includes, spare_index = check_if_binary_vector_includes(superset, subset)
+                    if includes:
+                        subset_superset_relation[current_key] =\
+                            numpy.append(subset_superset_relation[current_key],
+                                         numpy.array([[binary_vector_to_int(superset), spare_index[0]]]), axis=0)
+
+                list_of_dicts.append(subset_superset_relation)
+            result[key] = list_of_dicts
+        print("check_superset_inclusion:" + str(key))
+
+    return result
