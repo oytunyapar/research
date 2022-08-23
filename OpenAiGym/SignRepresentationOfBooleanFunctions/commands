@@ -143,4 +143,7 @@ monte_carlo_equivalence_class_performance_average(dir, True, 10,4)
 obs, vec = model.policy.obs_to_tensor(env.reset())
 a = numpy.argsort(model.q_net(obs).flatten().tolist())
 
-all(numpy.isin(numpy.where(numpy.array([0,1,1,0]) == 1)[0], numpy.where(numpy.array([0,1,1,1]) == 1)[0]))
+
+import SigmaPiFrameworkPython.Utils.CombinationUtils as cmb
+
+

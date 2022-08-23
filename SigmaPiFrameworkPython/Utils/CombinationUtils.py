@@ -95,3 +95,23 @@ def check_superset_inclusion(eliminated_subsets_size_dict):
         print("check_superset_inclusion:" + str(key))
 
     return result
+
+
+def check_the_elimination_dict_for_inclusion(elimination_dict):
+    elimination_dict_keys = elimination_dict.keys()
+
+    counter = 0
+
+    for subset_size in elimination_dict_keys:
+        current_dimension_list = elimination_dict[subset_size]
+        list_counter = 0
+        for current_dimension_list_dict_item in current_dimension_list:
+            current_dimension_list_dict_item_keys = current_dimension_list_dict_item.keys()
+            for current_dimension_list_dict_item_key in current_dimension_list_dict_item_keys:
+                if current_dimension_list_dict_item[current_dimension_list_dict_item_key].size == 0:
+                    print("[" + str(subset_size) + "][" + str(list_counter) + "]->" +
+                          str(current_dimension_list_dict_item))
+                    return False
+            list_counter += 1
+
+    return True
