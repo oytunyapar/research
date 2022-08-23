@@ -100,8 +100,6 @@ def check_superset_inclusion(eliminated_subsets_size_dict):
 def check_the_elimination_dict_for_inclusion(elimination_dict):
     elimination_dict_keys = elimination_dict.keys()
 
-    counter = 0
-
     for subset_size in elimination_dict_keys:
         current_dimension_list = elimination_dict[subset_size]
         list_counter = 0
