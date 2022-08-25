@@ -145,5 +145,10 @@ a = numpy.argsort(model.q_net(obs).flatten().tolist())
 
 
 import SigmaPiFrameworkPython.Utils.CombinationUtils as cmb
+from SigmaPiFrameworkPython.Utils.DataStructureUtils import *
+from SigmaPiFrameworkPython.SigmaPiLinearProgramming import *
+inp, out = monomial_exclusion_all_subsets(0xbb55,4)
+result = cmb.check_superset_inclusion(cmb.get_eliminated_subsets_size_dict(inp, out))
+save_data_structure("/home/oytun/PycharmProjects/research/Data","0xbb55_elimination_relation_dictionary", result)
 
 

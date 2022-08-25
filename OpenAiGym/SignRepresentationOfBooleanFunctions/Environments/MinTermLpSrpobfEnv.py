@@ -1,6 +1,7 @@
 from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase import *
-from SigmaPiFrameworkPython.SigmaPiLinearProgramming import monomial_exclusion
-from SigmaPiFrameworkPython.Utils.CombinationUtils import binary_vector_to_combination
+from SigmaPiFrameworkPython.SigmaPiLinearProgramming import monomial_exclusion, monomial_exclusion_all_subsets
+from SigmaPiFrameworkPython.Utils.CombinationUtils import binary_vector_to_combination, get_eliminated_subsets_size_dict
+
 
 import numpy
 
@@ -70,3 +71,20 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
             return int(numpy.ceil(reward * self.two_to_power_dimension))
         else:
             return int(numpy.sqrt(reward))
+
+    def get_possible_all_action_space(self):
+        result = numpy.empty([0, self.state_size], dtype=numpy.int32)
+
+        subsets, subset_elimination = monomial_exclusion_all_subsets(self.function, self.dimension)
+        eliminated_subsets_size_dict = get_eliminated_subsets_size_dict(subsets, subset_elimination)
+
+        eliminated_subsets_size_dict_keys = list(eliminated_subsets_size_dict.keys())
+        eliminated_subsets_size_dict_keys.pop()
+
+        for key in eliminated_subsets_size_dict_keys:
+            subsets = eliminated_subsets_size_dict[key]
+            for subset in subsets:
+                self.key = subset
+                result = numpy.append(result, self.create_observation().reshape([1, self.state_size]), axis=0)
+
+        return result
