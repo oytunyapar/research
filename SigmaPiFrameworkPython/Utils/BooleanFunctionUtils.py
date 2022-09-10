@@ -1,6 +1,7 @@
 import numpy
 import math
 import random
+import itertools
 from SigmaPiFrameworkPython.MonomialSetup import q_matrix_generator, monomial_setup
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import *
 
@@ -126,3 +127,18 @@ def get_complement_function_list(dimension, functions):
     all_functions = list(range(number_of_functions))
     unique_functions = (numpy.unique(functions) % number_of_functions).tolist()
     return list(set(all_functions) - set(unique_functions))
+
+
+def create_truth_table_input(dimension):
+    return list(itertools.product([False, True], repeat=dimension))
+
+
+def create_truth_table_output(dimension, boolean_function_callback):
+    result = [None] * 2**dimension
+    truth_table_input = create_truth_table_input(dimension)
+    counter = 0
+    for current_row in truth_table_input:
+        result[counter] = boolean_function_callback(current_row)
+        counter += 1
+
+    return result

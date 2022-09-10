@@ -1,4 +1,6 @@
 import numpy
+from SigmaPiFrameworkPython.Utils.DataStructureUtils import *
+from SigmaPiFrameworkPython.SigmaPiLinearProgramming import monomial_exclusion_all_subsets
 
 
 def binary_vector_to_combination(binary_vector):
@@ -113,3 +115,21 @@ def check_the_elimination_dict_for_inclusion(elimination_dict):
             list_counter += 1
 
     return True
+
+
+def get_elimination_relation_dictionary_name(function, dimension):
+    return str(dimension) + "dim_" + hex(function) + "_elimination_relation_dictionary"
+
+
+def get_elimination_relation_dictionary(function, dimension, output_directory_dir=None):
+    inp, out = monomial_exclusion_all_subsets(function, dimension)
+    result = check_superset_inclusion(get_eliminated_subsets_size_dict(inp, out))
+
+    if output_directory_dir is not None:
+        save_data_structure(output_directory_dir, get_elimination_relation_dictionary_name(function, dimension), result)
+
+    return result
+
+
+def load_elimination_relation_dictionary(function, dimension, output_directory_dir):
+    return open_data_structure(output_directory_dir, get_elimination_relation_dictionary_name(function, dimension))

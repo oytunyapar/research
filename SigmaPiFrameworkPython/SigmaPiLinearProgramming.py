@@ -31,6 +31,23 @@ def monomial_exclusion_all_subsets(function, dimension):
     return input_data, output_data
 
 
+def monomial_exclusion_iterative(function, dimension):
+    q_matrix = monomial_setup.q_matrix_generator(function, dimension)
+    size = 2 ** dimension
+    indexes = numpy.array(range(size))
+    combination = numpy.array([], dtype=numpy.int32)
+
+    for iterator in range(size):
+        index = numpy.random.choice(indexes)
+        indexes = numpy.delete(indexes, indexes == index)
+
+        combination = numpy.append(combination, index)
+        if monomial_exclusion(q_matrix, size, numpy.array(combination)) is False:
+            combination = numpy.delete(combination, combination == index)
+
+    return combination
+
+
 def monomial_exclusion(q_matrix, q_matrix_column_size, combination):
     result = linprog(c=numpy.ones(q_matrix_column_size),
                      A_ub=None,

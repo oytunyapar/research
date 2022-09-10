@@ -17,7 +17,7 @@ class RLModelType(Enum):
 
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[16, 8]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
@@ -30,7 +30,7 @@ def rl_create_model(model_type, env, time_steps):
         model = DQN('MlpPolicy', env,
                     policy_kwargs=policy_kwargs_dictionary[env.dimension],
                     verbose=1,
-                    exploration_final_eps=0.1,
+                    exploration_final_eps=0.2,
                     exploration_fraction=0.7,
                     batch_size=env.steps_in_each_epoch * batch_factor,
                     buffer_size=int(time_steps/buffer_factor))
@@ -165,5 +165,5 @@ def rl_runner_model_performance(env, model, functions):
     return performance
 
 
-def rl_load_model(output_directory, model_package_name="model.zip"):
+def rl_load_model(output_directory, model_package_name="model"):
     return DQN.load(output_directory + "/" + model_package_name)

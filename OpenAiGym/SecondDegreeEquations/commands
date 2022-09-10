@@ -9,3 +9,12 @@ env,model= rl_runner(root_limits, time_steps, root_dir, output_prefix)
 rl_runner_test_model(env, model)
 env.roots
 env.current_value
+
+
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.ModelPerformanceFunctions import *
+model_output_directory="/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/DQN/2022-05-31 03:31:29.029418_function_0xac90"
+model_output_directory="/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/DQN//2022-07-30 14:19:22.684197_bent_functions_75_percentage"
+elimination_relation_data_structure_dir="/home/oytun/PycharmProjects/research/Data"
+function=0xac90
+dimension=4
+dqn_model_all_state_performance(model_output_directory, function, dimension, elimination_relation_data_structure_dir=elimination_relation_data_structure_dir)
