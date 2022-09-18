@@ -72,19 +72,22 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         else:
             return int(numpy.sqrt(reward))
 
-    def get_possible_all_action_space(self):
-        result = numpy.empty([0, self.state_size], dtype=numpy.int32)
-
+    def get_possible_all_state_space(self):
         subsets, subset_elimination = monomial_exclusion_all_subsets(self.function, self.dimension)
         eliminated_subsets_size_dict = get_eliminated_subsets_size_dict(subsets, subset_elimination)
 
         eliminated_subsets_size_dict_keys = list(eliminated_subsets_size_dict.keys())
         eliminated_subsets_size_dict_keys.pop()
 
+        result = {}
+
         for key in eliminated_subsets_size_dict_keys:
             subsets = eliminated_subsets_size_dict[key]
+            current_matrix = numpy.empty([0, self.state_size], dtype=numpy.int32)
             for subset in subsets:
                 self.key = subset
-                result = numpy.append(result, self.create_observation().reshape([1, self.state_size]), axis=0)
+                current_matrix = numpy.append(current_matrix, self.create_observation().reshape([1, self.state_size]),
+                                              axis=0)
+            result[key] = current_matrix
 
         return result

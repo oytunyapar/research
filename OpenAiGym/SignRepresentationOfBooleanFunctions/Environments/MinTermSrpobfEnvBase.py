@@ -179,3 +179,6 @@ class MinTermSrpobfEnvBase(gym.Env):
         dump_json(self.function_each_episode, output_directory, "function_each_episode")
         dump_json(self.max_reward_dict, output_directory, "max_reward_dict")
         dump_json(self.max_reward_key_dict, output_directory, "max_reward_" + self.key_name + "_dict")
+
+    def get_key_from_state(self, state):
+        return state[self.function_representation_size:self.state_size]
