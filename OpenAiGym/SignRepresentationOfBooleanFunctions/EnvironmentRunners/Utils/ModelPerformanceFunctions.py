@@ -28,11 +28,11 @@ def dqn_model_all_state_performance(model_output_directory, function, dimension,
     for key in action_space_keys:
         current_state_space = state_space[key]
 
-        possible_actions = numpy.empty(0, dtype=numpy.int)
         for state in current_state_space:
             possible_functions_and_actions = \
                 elimination_relation_data_structure_internal[key][binary_vector_to_int(env.get_key_from_state(state))]
 
+            possible_actions = numpy.empty(0, dtype=numpy.int)
             for possible_function_and_action in possible_functions_and_actions:
                 possible_actions = numpy.append(possible_actions, possible_function_and_action[1])
 
@@ -42,7 +42,7 @@ def dqn_model_all_state_performance(model_output_directory, function, dimension,
             predicted_actions_sorted = numpy.argsort(model.q_net(obs).flatten().tolist())
             predicted_actions_sorted_size = predicted_actions_sorted.size
 
-            possible_points += (2 * (predicted_actions_sorted_size - 1) - possible_actions_size - 1) * \
+            possible_points += (2 * (predicted_actions_sorted_size - 1) - (possible_actions_size - 1)) * \
                                (possible_actions_size / 2)
 
             for possible_action in possible_actions:
