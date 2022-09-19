@@ -25,8 +25,12 @@ def dqn_model_all_state_performance(model_output_directory, function, dimension,
     possible_points = 0
     obtained_points = 0
 
+    correct_action = 0
+    num_states = 0
+
     for key in action_space_keys:
         current_state_space = state_space[key]
+        num_states += current_state_space.shape[0]
 
         for state in current_state_space:
             possible_functions_and_actions = \
@@ -42,10 +46,18 @@ def dqn_model_all_state_performance(model_output_directory, function, dimension,
             predicted_actions_sorted = numpy.argsort(model.q_net(obs).flatten().tolist())
             predicted_actions_sorted_size = predicted_actions_sorted.size
 
-            possible_points += (2 * (predicted_actions_sorted_size - 1) - (possible_actions_size - 1)) * \
-                               (possible_actions_size / 2)
+            maximum_index = predicted_actions_sorted_size - 1
+
+            if possible_actions_size > 0:
+                possible_points += ((2 * maximum_index - (possible_actions_size - 1)) * (possible_actions_size / 2)) + \
+                                   maximum_index ** 2 - maximum_index
 
             for possible_action in possible_actions:
-                obtained_points += numpy.where(predicted_actions_sorted == possible_action)[0][0]
+                obtained_point = numpy.where(predicted_actions_sorted == possible_action)[0][0]
+                if obtained_point == maximum_index:
+                    obtained_points += obtained_point**2
+                    correct_action += 1
+                else:
+                    obtained_points += obtained_point
 
-    return obtained_points/possible_points
+    return obtained_points/possible_points, correct_action/num_states
