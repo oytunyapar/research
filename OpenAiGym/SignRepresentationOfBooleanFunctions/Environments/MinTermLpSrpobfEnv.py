@@ -1,7 +1,7 @@
 from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEnvBase import *
 from SigmaPiFrameworkPython.SigmaPiLinearProgramming import monomial_exclusion, monomial_exclusion_all_subsets
 from SigmaPiFrameworkPython.Utils.CombinationUtils import binary_vector_to_combination, get_eliminated_subsets_size_dict
-
+from SigmaPiFrameworkPython.Utils.DataStructureUtils import *
 
 import numpy
 
@@ -72,22 +72,30 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         else:
             return int(numpy.sqrt(reward))
 
-    def get_possible_all_state_space(self):
-        subsets, subset_elimination = monomial_exclusion_all_subsets(self.function, self.dimension)
-        eliminated_subsets_size_dict = get_eliminated_subsets_size_dict(subsets, subset_elimination)
+    def get_possible_all_state_space(self, directory=None):
+        data_structure_file = str(self.dimension) + "dim_" + str(hex(self.function)) + "_possible_all_state_space"
 
-        eliminated_subsets_size_dict_keys = list(eliminated_subsets_size_dict.keys())
-        eliminated_subsets_size_dict_keys.pop()
+        try:
+            return open_data_structure(directory, data_structure_file)
+        except:
+            subsets, subset_elimination = monomial_exclusion_all_subsets(self.function, self.dimension)
+            eliminated_subsets_size_dict = get_eliminated_subsets_size_dict(subsets, subset_elimination)
 
-        result = {}
+            eliminated_subsets_size_dict_keys = list(eliminated_subsets_size_dict.keys())
+            eliminated_subsets_size_dict_keys.pop()
 
-        for key in eliminated_subsets_size_dict_keys:
-            subsets = eliminated_subsets_size_dict[key]
-            current_matrix = numpy.empty([0, self.state_size], dtype=numpy.int32)
-            for subset in subsets:
-                self.key = subset
-                current_matrix = numpy.append(current_matrix, self.create_observation().reshape([1, self.state_size]),
-                                              axis=0)
-            result[key] = current_matrix
+            result = {}
 
-        return result
+            for key in eliminated_subsets_size_dict_keys:
+                subsets = eliminated_subsets_size_dict[key]
+                current_matrix = numpy.empty([0, self.state_size], dtype=numpy.int32)
+                for subset in subsets:
+                    self.key = subset
+                    current_matrix = numpy.append(current_matrix, self.create_observation().reshape([1, self.state_size]),
+                                                  axis=0)
+                result[key] = current_matrix
+
+            if directory is not None:
+                save_data_structure(directory, data_structure_file, result)
+
+            return result

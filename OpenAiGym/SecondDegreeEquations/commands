@@ -16,4 +16,6 @@ model_output_directory="/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinT
 elimination_relation_data_structure_dir="/home/oytun/PycharmProjects/research/Data"
 function=0xac90
 dimension=4
-a,b = dqn_model_all_state_performance(model_output_directory, function, dimension, elimination_relation_data_structure_dir=elimination_relation_data_structure_dir)
+a,b = dqn_model_all_state_performance(model_output_directory, function, dimension,
+elimination_relation_data_structure_dir=elimination_relation_data_structure_dir,
+state_space_data_structure_dir=elimination_relation_data_structure_dir)

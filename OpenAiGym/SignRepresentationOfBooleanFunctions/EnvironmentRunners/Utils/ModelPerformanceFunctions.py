@@ -7,7 +7,8 @@ from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.Env
 
 def dqn_model_all_state_performance(model_output_directory, function, dimension,
                                     elimination_relation_data_structure=None,
-                                    elimination_relation_data_structure_dir=None):
+                                    elimination_relation_data_structure_dir=None,
+                                    state_space_data_structure_dir=None):
     model = rl_load_model(model_output_directory)
     env = env_creator(function, dimension, KeyType.MONOMIAL_SET)
 
@@ -19,7 +20,7 @@ def dqn_model_all_state_performance(model_output_directory, function, dimension,
     else:
         elimination_relation_data_structure_internal = get_elimination_relation_dictionary(function, dimension)
 
-    state_space = env.get_possible_all_state_space()
+    state_space = env.get_possible_all_state_space(state_space_data_structure_dir)
     action_space_keys = list(state_space.keys())
 
     possible_points = 0
@@ -50,12 +51,12 @@ def dqn_model_all_state_performance(model_output_directory, function, dimension,
 
             if possible_actions_size > 0:
                 possible_points += ((2 * maximum_index - (possible_actions_size - 1)) * (possible_actions_size / 2)) + \
-                                   maximum_index ** 2 - maximum_index
+                                   maximum_index
 
             for possible_action in possible_actions:
                 obtained_point = numpy.where(predicted_actions_sorted == possible_action)[0][0]
                 if obtained_point == maximum_index:
-                    obtained_points += obtained_point**2
+                    obtained_points += obtained_point*2
                     correct_action += 1
                 else:
                     obtained_points += obtained_point
