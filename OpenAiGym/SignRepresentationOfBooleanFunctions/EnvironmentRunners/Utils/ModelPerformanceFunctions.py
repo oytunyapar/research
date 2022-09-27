@@ -47,18 +47,19 @@ def dqn_model_all_state_performance(model_output_directory, function, dimension,
             predicted_actions_sorted = numpy.argsort(model.q_net(obs).flatten().tolist())
             predicted_actions_sorted_size = predicted_actions_sorted.size
 
-            maximum_index = predicted_actions_sorted_size - 1
+            if possible_actions_size > predicted_actions_sorted_size:
+                raise Exception("Possible action size is abnormal.")
 
-            if possible_actions_size > 0:
-                possible_points += ((2 * maximum_index - (possible_actions_size - 1)) * (possible_actions_size / 2)) + \
-                                   maximum_index
+            predicted_actions_sorted_and_truncated = predicted_actions_sorted[predicted_actions_sorted_size -
+                                                                              possible_actions_size:]
+            maximum_index = possible_actions_size - 1
+            possible_points += possible_actions_size
 
             for possible_action in possible_actions:
-                obtained_point = numpy.where(predicted_actions_sorted == possible_action)[0][0]
-                if obtained_point == maximum_index:
-                    obtained_points += obtained_point*2
-                    correct_action += 1
-                else:
-                    obtained_points += obtained_point
+                inclusion_result = numpy.where(predicted_actions_sorted_and_truncated == possible_action)[0]
+                if inclusion_result.size > 0:
+                    obtained_points += 1
+                    if inclusion_result[0] == maximum_index:
+                        correct_action += 1
 
     return obtained_points/possible_points, correct_action/num_states

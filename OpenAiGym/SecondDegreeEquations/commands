@@ -12,7 +12,8 @@ env.current_value
 
 
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.ModelPerformanceFunctions import *
-model_output_directory="/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/DQN/2022-09-18 16:52:13.671882_function_0xac90"
+folder="2022-09-10 17:11:46.835455_function_0xac90"
+model_output_directory="/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/DQN/" + folder
 elimination_relation_data_structure_dir="/home/oytun/PycharmProjects/research/Data"
 function=0xac90
 dimension=4
