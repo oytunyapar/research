@@ -16,34 +16,37 @@ class RLModelType(Enum):
 
 
 policy_kwargs_dictionary = {
-    3: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[24, 16]),
+    3: dict(activation_fn=th.nn.ReLU, net_arch=[16, 8]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
 }
 
 
-def rl_create_model(model_type, env, time_steps):
-    batch_factor = 32
+def rl_create_model(model_type, env):
+    batch_factor = 128
+    batch_size = env.steps_in_each_epoch * batch_factor
+
+    buffer_factor = 100
+    buffer_size = batch_size * buffer_factor
 
     if model_type is RLModelType.RL_DQN:
-        buffer_factor = 128
         model = DQN('MlpPolicy', env,
                     policy_kwargs=policy_kwargs_dictionary[env.dimension],
                     verbose=1,
-                    exploration_final_eps=0.2,
-                    exploration_fraction=0.7,
-                    batch_size=env.steps_in_each_epoch * batch_factor,
-                    buffer_size=int(time_steps/buffer_factor))
+                    exploration_final_eps=0.3,
+                    exploration_fraction=0.8,
+                    batch_size=batch_size,
+                    buffer_size=buffer_size)
     elif model_type is RLModelType.RL_PPO:
         model = PPO('MlpPolicy', make_vec_env(lambda: env, n_envs=4),
                     policy_kwargs=policy_kwargs_dictionary[env.dimension],
                     verbose=1,
-                    batch_size=env.steps_in_each_epoch * batch_factor)
+                    batch_size=batch_size)
     elif model_type is RLModelType.RL_A2C:
         model = A2C('MlpPolicy', make_vec_env(lambda: env, n_envs=4),
                     policy_kwargs=policy_kwargs_dictionary[env.dimension],
                     verbose=1,
-                    batch_size=env.steps_in_each_epoch * batch_factor)
+                    batch_size=batch_size)
     else:
         raise Exception("Undefined model type.")
 
@@ -68,7 +71,7 @@ def rl_runner_functions(functions,
                                                           "functions": functions, "test_functions": test_functions}
 
     if model is None:
-        model = rl_create_model(model_type, env, time_steps)
+        model = rl_create_model(model_type, env)
     else:
         model.set_env(env)
 

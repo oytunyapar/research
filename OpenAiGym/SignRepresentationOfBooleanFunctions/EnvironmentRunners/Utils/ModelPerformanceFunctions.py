@@ -15,8 +15,12 @@ def dqn_model_all_state_performance(model_output_directory, function, dimension,
     if elimination_relation_data_structure is not None:
         elimination_relation_data_structure_internal = elimination_relation_data_structure
     elif elimination_relation_data_structure_dir is not None:
-        elimination_relation_data_structure_internal =\
-            load_elimination_relation_dictionary(function, dimension, elimination_relation_data_structure_dir)
+        try:
+            elimination_relation_data_structure_internal =\
+                load_elimination_relation_dictionary(function, dimension, elimination_relation_data_structure_dir)
+        except:
+            elimination_relation_data_structure_internal = get_elimination_relation_dictionary(
+                function, dimension, elimination_relation_data_structure_dir)
     else:
         elimination_relation_data_structure_internal = get_elimination_relation_dictionary(function, dimension)
 
