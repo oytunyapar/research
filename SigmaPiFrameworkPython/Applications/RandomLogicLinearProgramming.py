@@ -17,13 +17,20 @@ def apply_random_search_linear_programming_on_functions(number_of_functions,
         functions = numpy.append(functions, specific_functions)
 
     functions = numpy.unique(functions)
+    number_of_functions = functions.size
 
     function_zeroes = {}
+    counter = 0
+
     for function in functions:
+        counter += 1
+
         function = int(function)
         function_zeroes[function] = []
         for i in range(0, number_of_iterations):
             function_zeroes[function].append(monomial_exclusion_iterative(function, dimension).size)
+
+        print("apply_random_search_linear_programming_on_functions:" + str(counter) + "/" + str(number_of_functions))
 
     function_zeroes_average_std = {}
     for key in function_zeroes.keys():
