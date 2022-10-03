@@ -1,4 +1,5 @@
 import pickle
+from pathlib import Path
 
 
 def open_data_structure(directory, file_name):
@@ -8,5 +9,8 @@ def open_data_structure(directory, file_name):
 
 
 def save_data_structure(directory, file_name, data_structure):
+    if not Path(directory).is_dir():
+        Path(directory).mkdir(parents=True)
+
     with open(directory + "/" + file_name + ".pkl", 'wb') as f:
         pickle.dump(data_structure, f)

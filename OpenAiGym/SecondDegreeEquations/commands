@@ -25,7 +25,11 @@ state_space_data_structure_dir=elimination_relation_data_structure_dir)
 import warnings
 warnings.simplefilter("ignore", RuntimeWarning)
 from SigmaPiFrameworkPython.Applications.RandomLogicLinearProgramming import *
-a,b = apply_random_search_linear_programming_on_functions(1200, 100, 6, [9761403244881934472, 10855359761657498816, 7583035861148412416, 3745489178524800608])
+dir = "/home/oytun/PycharmProjects/research/Data"
+a, b = apply_random_search_linear_programming_on_functions(3500, 100, 6,
+[9761403244881934472, 10855359761657498816, 7583035861148412416, 3745489178524800608], dir)
+
+a, b = apply_random_search_linear_programming_on_functions(1, 1, 6, save_dir=dir)
 
 import time
 time_ = time.time()
