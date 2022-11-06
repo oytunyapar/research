@@ -7,9 +7,18 @@ if(boolean_function >= 2^number_of_variables)
     return;
 end
 
-function_vector = diag(ix2prob(boolean_function,number_of_variables));
+if dimension > 5
+    function_vector = diag(boolean_function);
+else
+    function_vector = diag(ix2prob(boolean_function,number_of_variables));
+end
+
 d_matrix = monsetup(dimension);
 q_matrix=d_matrix*function_vector;
+
+fprintf("Function spectrum:\n");
+disp(sum(q_matrix,2)')
+
 intcon=(1:number_of_variables);
 
 if population_type == 1
@@ -84,7 +93,7 @@ end
 function number_of_population= numberOfPopulation(dimension, population_type)
 
 if population_type == 1
-    population_constant = 200;
+    population_constant = 250;
 elseif population_type == 2
     population_constant = 2000;
 end
