@@ -11,6 +11,8 @@ end
 max_scores_matrix = zeros(length_functions, repeats);
 max_populations_3d = zeros(repeats, number_of_variables, length_functions);
 
+clear global
+
 global intermadiate_max_scores;
 global intermadiate_max_population;
 
