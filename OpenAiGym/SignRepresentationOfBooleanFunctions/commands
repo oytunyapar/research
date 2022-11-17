@@ -50,13 +50,13 @@ functions, _ = get_functions_from_walsh_spectrum(0xac90, dimension)
 functions = functions.tolist()
 
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.RLRunner import *
-dimension = 4
+dimension = 6
 root_dir="/home/oytun/PycharmProjects/research"
-functions = [0xac90]
-output_prefix="function_0xac90"
+functions = [9761403244881934472]
+output_prefix="function_9761403244881934472"
 test_functions=None
 
-time_steps=12000000
+time_steps=4000000
 env,model= rl_runner_functions(functions,
 dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
 test_functions=test_functions)

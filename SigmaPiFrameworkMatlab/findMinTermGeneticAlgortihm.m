@@ -1,5 +1,5 @@
 function [x,Fval,exit_flag,output,population,scores] = ...
-    findMinTermGeneticAlgortihm(boolean_function, dimension, population_type)
+    findMinTermGeneticAlgortihm(boolean_function, dimension, population_type, output_function)
 number_of_variables = 2^dimension;
 
 if(boolean_function >= 2^number_of_variables)
@@ -46,7 +46,7 @@ lower_bounds(1,1:number_of_variables) = lower_bound;
 upper_bounds(1,1:number_of_variables) = upper_bound;
 
 options = optimoptions('ga','PopulationSize',numberOfPopulation(dimension, population_type),...
-    'MaxGenerations',numberOfIterations(dimension),'UseParallel',true);
+    'MaxGenerations',numberOfIterations(dimension), 'UseParallel',true, 'OutputFcn',output_function);
 
 [x,Fval,exit_flag,output,population,scores] = ...
     ga(FitnessFunction,number_of_variables,[],[],[],[],lower_bounds,upper_bounds,[],intcon,options);
@@ -93,7 +93,7 @@ end
 function number_of_population= numberOfPopulation(dimension, population_type)
 
 if population_type == 1
-    population_constant = 250;
+    population_constant = 300;
 elseif population_type == 2
     population_constant = 2000;
 end

@@ -32,10 +32,14 @@ def reward_performance(env, reward, function=None):
     no_zeroes = env.reward_to_number_of_zeros(reward)
     dimension = env.dimension
 
-    theoretical_no_zeroes = \
-        BooleanFunctionsWalshSpectrumNoZeroes[dimension][str(walsh_spectrum_compact(function, dimension, env.d_matrix))]
+    if dimension < 6:
+        theoretical_no_zeroes = \
+            BooleanFunctionsWalshSpectrumNoZeroes[dimension][str(walsh_spectrum_compact(function, dimension,
+                                                                                        env.d_matrix))]
 
-    return [theoretical_no_zeroes - no_zeroes, round(no_zeroes / theoretical_no_zeroes, precision)]
+        return [theoretical_no_zeroes - no_zeroes, round(no_zeroes / theoretical_no_zeroes, precision)]
+    else:
+        return no_zeroes
 
 
 def runner_overall_performance(performance):

@@ -18,7 +18,8 @@ class RLModelType(Enum):
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[16, 8]),
     4: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128])
+    5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128]),
+    6: dict(activation_fn=th.nn.ReLU, net_arch=[128, 64])
 }
 
 
@@ -83,8 +84,8 @@ def rl_runner_functions(functions,
     if test_functions is not None:
         test_data_performance_results = rl_runner_model_performance(env, model, test_functions)
 
-    rl_runner_output_helper(output_directory, output_folder_prefix, env, model,
-                            training_data_performance_results, test_data_performance_results, parameters_dict)
+    rl_runner_output_helper(output_directory, output_folder_prefix, env, model, parameters_dict,
+                            training_data_performance_results, test_data_performance_results)
 
     return env, model
 
@@ -113,28 +114,31 @@ def rl_runner_all_functions(dimension, output_directory=None, key_type=KeyType.K
                                model)
 
 
-def rl_runner_output_helper(root_directory, output_folder_label, env, model,
-                            training_data_performance_results, test_data_performance_results, parameters_dict):
+def rl_runner_output_helper(root_directory, output_folder_label, env, model, parameters_dict,
+                            training_data_performance_results=None, test_data_performance_results=None):
     output_directory = get_experiment_output_directory(root_directory, output_folder_label, type(model).__name__, env)
     if output_directory is not None:
         env.dump_env_statistics(output_directory)
+        dump_json(parameters_dict, output_directory, "parameters")
 
         dump_json(training_data_performance_results, output_directory, "training_data_performance_results")
         dump_json(test_data_performance_results, output_directory, "test_data_performance_results")
 
-        perf_mean_train, perf_deviance_train = runner_overall_performance(training_data_performance_results)
-        perf_mean_test, perf_deviance_test = runner_overall_performance(test_data_performance_results)
-        performance_mean_variance = {"perf_mean_train": perf_mean_train, "perf_deviance_train": perf_deviance_train,
-                                     "perf_mean_test": perf_mean_test, "perf_deviance_test": perf_deviance_test}
+        if env.dimension < 6:
+            dump_json(runner_equivalence_class_performance(training_data_performance_results, env.dimension),
+                      output_directory, "training_data_performance_results_equivalence_classes")
+            perf_mean_train, perf_deviance_train = runner_overall_performance(training_data_performance_results)
+            performance_mean_variance_train = \
+                {"perf_mean_train": perf_mean_train, "perf_deviance_train": perf_deviance_train}
+            dump_json(performance_mean_variance_train, output_directory, "performance_mean_variance_train")
 
-        dump_json(performance_mean_variance, output_directory, "performance_mean_variance")
+            dump_json(runner_equivalence_class_performance(test_data_performance_results, env.dimension),
+                      output_directory, "test_data_performance_results_equivalence_classes")
+            perf_mean_test, perf_deviance_test = runner_overall_performance(test_data_performance_results)
+            performance_mean_variance_test = {"perf_mean_test": perf_mean_test,
+                                              "perf_deviance_test": perf_deviance_test}
+            dump_json(performance_mean_variance_test, output_directory, "performance_mean_variance_test")
 
-        dump_json(runner_equivalence_class_performance(training_data_performance_results, env.dimension),
-                  output_directory, "training_data_performance_results_equivalence_classes")
-        dump_json(runner_equivalence_class_performance(test_data_performance_results, env.dimension),
-                  output_directory, "test_data_performance_results_equivalence_classes")
-
-        dump_json(parameters_dict, output_directory, "parameters")
         model.save(output_directory + "/" + "model")
 
 
