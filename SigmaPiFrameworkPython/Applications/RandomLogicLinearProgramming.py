@@ -47,3 +47,41 @@ def apply_random_search_linear_programming_on_functions(number_of_functions,
                             function_zeroes_average_std)
 
     return function_zeroes, function_zeroes_average_std
+
+
+def analyze_function_zeroes_average_std(function_zeroes_average_std, dimension):
+    max_average = 0
+    min_average = 2 ** dimension
+    average_of_averages = 0
+
+    max_std = 0
+    min_std = 2 ** dimension
+    average_of_stds = 0
+
+    keys = function_zeroes_average_std.keys()
+    for key in keys:
+        item = function_zeroes_average_std[key]
+        current_average = item[0]
+        current_std = item[1]
+
+        if current_average > max_average:
+            max_average = current_average
+
+        if current_average < min_average:
+            min_average = current_average
+
+        average_of_averages += current_average
+
+        if current_std > max_std:
+            max_std = current_std
+
+        if current_std < min_std:
+            min_std = current_std
+
+        average_of_stds += current_std
+
+    average_of_averages /= len(keys)
+    average_of_stds /= len(keys)
+
+    return {"max_average": max_average, "min_average": min_average, "average_of_averages": average_of_averages,
+            "max_std": max_std, "min_std": min_std, "average_of_stds": average_of_stds}

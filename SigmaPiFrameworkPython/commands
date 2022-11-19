@@ -1,0 +1,58 @@
+from OpenAiGym.SecondDegreeEquations.EnvironmentRunners.RLRunner import *
+time_steps=3000000
+root_dir="/home/oytun/PycharmProjects/research"
+output_prefix="random"
+root_limits=[-10,10]
+
+env,model= rl_runner(root_limits, time_steps, root_dir, output_prefix)
+
+rl_runner_test_model(env, model)
+env.roots
+env.current_value
+
+
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.ModelPerformanceFunctions import *
+function=0xac90
+dimension=4
+folder="2022-10-02 11:46:09.792860_function_" + str(hex(function))
+model_output_directory="/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/"+ str(dimension) +"dim/DQN/" + folder
+elimination_relation_data_structure_dir="/home/oytun/PycharmProjects/research/Data"
+
+a,b = dqn_model_all_state_performance(model_output_directory, function, dimension,
+elimination_relation_data_structure_dir=elimination_relation_data_structure_dir,
+state_space_data_structure_dir=elimination_relation_data_structure_dir)
+
+import warnings
+warnings.simplefilter("ignore", RuntimeWarning)
+from SigmaPiFrameworkPython.Applications.RandomLogicLinearProgramming import *
+dir = "/home/oytun/PycharmProjects/research/Data"
+a, b = apply_random_search_linear_programming_on_functions(0, 10000, 6,
+[9761403244881934472, 10855359761657498816, 7583035861148412416, 3745489178524800608], dir)
+
+a, b = apply_random_search_linear_programming_on_functions(0, 1, 6, [9761403244881934472, 10855359761657498816, 7583035861148412416, 3745489178524800608])
+
+import time
+time_ = time.time()
+a, b = apply_random_search_linear_programming_on_functions(0, 100, 6, [9761403244881934472])
+time_ =  time.time() - time_
+
+from SigmaPiFrameworkPython.Utils.DataStructureUtils import *
+six_dim_function_zeroes_str = "6dim_function_zeroes"
+six_dim_function_zeroes_average_std_str = "6dim_function_zeroes_average_std"
+directory="/home/oytun/PycharmProjects/research/Data/apply_random_search_linear_programming_on_functions_2022-10-04 20:26:07.937033"
+
+six_dim_function_zeroes = open_data_structure(directory, six_dim_function_zeroes_str)
+six_dim_function_zeroes_average_std= open_data_structure(directory, six_dim_function_zeroes_average_std_str)
+
+from SigmaPiFrameworkPython.Applications.RandomLogicLinearProgramming import *
+analyze_function_zeroes_average_std(six_dim_function_zeroes_average_std, 6)
+
+six_dim_bent_functions = [9761403244881934472, 10855359761657498816, 7583035861148412416, 3745489178524800608]
+six_dim_bent_functions_zeroes_average_std = {}
+
+for bent_function in six_dim_bent_functions:
+    six_dim_bent_functions_zeroes_average_std[bent_function] = six_dim_function_zeroes_average_std[bent_function]
+    six_dim_function_zeroes_average_std.pop(bent_function, None)
+
+analyze_function_zeroes_average_std(six_dim_function_zeroes_average_std, 6)
+analyze_function_zeroes_average_std(six_dim_bent_functions_zeroes_average_std, 6)
