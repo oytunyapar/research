@@ -17,6 +17,6 @@ elseif dimension == 5
             0x688d9b51, 0x288d9b41, 0x288d1b41, 0xdcfdda51, 0x68ad9b51, 0x688ddb51];
 end
 
-equivalent_functions = double(equivalent_functions);
+equivalent_functions = int64(equivalent_functions);
 
 end
