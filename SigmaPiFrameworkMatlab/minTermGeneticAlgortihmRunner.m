@@ -11,12 +11,12 @@ end
 max_scores_matrix = zeros(length_functions, repeats);
 max_populations_3d = zeros(repeats, number_of_variables, length_functions);
 
-clear global
-
-global intermadiate_max_scores;
-global intermadiate_max_population;
-
 for iterator = 1:length_functions
+    clear global
+
+    global intermadiate_max_scores;
+    global intermadiate_max_population;
+
     max_scores = zeros(1,repeats);
     max_populations = zeros(repeats,number_of_variables);
     for repeats_iterator = 1:repeats

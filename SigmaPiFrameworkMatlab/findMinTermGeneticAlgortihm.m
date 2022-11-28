@@ -93,7 +93,7 @@ end
 function number_of_population= numberOfPopulation(dimension, population_type)
 
 if population_type == 1
-    population_constant = 300;
+    population_constant = 400;
 elseif population_type == 2
     population_constant = 2000;
 end
