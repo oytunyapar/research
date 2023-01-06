@@ -51,6 +51,7 @@ class MinTermSrpobfEnvBase(gym.Env):
         self.d_matrix = monomial_setup(dimension)
         self.q_matrix = q_matrix_generator(self.function, self.dimension, self.d_matrix)
         self.walsh_spectrum = self.q_matrix.sum(1)
+        self.absolute_walsh_spectrum = [abs(x) for x in self.walsh_spectrum]
         self.spectrum = self.walsh_spectrum * (2 ** -self.dimension)
         self.function_representation_type = function_representation_type
         self.function_representation = None
@@ -83,9 +84,14 @@ class MinTermSrpobfEnvBase(gym.Env):
 
         self.episodic_reward = episodic_reward
 
-    def _create_action_and_observation_space(self, limit_low=-numpy.inf, limit_high=numpy.inf, dtype=numpy.float32):
-        self.action_space = spaces.Discrete(self.action_size)
+    def _create_observation_space(self, limit_low=-numpy.inf, limit_high=numpy.inf, dtype=numpy.float32):
         self.observation_space = spaces.Box(limit_low, limit_high, [self.state_size], dtype)
+
+    def _create_action_space(self, callback=None):
+        if callback is None:
+            self.action_space = spaces.Discrete(self.action_size)
+        else:
+            self.action_space = spaces.Discrete(self.action_size, callback)
 
     def update_episode_reward_statistics(self, reward):
         self.cumulative_reward_in_the_episode += reward
@@ -134,7 +140,7 @@ class MinTermSrpobfEnvBase(gym.Env):
         observation[self.function_representation_size:self.state_size] = self.key
         return observation
 
-    def reset_key(self):
+    def reset_internal(self):
         pass
 
     def reset(self):
@@ -157,7 +163,7 @@ class MinTermSrpobfEnvBase(gym.Env):
 
             self.set_function(self.function)
 
-        self.reset_key()
+        self.reset_internal()
 
         observation = self.create_observation()
         return observation

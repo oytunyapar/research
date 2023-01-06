@@ -56,10 +56,9 @@ functions = [9761403244881934472]
 output_prefix="function_9761403244881934472"
 test_functions=None
 
-time_steps=4000000
+time_steps=12000
 env,model= rl_runner_functions(functions,
-dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
-test_functions=test_functions)
+dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,test_functions=test_functions)
 
 from OpenAiGym.EnvironmentRunners.RLRunner.RLRunner import *
 dimension = 3

@@ -25,7 +25,7 @@ class MinTermSrpobfEnv(MinTermSrpobfEnvBase):
 
         self.key_name = "k_vector"
         self.key_size = self.two_to_power_dimension
-        self.reset_key()
+        self.reset_internal()
         self.k_vector_element_max_value = 2 ** (dimension - 1)
 
         self.max_reward_key = self.key.copy()
@@ -46,9 +46,10 @@ class MinTermSrpobfEnv(MinTermSrpobfEnvBase):
 
         self.state_size = self.function_representation_size + self.key_size
 
-        super(MinTermSrpobfEnv, self)._create_action_and_observation_space()
+        super(MinTermSrpobfEnv, self)._create_observation_space()
+        super(MinTermSrpobfEnv, self)._create_action_space()
 
-    def reset_key(self):
+    def reset_internal(self):
         self.key = numpy.ones(self.key_size)
 
     def step(self, action):

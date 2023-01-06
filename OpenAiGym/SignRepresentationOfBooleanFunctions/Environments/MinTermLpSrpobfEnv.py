@@ -2,6 +2,7 @@ from OpenAiGym.SignRepresentationOfBooleanFunctions.Environments.MinTermSrpobfEn
 from SigmaPiFrameworkPython.SigmaPiLinearProgramming import monomial_exclusion, monomial_exclusion_all_subsets
 from SigmaPiFrameworkPython.Utils.CombinationUtils import binary_vector_to_combination, get_eliminated_subsets_size_dict
 from SigmaPiFrameworkPython.Utils.DataStructureUtils import *
+from SigmaPiFrameworkPython.Utils.HelperFunctions import *
 
 import numpy
 
@@ -15,26 +16,36 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         self.steps_in_each_epoch = self.two_to_power_dimension * 2
         self.action_size = self.two_to_power_dimension
 
+        self.remaining_monomials = [*range(0, self.action_size)]
+        self.selected_monomials = set()
+        self.non_elimination_statistics = dict.fromkeys(self.remaining_monomials, 0)
+
         self.key_name = "monomial_set"
         self.key_size = self.two_to_power_dimension
-        self.reset_key()
+        self.reset_internal()
 
         self.state_size = self.function_representation_size + self.key_size
 
         self.max_reward_key = self.key.copy()
 
         if q_matrix_representation:
-            super(MinTermLpSrpobfEnv, self)._create_action_and_observation_space(-1, 1, dtype=numpy.int)
+            super(MinTermLpSrpobfEnv, self)._create_observation_space(-1, 1, dtype=numpy.int)
+            super(MinTermLpSrpobfEnv, self)._create_action_space(self.generate_action)
         else:
-            super(MinTermLpSrpobfEnv, self)._create_action_and_observation_space(-self.two_to_power_dimension,
-                                                                                 self.two_to_power_dimension)
+            super(MinTermLpSrpobfEnv, self)._create_observation_space(-self.two_to_power_dimension,
+                                                                      self.two_to_power_dimension)
+            super(MinTermLpSrpobfEnv, self)._create_action_space(self.generate_action)
 
-    def reset_key(self):
+    def reset_internal(self):
         self.key = numpy.zeros(self.key_size)
+        self.remaining_monomials = [*range(0, self.action_size)]
+        self.selected_monomials.clear()
 
     def step(self, action):
         self.current_step = self.current_step + 1
-        self.key[action % self.key_size] = 1
+
+        action_normalized = action % self.key_size
+        self.key[action_normalized] = 1
 
         is_feasible = \
             monomial_exclusion(self.q_matrix, self.two_to_power_dimension, binary_vector_to_combination(self.key))
@@ -42,9 +53,15 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         if is_feasible:
             done = self.check_episode_end()
             returned_reward = self.reward(self.key)
+
+            if action_normalized in self.remaining_monomials:
+                self.remaining_monomials.remove(action_normalized)
+
+            self.selected_monomials.add(action_normalized)
         else:
             done = True
-            returned_reward = 0
+            returned_reward = -1
+            self.update_non_elimination_statistics()
 
         self.update_episode_reward_statistics(returned_reward)
 
@@ -99,3 +116,20 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
                 save_data_structure(directory, data_structure_file, result)
 
             return result
+
+    def update_non_elimination_statistics(self):
+        elimination_penalty = 1/len(self.selected_monomials)
+        for selected_monomial in self.selected_monomials:
+            self.non_elimination_statistics[selected_monomial] -= elimination_penalty
+
+    def generate_action(self):
+        remaining_monomials_aws = [self.absolute_walsh_spectrum[x] for x in self.remaining_monomials]
+        monomial_selection_possibility_ws = softmax(remaining_monomials_aws)
+
+        remaining_monomials_penalties = [self.non_elimination_statistics[x] for x in self.remaining_monomials]
+        monomial_selection_possibility_non_elimination = softmax(remaining_monomials_penalties)
+
+        combined_possibility = (monomial_selection_possibility_ws + monomial_selection_possibility_non_elimination)/2
+
+        return numpy.random.choice(self.remaining_monomials, p=[float(i)/sum(combined_possibility) for i in
+                                                                combined_possibility])
