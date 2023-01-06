@@ -123,7 +123,7 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
             self.non_elimination_statistics[selected_monomial] -= elimination_penalty
 
     def generate_action(self):
-        remaining_monomials_aws = [self.absolute_walsh_spectrum[x] for x in self.remaining_monomials]
+        remaining_monomials_aws = [self.minus_absolute_walsh_spectrum[x] for x in self.remaining_monomials]
         monomial_selection_possibility_ws = softmax(remaining_monomials_aws)
 
         remaining_monomials_penalties = [self.non_elimination_statistics[x] for x in self.remaining_monomials]

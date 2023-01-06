@@ -51,7 +51,7 @@ class MinTermSrpobfEnvBase(gym.Env):
         self.d_matrix = monomial_setup(dimension)
         self.q_matrix = q_matrix_generator(self.function, self.dimension, self.d_matrix)
         self.walsh_spectrum = self.q_matrix.sum(1)
-        self.absolute_walsh_spectrum = [abs(x) for x in self.walsh_spectrum]
+        self.minus_absolute_walsh_spectrum = [-abs(x) for x in self.walsh_spectrum]
         self.spectrum = self.walsh_spectrum * (2 ** -self.dimension)
         self.function_representation_type = function_representation_type
         self.function_representation = None
