@@ -15,14 +15,14 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
 
         self.minus_absolute_walsh_spectrum = [-abs(x) for x in self.walsh_spectrum]
 
-        self.steps_in_each_epoch = self.two_to_power_dimension * 2
+        self.steps_in_each_epoch = self.two_to_power_dimension
         self.action_size = self.two_to_power_dimension
 
         self.remaining_monomials = [*range(0, self.action_size)]
         self.selected_monomials = set()
 
         self.non_elimination_statistics = dict()
-        self.non_elimination_statistics[self.function] = dict.fromkeys(self.remaining_monomials, [0, 1])
+        self.initialize_non_elimination_statistics()
 
         self.key_name = "monomial_set"
         self.key_size = self.two_to_power_dimension
@@ -40,12 +40,18 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
                                                                       self.two_to_power_dimension)
             super(MinTermLpSrpobfEnv, self)._create_action_space(self.generate_action)
 
+    def initialize_non_elimination_statistics(self):
+        if self.function not in self.non_elimination_statistics:
+            monomial_dict = {}
+            for monomial in range(0, self.action_size):
+                monomial_dict[monomial] = [0, 1]
+            self.non_elimination_statistics[self.function] = monomial_dict
+
     def set_function(self, function):
         super(MinTermLpSrpobfEnv, self).set_function(function)
         self.minus_absolute_walsh_spectrum = [-abs(x) for x in self.walsh_spectrum]
 
-        if function not in self.non_elimination_statistics:
-            self.non_elimination_statistics[self.function] = dict.fromkeys([*range(0, self.action_size)], [0, 1])
+        self.initialize_non_elimination_statistics()
 
     def reset_internal(self):
         self.key = numpy.zeros(self.key_size)
@@ -71,7 +77,7 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
             self.selected_monomials.add(action_normalized)
         else:
             done = True
-            returned_reward = -1
+            returned_reward = 0
             self.update_non_elimination_statistics()
 
         self.update_episode_reward_statistics(returned_reward)
@@ -129,7 +135,7 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
             return result
 
     def update_non_elimination_statistics(self):
-        elimination_penalty = 0.001/len(self.selected_monomials)
+        elimination_penalty = 1/len(self.selected_monomials)
         for selected_monomial in self.selected_monomials:
             self.non_elimination_statistics[self.function][selected_monomial][0] -= elimination_penalty
             self.non_elimination_statistics[self.function][selected_monomial][1] += 1
@@ -141,17 +147,19 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
             remaining_monomials_aws = [self.minus_absolute_walsh_spectrum[x] for x in self.remaining_monomials]
             monomial_selection_possibility_ws = softmax(remaining_monomials_aws)
             action = numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_ws)
+
+            if debug_print is True:
+                print(monomial_selection_possibility_ws)
         elif random_generate_action_policy_selection < 0.75:
             remaining_monomials_penalties = [self.non_elimination_statistics[self.function][x][0] /
                                              self.non_elimination_statistics[self.function][x][1] for x in
                                              self.remaining_monomials]
             monomial_selection_possibility_non_elimination = softmax(remaining_monomials_penalties)
             action = numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_non_elimination)
+
+            if debug_print is True:
+                print(monomial_selection_possibility_non_elimination)
         else:
             action = numpy.random.choice(self.remaining_monomials)
-
-        if debug_print is True:
-            print(monomial_selection_possibility_ws)
-            print(monomial_selection_possibility_non_elimination)
 
         return action
