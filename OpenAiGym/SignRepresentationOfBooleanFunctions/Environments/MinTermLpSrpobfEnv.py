@@ -13,12 +13,16 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         super(MinTermLpSrpobfEnv, self).\
             __init__(function, dimension, q_matrix_representation, episodic_reward)
 
+        self.minus_absolute_walsh_spectrum = [-abs(x) for x in self.walsh_spectrum]
+
         self.steps_in_each_epoch = self.two_to_power_dimension * 2
         self.action_size = self.two_to_power_dimension
 
         self.remaining_monomials = [*range(0, self.action_size)]
         self.selected_monomials = set()
-        self.non_elimination_statistics = dict.fromkeys(self.remaining_monomials, 0)
+
+        self.non_elimination_statistics = dict()
+        self.non_elimination_statistics[self.function] = dict.fromkeys(self.remaining_monomials, [0, 1])
 
         self.key_name = "monomial_set"
         self.key_size = self.two_to_power_dimension
@@ -35,6 +39,13 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
             super(MinTermLpSrpobfEnv, self)._create_observation_space(-self.two_to_power_dimension,
                                                                       self.two_to_power_dimension)
             super(MinTermLpSrpobfEnv, self)._create_action_space(self.generate_action)
+
+    def set_function(self, function):
+        super(MinTermLpSrpobfEnv, self).set_function(function)
+        self.minus_absolute_walsh_spectrum = [-abs(x) for x in self.walsh_spectrum]
+
+        if function not in self.non_elimination_statistics:
+            self.non_elimination_statistics[self.function] = dict.fromkeys([*range(0, self.action_size)], [0, 1])
 
     def reset_internal(self):
         self.key = numpy.zeros(self.key_size)
@@ -118,18 +129,29 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
             return result
 
     def update_non_elimination_statistics(self):
-        elimination_penalty = 1/len(self.selected_monomials)
+        elimination_penalty = 0.001/len(self.selected_monomials)
         for selected_monomial in self.selected_monomials:
-            self.non_elimination_statistics[selected_monomial] -= elimination_penalty
+            self.non_elimination_statistics[self.function][selected_monomial][0] -= elimination_penalty
+            self.non_elimination_statistics[self.function][selected_monomial][1] += 1
 
-    def generate_action(self):
-        remaining_monomials_aws = [self.minus_absolute_walsh_spectrum[x] for x in self.remaining_monomials]
-        monomial_selection_possibility_ws = softmax(remaining_monomials_aws)
+    def generate_action(self, debug_print=False):
+        random_generate_action_policy_selection = numpy.random.rand()
 
-        remaining_monomials_penalties = [self.non_elimination_statistics[x] for x in self.remaining_monomials]
-        monomial_selection_possibility_non_elimination = softmax(remaining_monomials_penalties)
+        if random_generate_action_policy_selection < 0.5:
+            remaining_monomials_aws = [self.minus_absolute_walsh_spectrum[x] for x in self.remaining_monomials]
+            monomial_selection_possibility_ws = softmax(remaining_monomials_aws)
+            action = numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_ws)
+        elif random_generate_action_policy_selection < 0.75:
+            remaining_monomials_penalties = [self.non_elimination_statistics[self.function][x][0] /
+                                             self.non_elimination_statistics[self.function][x][1] for x in
+                                             self.remaining_monomials]
+            monomial_selection_possibility_non_elimination = softmax(remaining_monomials_penalties)
+            action = numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_non_elimination)
+        else:
+            action = numpy.random.choice(self.remaining_monomials)
 
-        combined_possibility = (monomial_selection_possibility_ws + monomial_selection_possibility_non_elimination)/2
+        if debug_print is True:
+            print(monomial_selection_possibility_ws)
+            print(monomial_selection_possibility_non_elimination)
 
-        return numpy.random.choice(self.remaining_monomials, p=[float(i)/sum(combined_possibility) for i in
-                                                                combined_possibility])
+        return action
