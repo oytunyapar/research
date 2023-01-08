@@ -15,7 +15,7 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
 
         self.minus_absolute_walsh_spectrum = [-abs(x) for x in self.walsh_spectrum]
 
-        self.steps_in_each_epoch = self.two_to_power_dimension
+        self.steps_in_each_epoch = self.two_to_power_dimension * 2
         self.action_size = self.two_to_power_dimension
 
         self.remaining_monomials = [*range(0, self.action_size)]
@@ -83,13 +83,13 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
                 self.update_elimination_statistics()
             else:
                 done = True
-                returned_reward = -0.1
+                returned_reward = -2
                 self.update_non_elimination_statistics()
 
             self.update_episode_reward_statistics(returned_reward)
         else:
             done = self.check_episode_end()
-            returned_reward = -0.1
+            returned_reward = -1
 
         observation = self.create_observation()
         info = {}
