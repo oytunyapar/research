@@ -9,9 +9,9 @@ import numpy
 
 class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
     def __init__(self, function, dimension,
-                 q_matrix_representation, episodic_reward):
+                 function_representation_type, episodic_reward):
         super(MinTermLpSrpobfEnv, self).\
-            __init__(function, dimension, q_matrix_representation, episodic_reward)
+            __init__(function, dimension, function_representation_type, episodic_reward)
 
         self.minus_absolute_walsh_spectrum = [-abs(x) for x in self.walsh_spectrum]
 
@@ -24,6 +24,8 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         self.non_elimination_statistics = dict()
         self.initialize_non_elimination_statistics()
 
+        self.action_selection_statistics = dict.fromkeys([*range(self.action_size)], 0)
+
         self.key_name = "monomial_set"
         self.key_size = self.two_to_power_dimension
         self.reset_internal()
@@ -32,13 +34,13 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
 
         self.max_reward_key = self.key.copy()
 
-        if q_matrix_representation:
+        if function_representation_type is FunctionRepresentationType.Q_MATRIX:
             super(MinTermLpSrpobfEnv, self)._create_observation_space(-1, 1, dtype=numpy.int)
             super(MinTermLpSrpobfEnv, self)._create_action_space(self.generate_action)
         else:
             super(MinTermLpSrpobfEnv, self)._create_observation_space(-self.two_to_power_dimension,
                                                                       self.two_to_power_dimension)
-            super(MinTermLpSrpobfEnv, self)._create_action_space(self.generate_action)
+            super(MinTermLpSrpobfEnv, self)._create_action_space()
 
     def initialize_non_elimination_statistics(self):
         if self.function not in self.non_elimination_statistics:
@@ -64,6 +66,8 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         action_normalized = action % self.key_size
         self.key[action_normalized] = 1
 
+        self.action_selection_statistics[action_normalized] += 1
+
         is_feasible = \
             monomial_exclusion(self.q_matrix, self.two_to_power_dimension, binary_vector_to_combination(self.key))
 
@@ -75,9 +79,10 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
                 self.remaining_monomials.remove(action_normalized)
 
             self.selected_monomials.add(action_normalized)
+            self.update_elimination_statistics()
         else:
             done = True
-            returned_reward = 0
+            returned_reward = -10
             self.update_non_elimination_statistics()
 
         self.update_episode_reward_statistics(returned_reward)
@@ -98,7 +103,7 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         if reward > self.max_reward_in_the_episode:
             return reward
         else:
-            return 0
+            return -10
 
     def reward_to_number_of_zeros(self, reward):
         if self.function_representation_type == FunctionRepresentationType.Q_MATRIX:
@@ -134,32 +139,42 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
 
             return result
 
+    def dump_env_statistics(self, output_directory):
+        super(MinTermLpSrpobfEnv, self).dump_env_statistics(output_directory)
+        dump_json(self.action_selection_statistics, output_directory, "action_selection_statistics")
+
     def update_non_elimination_statistics(self):
         elimination_penalty = 1/len(self.selected_monomials)
         for selected_monomial in self.selected_monomials:
             self.non_elimination_statistics[self.function][selected_monomial][0] -= elimination_penalty
             self.non_elimination_statistics[self.function][selected_monomial][1] += 1
 
-    def generate_action(self, debug_print=False):
+    def update_elimination_statistics(self):
+        for selected_monomial in self.selected_monomials:
+            self.non_elimination_statistics[self.function][selected_monomial][1] += 1
+
+    def generate_action(self):
         random_generate_action_policy_selection = numpy.random.rand()
 
-        if random_generate_action_policy_selection < 0.5:
+        if random_generate_action_policy_selection < 0.25:
             remaining_monomials_aws = [self.minus_absolute_walsh_spectrum[x] for x in self.remaining_monomials]
             monomial_selection_possibility_ws = softmax(remaining_monomials_aws)
             action = numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_ws)
 
-            if debug_print is True:
-                print(monomial_selection_possibility_ws)
-        elif random_generate_action_policy_selection < 0.75:
+        elif random_generate_action_policy_selection < 0.5:
             remaining_monomials_penalties = [self.non_elimination_statistics[self.function][x][0] /
                                              self.non_elimination_statistics[self.function][x][1] for x in
                                              self.remaining_monomials]
-            monomial_selection_possibility_non_elimination = softmax(remaining_monomials_penalties)
+            if min(remaining_monomials_penalties) == 0:
+                monomial_selection_possibility_non_elimination = softmax(remaining_monomials_penalties)
+            else:
+                monomial_selection_possibility_non_elimination =\
+                    softmax([-1/min(remaining_monomials_penalties) * x for x in remaining_monomials_penalties])
             action = numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_non_elimination)
 
-            if debug_print is True:
-                print(monomial_selection_possibility_non_elimination)
-        else:
+        elif random_generate_action_policy_selection < 0.75:
             action = numpy.random.choice(self.remaining_monomials)
+        else:
+            action = numpy.random.choice(self.action_size)
 
         return action

@@ -87,10 +87,7 @@ class MinTermSrpobfEnvBase(gym.Env):
         self.observation_space = spaces.Box(limit_low, limit_high, [self.state_size], dtype)
 
     def _create_action_space(self, callback=None):
-        if callback is None:
-            self.action_space = spaces.Discrete(self.action_size)
-        else:
-            self.action_space = spaces.Discrete(self.action_size, callback)
+        self.action_space = spaces.Discrete(self.action_size, callback)
 
     def update_episode_reward_statistics(self, reward):
         self.cumulative_reward_in_the_episode += reward
