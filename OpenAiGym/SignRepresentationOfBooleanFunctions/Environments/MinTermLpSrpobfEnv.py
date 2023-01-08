@@ -36,11 +36,10 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
 
         if function_representation_type is FunctionRepresentationType.Q_MATRIX:
             super(MinTermLpSrpobfEnv, self)._create_observation_space(-1, 1, dtype=numpy.int)
-            super(MinTermLpSrpobfEnv, self)._create_action_space(self.generate_action)
         else:
             super(MinTermLpSrpobfEnv, self)._create_observation_space(-self.two_to_power_dimension,
                                                                       self.two_to_power_dimension)
-            super(MinTermLpSrpobfEnv, self)._create_action_space()
+        super(MinTermLpSrpobfEnv, self)._create_action_space()
 
     def initialize_non_elimination_statistics(self):
         if self.function not in self.non_elimination_statistics:
