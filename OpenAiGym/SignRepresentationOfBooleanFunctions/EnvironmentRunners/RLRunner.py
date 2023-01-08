@@ -42,7 +42,7 @@ def rl_create_model(model_type, env):
                     batch_size=batch_size,
                     buffer_size=buffer_size,
                     train_freq=4,
-                    learning_rate=0.001,
+                    learning_rate=0.0001,
                     learning_starts=learning_starts)
     elif model_type is RLModelType.RL_PPO:
         model = PPO('MlpPolicy', make_vec_env(lambda: env, n_envs=4),

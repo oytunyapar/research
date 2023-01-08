@@ -56,7 +56,7 @@ functions = [44175]
 output_prefix="function_44175"
 test_functions=None
 
-time_steps=300000
+time_steps=100000
 env,model= rl_runner_functions(functions,
 dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,test_functions=test_functions)
 
@@ -158,6 +158,8 @@ save_data_structure("/home/oytun/PycharmProjects/research/Data","0xbb55_eliminat
 x = dict.fromkeys([*range(env.action_size)],0)
 for i in range(1000):
     x[env.generate_action()] += 1
+
+model.q_net(model.policy.obs_to_tensor(env.create_observation())[0])
 
 
 

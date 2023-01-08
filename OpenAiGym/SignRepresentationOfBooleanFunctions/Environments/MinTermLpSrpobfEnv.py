@@ -64,28 +64,33 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         self.current_step = self.current_step + 1
 
         action_normalized = action % self.key_size
-        self.key[action_normalized] = 1
 
-        self.action_selection_statistics[action_normalized] += 1
+        if action_normalized not in self.selected_monomials:
+            self.key[action_normalized] = 1
 
-        is_feasible = \
-            monomial_exclusion(self.q_matrix, self.two_to_power_dimension, binary_vector_to_combination(self.key))
+            self.action_selection_statistics[action_normalized] += 1
 
-        if is_feasible:
-            done = self.check_episode_end()
-            returned_reward = self.reward(self.key)
+            is_feasible = \
+                monomial_exclusion(self.q_matrix, self.two_to_power_dimension, binary_vector_to_combination(self.key))
 
-            if action_normalized in self.remaining_monomials:
-                self.remaining_monomials.remove(action_normalized)
+            if is_feasible:
+                done = self.check_episode_end()
+                returned_reward = self.reward(self.key)
 
-            self.selected_monomials.add(action_normalized)
-            self.update_elimination_statistics()
+                if action_normalized in self.remaining_monomials:
+                    self.remaining_monomials.remove(action_normalized)
+
+                self.selected_monomials.add(action_normalized)
+                self.update_elimination_statistics()
+            else:
+                done = True
+                returned_reward = -0.1
+                self.update_non_elimination_statistics()
+
+            self.update_episode_reward_statistics(returned_reward)
         else:
-            done = True
-            returned_reward = -10
-            self.update_non_elimination_statistics()
-
-        self.update_episode_reward_statistics(returned_reward)
+            done = self.check_episode_end()
+            returned_reward = -0.1
 
         observation = self.create_observation()
         info = {}
@@ -93,23 +98,10 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         return observation, returned_reward, done, info
 
     def reward(self, next_key):
-        next_number_of_zeroed_monomials = numpy.count_nonzero(next_key == 1)
-
-        if self.function_representation_type == FunctionRepresentationType.Q_MATRIX:
-            reward = next_number_of_zeroed_monomials / self.two_to_power_dimension
-        else:
-            reward = next_number_of_zeroed_monomials ** 2
-
-        if reward > self.max_reward_in_the_episode:
-            return reward
-        else:
-            return -10
+        return numpy.count_nonzero(next_key == 1)/self.two_to_power_dimension
 
     def reward_to_number_of_zeros(self, reward):
-        if self.function_representation_type == FunctionRepresentationType.Q_MATRIX:
-            return int(numpy.ceil(reward * self.two_to_power_dimension))
-        else:
-            return int(numpy.sqrt(reward))
+        return int(numpy.ceil(reward * self.two_to_power_dimension))
 
     def get_possible_all_state_space(self, directory=None):
         data_structure_file = str(self.dimension) + "dim_" + str(hex(self.function)) + "_possible_all_state_space"
