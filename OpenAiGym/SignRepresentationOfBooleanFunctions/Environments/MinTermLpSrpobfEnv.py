@@ -144,28 +144,38 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         for selected_monomial in self.selected_monomials:
             self.non_elimination_statistics[self.function][selected_monomial][1] += 1
 
+    def generate_action_min_walsh_spectrum_policy(self):
+        remaining_monomials_aws = [self.minus_absolute_walsh_spectrum[x] for x in self.remaining_monomials]
+        monomial_selection_possibility_ws = softmax(remaining_monomials_aws)
+        return numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_ws)
+
+    def generate_action_statistics_policy(self):
+        remaining_monomials_penalties = [self.non_elimination_statistics[self.function][x][0] /
+                                         self.non_elimination_statistics[self.function][x][1] for x in
+                                         self.remaining_monomials]
+        if min(remaining_monomials_penalties) == 0:
+            monomial_selection_possibility_non_elimination = softmax(remaining_monomials_penalties)
+        else:
+            monomial_selection_possibility_non_elimination = \
+                softmax([-1 / min(remaining_monomials_penalties) * x for x in remaining_monomials_penalties])
+        return numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_non_elimination)
+
+    def generate_action_remaining_monomials_only_policy(self):
+        return numpy.random.choice(self.remaining_monomials)
+
+    def generate_action_random_policy(self):
+        return numpy.random.choice(self.action_size)
+
     def generate_action(self):
         random_generate_action_policy_selection = numpy.random.rand()
 
         if random_generate_action_policy_selection < 0.25:
-            remaining_monomials_aws = [self.minus_absolute_walsh_spectrum[x] for x in self.remaining_monomials]
-            monomial_selection_possibility_ws = softmax(remaining_monomials_aws)
-            action = numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_ws)
-
+            action = self.generate_action_min_walsh_spectrum_policy()
         elif random_generate_action_policy_selection < 0.5:
-            remaining_monomials_penalties = [self.non_elimination_statistics[self.function][x][0] /
-                                             self.non_elimination_statistics[self.function][x][1] for x in
-                                             self.remaining_monomials]
-            if min(remaining_monomials_penalties) == 0:
-                monomial_selection_possibility_non_elimination = softmax(remaining_monomials_penalties)
-            else:
-                monomial_selection_possibility_non_elimination =\
-                    softmax([-1/min(remaining_monomials_penalties) * x for x in remaining_monomials_penalties])
-            action = numpy.random.choice(self.remaining_monomials, p=monomial_selection_possibility_non_elimination)
-
+            action = self.generate_action_statistics_policy()
         elif random_generate_action_policy_selection < 0.75:
-            action = numpy.random.choice(self.remaining_monomials)
+            action = self.generate_action_remaining_monomials_only_policy()
         else:
-            action = numpy.random.choice(self.action_size)
+            action = self.generate_action_random_policy()
 
         return action

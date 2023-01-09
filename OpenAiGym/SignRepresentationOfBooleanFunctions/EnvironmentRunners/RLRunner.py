@@ -157,14 +157,24 @@ def rl_runner_test_model(env, model, function=None):
     obs = env.reset()
     done = False
 
-    actions = []
+    actions = set()
 
     while not done:
         action, _state = model.predict(obs, deterministic=True)
-        actions.append(action)
+
+        if action in actions:
+            predicted_actions_sorted = numpy.argsort(model.q_net(model.policy.obs_to_tensor(obs)[0]).flatten().tolist())
+            for index in range(1, predicted_actions_sorted.size):
+                action = predicted_actions_sorted[index]
+                if action not in actions:
+                    actions.add(action)
+                    break
+        else:
+            actions.add(action)
+
         obs, reward, done, info = env.step(action)
 
-    return env.max_reward_in_the_episode, actions
+    return env.max_reward_in_the_episode, list(actions)
 
 
 def rl_runner_model_performance(env, model, functions):
