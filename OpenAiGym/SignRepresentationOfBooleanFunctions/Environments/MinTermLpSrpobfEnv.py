@@ -24,7 +24,8 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         self.non_elimination_statistics = dict()
         self.initialize_non_elimination_statistics()
 
-        self.action_selection_statistics = dict.fromkeys([*range(self.action_size)], 0)
+        self.action_selection_statistics = dict()
+        self.initialize_action_selection_statistics()
 
         self.key_name = "monomial_set"
         self.key_size = self.two_to_power_dimension
@@ -48,11 +49,15 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
                 monomial_dict[monomial] = [0, 1]
             self.non_elimination_statistics[self.function] = monomial_dict
 
+    def initialize_action_selection_statistics(self):
+        if self.function not in self.action_selection_statistics:
+            self.action_selection_statistics[self.function] = dict.fromkeys([*range(self.action_size)], 0)
+
     def set_function(self, function):
         super(MinTermLpSrpobfEnv, self).set_function(function)
         self.minus_absolute_walsh_spectrum = [-abs(x) for x in self.walsh_spectrum]
-
         self.initialize_non_elimination_statistics()
+        self.initialize_action_selection_statistics()
 
     def reset_internal(self):
         self.key = numpy.zeros(self.key_size)
@@ -65,9 +70,10 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         action_normalized = action % self.key_size
 
         if action_normalized not in self.selected_monomials:
-            self.key[action_normalized] = 1
+            self.selected_monomials.add(action_normalized)
 
-            self.action_selection_statistics[action_normalized] += 1
+            self.key[action_normalized] = 1
+            self.action_selection_statistics[self.function][action_normalized] += 1
 
             is_feasible = \
                 monomial_exclusion(self.q_matrix, self.two_to_power_dimension, binary_vector_to_combination(self.key))
@@ -79,7 +85,6 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
                 if action_normalized in self.remaining_monomials:
                     self.remaining_monomials.remove(action_normalized)
 
-                self.selected_monomials.add(action_normalized)
                 self.update_elimination_statistics()
             else:
                 done = True

@@ -40,23 +40,31 @@ test_functions=test_functions)
 
 
 
-from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.DumpOutputs import *
+from OpenAiGym.Utils.DumpOutputs import *
 dir = "/home/oytun/PycharmProjects/research/Data/OpenAiGym/MinTermLpSrpobfEnv/4dim/DQN/2022-03-21 16:29:02.564906_functions_range_0_to_65536_size_49152"
 functions = load_json(dir,"parameters")["functions"]
 output_prefix="functions_range_0_to_65536_size_49152"
+from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
+dimension = 4
+test_functions = get_complement_function_list(dimension, functions)
+root_dir="/home/oytun/PycharmProjects/research"
+time_steps=10000000
+from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.RLRunner import *
+env,model= rl_runner_functions(functions,
+dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,test_functions=test_functions)
 
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 functions, _ = get_functions_from_walsh_spectrum(0xac90, dimension)
 functions = functions.tolist()
 
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.RLRunner import *
-dimension = 4
+dimension = 6
 root_dir="/home/oytun/PycharmProjects/research"
-functions = [44175]
-output_prefix="function_44175"
+functions = [9761403244881934472]
+output_prefix="function_9761403244881934472"
 test_functions=None
 
-time_steps=200000
+time_steps=2000000
 env,model= rl_runner_functions(functions,
 dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,test_functions=test_functions)
 
