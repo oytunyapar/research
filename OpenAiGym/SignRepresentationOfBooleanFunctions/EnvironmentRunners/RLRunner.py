@@ -7,6 +7,7 @@ from stable_baselines3 import DQN, PPO, A2C
 from stable_baselines3.common.env_util import make_vec_env
 import numpy
 from enum import Enum
+import time
 
 
 class RLModelType(Enum):
@@ -82,16 +83,22 @@ def rl_runner_functions(functions,
     else:
         model.set_env(env)
 
+    learning_start_time = time.time()
     model.learn(total_timesteps=time_steps)
+    learning_elapsed_time = time.time() - learning_start_time
 
+    test_start_time = time.time()
     training_data_performance_results = rl_runner_model_performance(env, model, functions)
 
     test_data_performance_results = {}
     if test_functions is not None:
         test_data_performance_results = rl_runner_model_performance(env, model, test_functions)
+    test_elapsed_time = time.time() - test_start_time
+
+    elapsed_time_statistics = {"learning_elapsed_time": learning_elapsed_time, "test_elapsed_time": test_elapsed_time}
 
     rl_runner_output_helper(output_directory, output_folder_prefix, env, model, parameters_dict,
-                            training_data_performance_results, test_data_performance_results)
+                            elapsed_time_statistics, training_data_performance_results, test_data_performance_results)
 
     return env, model
 
@@ -120,12 +127,14 @@ def rl_runner_all_functions(dimension, output_directory=None, key_type=KeyType.K
                                model)
 
 
-def rl_runner_output_helper(root_directory, output_folder_label, env, model, parameters_dict,
+def rl_runner_output_helper(root_directory, output_folder_label, env, model, parameters_dict, elapsed_time_statistics,
                             training_data_performance_results=None, test_data_performance_results=None):
     output_directory = get_experiment_output_directory(root_directory, output_folder_label, type(model).__name__, env)
     if output_directory is not None:
         env.dump_env_statistics(output_directory)
         dump_json(parameters_dict, output_directory, "parameters")
+
+        dump_json(elapsed_time_statistics, output_directory, "elapsed_time_statistics")
 
         dump_json(training_data_performance_results, output_directory, "training_data_performance_results")
         dump_json(test_data_performance_results, output_directory, "test_data_performance_results")

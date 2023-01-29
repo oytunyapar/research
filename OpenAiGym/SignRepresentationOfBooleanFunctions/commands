@@ -48,10 +48,13 @@ from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 dimension = 4
 test_functions = get_complement_function_list(dimension, functions)
 root_dir="/home/oytun/PycharmProjects/research"
-time_steps=5000000
+time_steps=5000
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.RLRunner import *
-env,model= rl_runner_functions(functions,
-dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,test_functions=test_functions)
+import time
+
+for i in range(0,2):
+    env,model= rl_runner_functions(functions,
+    dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,test_functions=test_functions)
 
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 functions, _ = get_functions_from_walsh_spectrum(0xac90, dimension)
