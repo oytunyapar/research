@@ -7,6 +7,13 @@ from SigmaPiFrameworkPython.Utils.HelperFunctions import *
 import numpy
 
 
+class ActionSelectionPolicy(Enum):
+    MINIMUM_WALSH_SPECTRUM = 1
+    ACTION_STATISTICS = 2
+    REMAINING_MONOMIALS_ONLY = 3
+    RANDOM = 4
+
+
 class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
     def __init__(self, function, dimension,
                  function_representation_type, episodic_reward):
@@ -35,12 +42,20 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
 
         self.max_reward_key = self.key.copy()
 
+        self.action_policy_functions_dic =\
+            {ActionSelectionPolicy.MINIMUM_WALSH_SPECTRUM: self.generate_action_min_walsh_spectrum_policy,
+             ActionSelectionPolicy.ACTION_STATISTICS: self.generate_action_statistics_policy,
+             ActionSelectionPolicy.REMAINING_MONOMIALS_ONLY: self.generate_action_remaining_monomials_only_policy,
+             ActionSelectionPolicy.RANDOM: self.generate_action_random_policy}
+
+        self.selected_action_policies = [ActionSelectionPolicy.RANDOM]
+
         if function_representation_type is FunctionRepresentationType.Q_MATRIX:
             super(MinTermLpSrpobfEnv, self)._create_observation_space(-1, 1, dtype=numpy.int)
         else:
             super(MinTermLpSrpobfEnv, self)._create_observation_space(-self.two_to_power_dimension,
                                                                       self.two_to_power_dimension)
-        super(MinTermLpSrpobfEnv, self)._create_action_space()
+        super(MinTermLpSrpobfEnv, self)._create_action_space(self.generate_action)
 
     def initialize_non_elimination_statistics(self):
         if self.function not in self.non_elimination_statistics:
@@ -172,15 +187,8 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
         return numpy.random.choice(self.action_size)
 
     def generate_action(self):
-        random_generate_action_policy_selection = numpy.random.rand()
+        return self.action_policy_functions_dic[numpy.random.choice(self.selected_action_policies)]()
 
-        if random_generate_action_policy_selection < 0.25:
-            action = self.generate_action_min_walsh_spectrum_policy()
-        elif random_generate_action_policy_selection < 0.5:
-            action = self.generate_action_statistics_policy()
-        elif random_generate_action_policy_selection < 0.75:
-            action = self.generate_action_remaining_monomials_only_policy()
-        else:
-            action = self.generate_action_random_policy()
-
-        return action
+    def env_specific_configuration(self):
+        return super(MinTermLpSrpobfEnv, self).env_specific_configuration() |\
+               {"selected_action_policies": str(self.selected_action_policies)}

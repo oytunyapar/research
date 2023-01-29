@@ -155,4 +155,4 @@ class MinTermSrpobfEnv(MinTermSrpobfEnvBase):
         self.key /= k_vector_gcd
 
     def env_specific_configuration(self):
-        return super.env_specific_configuration() | {"action_type": str(self.action_type)}
+        return super(MinTermSrpobfEnv, self).env_specific_configuration() | {"action_type": str(self.action_type)}
