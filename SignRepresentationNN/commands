@@ -1,5 +1,5 @@
 from SignRepresentationNN.prune import *
-learning = PruneSigmaPiModel(44175,4)
+learning = PruneSigmaPiModel(44176,4)
 learning.operation()
 learning.train()
 learning.test()

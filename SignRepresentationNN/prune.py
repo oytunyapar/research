@@ -17,13 +17,14 @@ class PruneSigmaPiModel:
         self.batch_size = dimension
         self.data = SigmaPiModelDataSet(function, dimension)
         self.data_loader = torch.utils.data.DataLoader(self.data, batch_size=self.batch_size, shuffle=True)
+        self.num_batch = numpy.ceil(len(self.data)/self.batch_size).astype(int)
 
         self.number_of_epochs = 200 * self.two_to_power_dimension
         self.number_of_fine_tune_epochs = int(self.number_of_epochs/4)
 
-        self.log_interval = 50
+        self.log_interval = 10
 
-        self.decay = 0.05
+        self.decay = 0.1
         self.prune_limit = 0.01
 
     def new_optimizer(self):
@@ -32,6 +33,7 @@ class PruneSigmaPiModel:
     def train(self):
         self.model.train()
         for epoch in range(self.number_of_epochs):
+            loss_value = 0
             for batch_idx, (data, target) in enumerate(self.data_loader):
                 data, target = data.to(self.device), target.to(self.device)
                 target = target.reshape([target.size()[0], 1])
@@ -50,14 +52,18 @@ class PruneSigmaPiModel:
 
                 self.optimizer.step()
 
-                if batch_idx == 0 and epoch % self.log_interval == 0:
-                    percentage = 100 * epoch / self.number_of_epochs
-                    print(f'Train Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss.item():.3f}  Reg: {reg:.3f}')
+                loss_value += loss.item()
+
+            if epoch % self.log_interval == 0:
+                percentage = 100 * epoch / self.number_of_epochs
+                print(f'Train Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.3f}  '
+                      f'Reg: {reg:.3f}')
 
     def fine_tune_train(self):
         self.new_optimizer()
         self.model.train()
         for epoch in range(self.number_of_fine_tune_epochs):
+            loss_value = 0
             for batch_idx, (data, target) in enumerate(self.data_loader):
                 data, target = data.to(self.device), target.to(self.device)
                 target = target.reshape([target.size()[0], 1])
@@ -78,9 +84,11 @@ class PruneSigmaPiModel:
 
                 self.optimizer.step()
 
-                if batch_idx == 0 and epoch % self.log_interval == 0:
-                    percentage = 100 * epoch / self.number_of_fine_tune_epochs
-                    print(f'Fine Tune Train Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss.item():.3f}')
+                loss_value += loss.item()
+
+            if epoch % self.log_interval == 0:
+                percentage = 100 * epoch / self.number_of_fine_tune_epochs
+                print(f'Fine Tune Train Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.3f}')
 
     def prune(self):
         for name, p in self.model.named_parameters():
