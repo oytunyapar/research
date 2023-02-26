@@ -48,7 +48,8 @@ class MinTermLpSrpobfEnv(MinTermSrpobfEnvBase):
              ActionSelectionPolicy.REMAINING_MONOMIALS_ONLY: self.generate_action_remaining_monomials_only_policy,
              ActionSelectionPolicy.RANDOM: self.generate_action_random_policy}
 
-        self.selected_action_policies = [ActionSelectionPolicy.RANDOM]
+        self.selected_action_policies = [ActionSelectionPolicy.MINIMUM_WALSH_SPECTRUM,
+                                         ActionSelectionPolicy.ACTION_STATISTICS]
 
         if function_representation_type is FunctionRepresentationType.Q_MATRIX:
             super(MinTermLpSrpobfEnv, self)._create_observation_space(-1, 1, dtype=numpy.int)
