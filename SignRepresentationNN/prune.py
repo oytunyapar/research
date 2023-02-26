@@ -18,7 +18,7 @@ class PruneSigmaPiModel:
         self.data = SigmaPiModelDataSet(function, dimension)
         self.data_loader = torch.utils.data.DataLoader(self.data, batch_size=self.batch_size, shuffle=True)
 
-        self.number_of_epochs = 2000 * self.two_to_power_dimension
+        self.number_of_epochs = 200 * self.two_to_power_dimension
         self.number_of_fine_tune_epochs = int(self.number_of_epochs/4)
 
         self.log_interval = 50
