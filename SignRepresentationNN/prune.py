@@ -5,90 +5,102 @@ from SignRepresentationNN.data import *
 
 
 class PruneSigmaPiModel:
-    def __init__(self, function, dimension):
+    def __init__(self, function, dimension, simple_model=False):
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
         self.total_number_of_functions = 2 ** self.two_to_power_dimension
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
-        self.model = SigmaPiModel(dimension).to(self.device)
-        self.optimizer = torch.optim.Adam(self.model.parameters())
+
+        if simple_model:
+            self.model = SigmaPiSimpleModel(dimension).to(self.device)
+            self.loss_function = self.linear_error
+        else:
+            self.model = SigmaPiModel(dimension).to(self.device)
+            self.loss_function = torch.nn.functional.mse_loss
+
+        self.optimizer = None
 
         self.batch_size = dimension
         self.data = SigmaPiModelDataSet(function, dimension)
         self.data_loader = torch.utils.data.DataLoader(self.data, batch_size=self.batch_size, shuffle=True)
         self.num_batch = numpy.ceil(len(self.data)/self.batch_size).astype(int)
 
-        self.number_of_epochs = 200 * self.two_to_power_dimension
+        self.number_of_epochs = 400 * self.two_to_power_dimension
         self.number_of_fine_tune_epochs = int(self.number_of_epochs/4)
+
+        self.regularization_func = self.hoyer_regularization_func
+        self.gradient_change_func = None
 
         self.log_interval = 10
 
-        self.decay = 0.1
         self.prune_limit = 0.01
 
     def new_optimizer(self):
         self.optimizer = torch.optim.Adam(self.model.parameters())
 
-    def train(self):
-        self.model.train()
-        for epoch in range(self.number_of_epochs):
-            loss_value = 0
-            for batch_idx, (data, target) in enumerate(self.data_loader):
-                data, target = data.to(self.device), target.to(self.device)
-                target = target.reshape([target.size()[0], 1])
+    def set_regularization_func(self, function):
+        self.regularization_func = function
 
-                self.optimizer.zero_grad()
-                output = self.model(data)
-                loss = torch.nn.functional.mse_loss(output, target)
+    def set_gradient_change_func(self, function):
+        self.gradient_change_func = function
 
-                reg = 0.0
-                for param in self.model.parameters():
-                    if param.requires_grad and torch.sum(torch.abs(param)) > 0:
-                        reg += (torch.sum(torch.abs(param)) ** 2) / torch.sum(param ** 2)
+    def linear_error(self, output, target):
+        error = -output * target
+        #tensor = error.data.cpu().numpy()
+        #new_tensor = numpy.where(tensor < 0, 0, tensor)
+        #error = torch.from_numpy(new_tensor).to(self.device)
+        return error.sum()
 
-                total_loss = loss + self.decay * reg
-                total_loss.backward()
+    def hoyer_regularization_func(self):
+        reg = 0.0
+        for param in self.model.parameters():
+            if param.requires_grad and torch.sum(torch.abs(param)) > 0:
+                reg += (torch.sum(torch.abs(param)) ** 2) / torch.sum(param ** 2)
 
-                self.optimizer.step()
+        return reg
 
-                loss_value += loss.item()
+    def zero_out_gradients(self):
+        for name, p in self.model.named_parameters():
+            if 'mask' in name:
+                continue
+            tensor = p.data.cpu().numpy()
+            grad_tensor = p.grad.cpu().numpy()
+            grad_tensor = numpy.where(tensor == 0, 0, grad_tensor)
+            p.grad = torch.from_numpy(grad_tensor).to(self.device)
 
-            if epoch % self.log_interval == 0:
-                percentage = 100 * epoch / self.number_of_epochs
-                print(f'Train Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.3f}  '
-                      f'Reg: {reg:.3f}')
-
-    def fine_tune_train(self):
+    def train(self, number_of_epochs, decay=0.05):
         self.new_optimizer()
         self.model.train()
-        for epoch in range(self.number_of_fine_tune_epochs):
+        for epoch in range(number_of_epochs):
             loss_value = 0
             for batch_idx, (data, target) in enumerate(self.data_loader):
                 data, target = data.to(self.device), target.to(self.device)
                 target = target.reshape([target.size()[0], 1])
 
                 self.optimizer.zero_grad()
-
                 output = self.model(data)
-                loss = torch.nn.functional.mse_loss(output, target)
-                loss.backward()
+                loss = self.loss_function(output, target)
+                total_loss = loss
+                reg = 0.0
 
-                for name, p in self.model.named_parameters():
-                    if 'mask' in name:
-                        continue
-                    tensor = p.data.cpu().numpy()
-                    grad_tensor = p.grad.cpu().numpy()
-                    grad_tensor = numpy.where(tensor == 0, 0, grad_tensor)
-                    p.grad = torch.from_numpy(grad_tensor).to(self.device)
+                if decay != 0:
+                    reg = decay * self.regularization_func()
+                    total_loss += reg
+
+                total_loss.backward()
+
+                if self.gradient_change_func is not None:
+                    self.gradient_change_func()
 
                 self.optimizer.step()
 
                 loss_value += loss.item()
 
             if epoch % self.log_interval == 0:
-                percentage = 100 * epoch / self.number_of_fine_tune_epochs
-                print(f'Fine Tune Train Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.3f}')
+                percentage = 100 * epoch / number_of_epochs
+                print(f'Train Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.3f}  '
+                      f'Reg: {reg:.3f}')
 
     def prune(self):
         for name, p in self.model.named_parameters():
@@ -118,13 +130,16 @@ class PruneSigmaPiModel:
 
         return num_correct, num_target
 
-    def operation(self):
-        self.train()
+    def operation(self, decay=0.05):
+        self.set_gradient_change_func(None)
+        self.train(self.number_of_epochs, decay)
         correct, target = self.test()
         print(correct, "/", target)
 
         self.prune()
-        self.fine_tune_train()
+
+        self.set_gradient_change_func(self.zero_out_gradients)
+        self.train(self.number_of_fine_tune_epochs, 0)
         correct, target = self.test()
         print(correct, "/", target)
 

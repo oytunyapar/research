@@ -12,3 +12,12 @@ class SigmaPiModel(Module):
         x = self.linear1(x)
         x = self.activation(x)
         return x
+
+
+class SigmaPiSimpleModel(Module):
+    def __init__(self, dimension):
+        super(SigmaPiSimpleModel, self).__init__()
+        self.linear1 = nn.Linear(2 ** dimension, 1, bias=False)
+
+    def forward(self, x):
+        return self.linear1(x)
