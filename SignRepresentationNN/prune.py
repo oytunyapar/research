@@ -26,15 +26,17 @@ class PruneSigmaPiModel:
         self.data_loader = torch.utils.data.DataLoader(self.data, batch_size=self.batch_size, shuffle=True)
         self.num_batch = numpy.ceil(len(self.data)/self.batch_size).astype(int)
 
-        self.number_of_epochs = 400 * self.two_to_power_dimension
-        self.number_of_fine_tune_epochs = int(self.number_of_epochs/4)
+        self.number_of_epochs = 200 * self.two_to_power_dimension
+        self.number_of_fine_tune_epochs = int(self.number_of_epochs/8)
 
         self.regularization_func = self.hoyer_regularization_func
         self.gradient_change_func = None
 
-        self.log_interval = 10
+        self.log_interval = 50
 
         self.prune_limit = 0.01
+
+        self.debug = False
 
     def new_optimizer(self):
         self.optimizer = torch.optim.Adam(self.model.parameters())
@@ -94,7 +96,7 @@ class PruneSigmaPiModel:
 
                 loss_value += loss.item()
 
-            if epoch % self.log_interval == 0:
+            if epoch % self.log_interval == 0 and self.debug:
                 percentage = 100 * epoch / number_of_epochs
                 print(f'Train Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.3f}  '
                       f'Reg: {reg:.3f}')
@@ -127,18 +129,19 @@ class PruneSigmaPiModel:
 
         return num_correct, num_target
 
-    def operation(self, decay=0.05):
+    def operation(self, decay=0.05, debug=False):
+        self.debug = debug
+
         self.set_gradient_change_func(None)
         self.train(self.number_of_epochs, decay)
-        correct, target = self.test()
-        print(correct, "/", target)
 
         self.prune()
 
         self.set_gradient_change_func(self.zero_out_gradients)
         self.train(self.number_of_fine_tune_epochs, 0)
+
         correct, target = self.test()
-        print(correct, "/", target)
+        return correct == target
 
     def zeroed_weights(self):
         for name, p in self.model.named_parameters():
