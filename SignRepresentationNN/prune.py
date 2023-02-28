@@ -14,7 +14,7 @@ class PruneSigmaPiModel:
 
         if simple_model:
             self.model = SigmaPiSimpleModel(dimension).to(self.device)
-            self.loss_function = self.linear_error
+            self.loss_function = self.exponential_error
         else:
             self.model = SigmaPiModel(dimension).to(self.device)
             self.loss_function = torch.nn.functional.mse_loss
@@ -45,12 +45,9 @@ class PruneSigmaPiModel:
     def set_gradient_change_func(self, function):
         self.gradient_change_func = function
 
-    def linear_error(self, output, target):
-        error = -output * target
-        #tensor = error.data.cpu().numpy()
-        #new_tensor = numpy.where(tensor < 0, 0, tensor)
-        #error = torch.from_numpy(new_tensor).to(self.device)
-        return error.sum()
+    def exponential_error(self, output, target):
+        error = torch.exp((-output * target).sum())
+        return error.clone()
 
     def hoyer_regularization_func(self):
         reg = 0.0
