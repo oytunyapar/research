@@ -1,12 +1,15 @@
 from SignRepresentationNN.prune import *
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import *
 from SigmaPiFrameworkPython.Utils.DataStructureUtils import *
+from OpenAiGym.Utils.DumpOutputs import dump_json
 import datetime
 import time
+import numpy
 
 
 def prune_runner(number_of_runs=1):
     data = {}
+    learning = None
 
     for dimension in BooleanFunctionsEquivalentClasses.keys():
         data[dimension] = {}
@@ -17,14 +20,30 @@ def prune_runner(number_of_runs=1):
             function_counter += 1
             time_in_seconds = time.time()
             for run in range(number_of_runs):
-                learning = PruneSigmaPiModel(function, dimension, False)
+                learning = PruneSigmaPiModel(function, dimension, 0.05, False)
                 if learning.operation(0.05):
                     data[dimension][function].append(len(learning.zeroed_weights()))
             print("Dimension:", dimension, " Function:", function_counter, "/", num_functions,
                   " Elapsed time:", time.time() - time_in_seconds)
 
-    dir_name = "/home/oytun/PycharmProjects/research/Data/prune_runner"
-    save_data_structure(dir_name, "/" + str(datetime.datetime.now()), data)
+    dir_name = "/home/oytun/PycharmProjects/research/Data/prune_runner/" + str(datetime.datetime.now())
+    save_data_structure(dir_name, "dictionary", data)
+    dump_json(learning.parameters(), dir_name, "parameters")
 
     return data
 
+
+def max_prune_runner(directory, file):
+    data = open_data_structure(directory, file)
+    max_data = {}
+    for dimension in data.keys():
+        current_functions = data[dimension]
+        max_data[dimension] = {}
+        for function in current_functions.keys():
+            values = current_functions[function]
+            if len(values) > 0:
+                max_data[dimension][hex(function)] = numpy.max(values)
+            else:
+                max_data[dimension][hex(function)] = None
+
+    return max_data

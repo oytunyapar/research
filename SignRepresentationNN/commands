@@ -1,6 +1,6 @@
 from SignRepresentationNN.prune import *
-learning = PruneSigmaPiModel(172,3, False)
-learning.operation(0.03)
+learning = PruneSigmaPiModel(172,3, 0.05, False)
+learning.operation()
 learning.train()
 learning.test()
 
@@ -12,6 +12,9 @@ len(learning.zeroed_weights())
 from SignRepresentationNN.prune_runner import *
 x = prune_runner(10)
 
+from SignRepresentationNN.prune_runner import *
+d = max_prune_runner("/home/oytun/PycharmProjects/research/Data/prune_runner", "2023-03-01 05:59:21.352102")
+e = max_prune_runner("/home/oytun/PycharmProjects/research/Data/prune_runner", "2023-03-02 06:18:27.842212")
 
 for name, param in learning.model.named_parameters():
     print(name)

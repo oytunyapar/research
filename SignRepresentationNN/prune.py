@@ -5,13 +5,14 @@ from SignRepresentationNN.data import *
 
 
 class PruneSigmaPiModel:
-    def __init__(self, function, dimension, simple_model=False):
+    def __init__(self, function, dimension, decay=0.05, simple_model=False):
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
         self.total_number_of_functions = 2 ** self.two_to_power_dimension
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
 
+        self.simple_model = simple_model
         if simple_model:
             self.model = SigmaPiSimpleModel(dimension).to(self.device)
             self.loss_function = self.exponential_error
@@ -31,6 +32,8 @@ class PruneSigmaPiModel:
 
         self.regularization_func = self.hoyer_regularization_func
         self.gradient_change_func = None
+
+        self.decay = decay
 
         self.log_interval = 50
 
@@ -68,7 +71,7 @@ class PruneSigmaPiModel:
             grad_tensor = numpy.where(tensor == 0, 0, grad_tensor)
             p.grad = torch.from_numpy(grad_tensor).to(self.device)
 
-    def train(self, number_of_epochs, decay=0.05):
+    def train(self, number_of_epochs):
         self.new_optimizer()
         self.model.train()
         for epoch in range(number_of_epochs):
@@ -83,8 +86,8 @@ class PruneSigmaPiModel:
                 total_loss = loss
                 reg = 0.0
 
-                if decay != 0:
-                    reg = decay * self.regularization_func()
+                if self.decay != 0:
+                    reg = self.decay * self.regularization_func()
                     total_loss += reg
 
                 total_loss.backward()
@@ -129,16 +132,16 @@ class PruneSigmaPiModel:
 
         return num_correct, num_target
 
-    def operation(self, decay=0.05, debug=False):
+    def operation(self, debug=False):
         self.debug = debug
 
         self.set_gradient_change_func(None)
-        self.train(self.number_of_epochs, decay)
+        self.train(self.number_of_epochs)
 
         self.prune()
 
         self.set_gradient_change_func(self.zero_out_gradients)
-        self.train(self.number_of_fine_tune_epochs, 0)
+        self.train(self.number_of_fine_tune_epochs)
 
         correct, target = self.test()
         return correct == target
@@ -148,3 +151,11 @@ class PruneSigmaPiModel:
             if 'mask' in name:
                 continue
             return numpy.where(p.data.cpu().numpy() == 0)[1]
+
+    def parameters(self):
+        parameters = {"prune_limit": str(self.prune_limit), "simple_model": str(self.simple_model),
+                      "decay": str(self.decay), "number_of_epochs": str(self.number_of_epochs),
+                      "loss_function": str(self.loss_function), "regularization_func": str(self.regularization_func)}
+
+        return parameters
+
