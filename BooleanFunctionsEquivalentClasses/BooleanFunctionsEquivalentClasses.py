@@ -12,7 +12,7 @@ BooleanFunctionsEquivalentClasses =\
             0x688d9b51, 0x288d9b41, 0x288d1b41, 0xdcfdda51, 0x68ad9b51, 0x688ddb51]
     }
 
-BooleanFunctionsEquivalentClassesDensity=\
+BooleanFunctionsEquivalentClassesDensity =\
     {
         2: {0x1: 1,
             0x2: 3},

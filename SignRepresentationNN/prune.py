@@ -30,7 +30,7 @@ class PruneSigmaPiModel:
         self.number_of_epochs = 200 * self.two_to_power_dimension
         self.number_of_fine_tune_epochs = int(self.number_of_epochs/8)
 
-        self.regularization_func = self.hoyer_regularization_func
+        self.regularization_func = self.l1_regularization_func
         self.gradient_change_func = None
 
         self.decay = decay
@@ -59,6 +59,14 @@ class PruneSigmaPiModel:
         for param in self.model.parameters():
             if param.requires_grad and torch.sum(torch.abs(param)) > 0:
                 reg += (torch.sum(torch.abs(param)) ** 2) / torch.sum(param ** 2)
+
+        return reg
+
+    def l1_regularization_func(self):
+        reg = 0.0
+        for param in self.model.parameters():
+            if param.requires_grad and torch.sum(torch.abs(param)) > 0:
+                reg += torch.sum(torch.abs(param))
 
         return reg
 

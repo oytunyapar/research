@@ -14,7 +14,7 @@ x = prune_runner(10)
 
 from SignRepresentationNN.prune_runner import *
 d = max_prune_runner("/home/oytun/PycharmProjects/research/Data/prune_runner", "2023-03-01 05:59:21.352102")
-e = max_prune_runner("/home/oytun/PycharmProjects/research/Data/prune_runner", "2023-03-02 06:18:27.842212")
+e = max_prune_runner("/home/oytun/PycharmProjects/research/Data/prune_runner/2023-03-02 22:54:02.797868", "dictionary")
 
 for name, param in learning.model.named_parameters():
     print(name)
