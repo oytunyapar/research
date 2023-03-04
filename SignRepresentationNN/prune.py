@@ -2,10 +2,24 @@ import torch
 import numpy
 from SignRepresentationNN.models import *
 from SignRepresentationNN.data import *
+from enum import Enum
+
+
+class LossFunction(Enum):
+    MSE = 0
+    RELU = 1
+    EXPONENTIAL = 2
+
+
+class RegularizationFunction(Enum):
+    HOYER_SQUARE = 0
+    L1 = 1
+    HOYER_SQUARE_AND_L1_AND = 2
 
 
 class PruneSigmaPiModel:
-    def __init__(self, function, dimension, decay=0.05, simple_model=False):
+    def __init__(self, function, dimension, decay=0.05, simple_model=False, loss_function=LossFunction.MSE,
+                 regularization_func=RegularizationFunction.HOYER_SQUARE):
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
         self.total_number_of_functions = 2 ** self.two_to_power_dimension
@@ -15,10 +29,26 @@ class PruneSigmaPiModel:
         self.simple_model = simple_model
         if simple_model:
             self.model = SigmaPiSimpleModel(dimension).to(self.device)
-            self.loss_function = self.exponential_error
         else:
             self.model = SigmaPiModel(dimension).to(self.device)
+
+        if loss_function == LossFunction.MSE:
             self.loss_function = torch.nn.functional.mse_loss
+        elif loss_function == LossFunction.RELU:
+            self.loss_function = self.relu_error
+        elif loss_function == LossFunction.EXPONENTIAL:
+            self.loss_function = self.exponential_error
+        else:
+            raise Exception("Unknown loss function.")
+
+        if regularization_func == RegularizationFunction.HOYER_SQUARE:
+            self.regularization_func = self.hoyer_square_regularization_func
+        elif regularization_func == RegularizationFunction.L1:
+            self.regularization_func = self.l1_regularization_func
+        elif regularization_func == RegularizationFunction.HOYER_SQUARE_AND_L1_AND:
+            self.regularization_func = self.hoyer_square_and_l1_regularization_func
+        else:
+            raise Exception("Unknown regularization function.")
 
         self.optimizer = None
 
@@ -30,7 +60,6 @@ class PruneSigmaPiModel:
         self.number_of_epochs = 200 * self.two_to_power_dimension
         self.number_of_fine_tune_epochs = int(self.number_of_epochs/8)
 
-        self.regularization_func = self.l1_regularization_func
         self.gradient_change_func = None
 
         self.decay = decay
@@ -40,6 +69,9 @@ class PruneSigmaPiModel:
         self.prune_limit = 0.01
 
         self.debug = False
+
+    def disable_regularization(self):
+        self.decay = 0
 
     def new_optimizer(self):
         self.optimizer = torch.optim.Adam(self.model.parameters())
@@ -54,7 +86,11 @@ class PruneSigmaPiModel:
         error = torch.exp((-output * target).sum())
         return error.clone()
 
-    def hoyer_regularization_func(self):
+    def relu_error(self, output, target):
+        error = torch.relu(torch.tensor(1).to(self.device) - (output * target).sum())
+        return error.clone()
+
+    def hoyer_square_regularization_func(self):
         reg = 0.0
         for param in self.model.parameters():
             if param.requires_grad and torch.sum(torch.abs(param)) > 0:
@@ -69,6 +105,9 @@ class PruneSigmaPiModel:
                 reg += torch.sum(torch.abs(param))
 
         return reg
+
+    def hoyer_square_and_l1_regularization_func(self):
+        return self.hoyer_square_regularization_func() + self.l1_regularization_func()
 
     def zero_out_gradients(self):
         for name, p in self.model.named_parameters():
@@ -94,7 +133,7 @@ class PruneSigmaPiModel:
                 total_loss = loss
                 reg = 0.0
 
-                if self.decay != 0:
+                if self.decay != 0 and self.regularization_func is not None:
                     reg = self.decay * self.regularization_func()
                     total_loss += reg
 
@@ -148,6 +187,7 @@ class PruneSigmaPiModel:
 
         self.prune()
 
+        self.disable_regularization()
         self.set_gradient_change_func(self.zero_out_gradients)
         self.train(self.number_of_fine_tune_epochs)
 
