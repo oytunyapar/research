@@ -5,7 +5,7 @@ import numpy
 from SigmaPiFrameworkPython.BooleanFunctionGenerator import boolean_function_generator
 from SigmaPiFrameworkPython.MonomialSetup import monomial_setup, q_matrix_generator
 
-from OpenAiGym.Utils.DumpOutputs import dump_outputs, dump_json
+from Utils.DumpOutputs import dump_outputs, dump_json
 
 from enum import Enum
 

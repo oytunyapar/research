@@ -18,8 +18,8 @@ class RegularizationFunction(Enum):
 
 
 class PruneSigmaPiModel:
-    def __init__(self, function, dimension, decay=0.05, simple_model=False, loss_function=LossFunction.MSE,
-                 regularization_func=RegularizationFunction.HOYER_SQUARE):
+    def __init__(self, function, dimension, regularization_strength=0.05, simple_model=False,
+                 loss_function=LossFunction.MSE, regularization_function=RegularizationFunction.HOYER_SQUARE):
         self.dimension = dimension
         self.two_to_power_dimension = 2 ** dimension
         self.total_number_of_functions = 2 ** self.two_to_power_dimension
@@ -32,6 +32,8 @@ class PruneSigmaPiModel:
         else:
             self.model = SigmaPiModel(dimension).to(self.device)
 
+        self.loss_function_enum = loss_function
+
         if loss_function == LossFunction.MSE:
             self.loss_function = torch.nn.functional.mse_loss
         elif loss_function == LossFunction.RELU:
@@ -41,12 +43,14 @@ class PruneSigmaPiModel:
         else:
             raise Exception("Unknown loss function.")
 
-        if regularization_func == RegularizationFunction.HOYER_SQUARE:
-            self.regularization_func = self.hoyer_square_regularization_func
-        elif regularization_func == RegularizationFunction.L1:
-            self.regularization_func = self.l1_regularization_func
-        elif regularization_func == RegularizationFunction.HOYER_SQUARE_AND_L1_AND:
-            self.regularization_func = self.hoyer_square_and_l1_regularization_func
+        self.regularization_function_enum = regularization_function
+
+        if regularization_function == RegularizationFunction.HOYER_SQUARE:
+            self.regularization_function = self.hoyer_square_regularization_func
+        elif regularization_function == RegularizationFunction.L1:
+            self.regularization_function = self.l1_regularization_func
+        elif regularization_function == RegularizationFunction.HOYER_SQUARE_AND_L1_AND:
+            self.regularization_function = self.hoyer_square_and_l1_regularization_func
         else:
             raise Exception("Unknown regularization function.")
 
@@ -62,7 +66,7 @@ class PruneSigmaPiModel:
 
         self.gradient_change_func = None
 
-        self.decay = decay
+        self.regularization_strength = regularization_strength
 
         self.log_interval = 50
 
@@ -71,13 +75,16 @@ class PruneSigmaPiModel:
         self.debug = False
 
     def disable_regularization(self):
-        self.decay = 0
+        self.set_regularization_strength(0)
+
+    def set_regularization_strength(self, regularization_strength):
+        self.regularization_strength = regularization_strength
 
     def new_optimizer(self):
         self.optimizer = torch.optim.Adam(self.model.parameters())
 
     def set_regularization_func(self, function):
-        self.regularization_func = function
+        self.regularization_function = function
 
     def set_gradient_change_func(self, function):
         self.gradient_change_func = function
@@ -133,8 +140,8 @@ class PruneSigmaPiModel:
                 total_loss = loss
                 reg = 0.0
 
-                if self.decay != 0 and self.regularization_func is not None:
-                    reg = self.decay * self.regularization_func()
+                if self.regularization_strength != 0 and self.regularization_function is not None:
+                    reg = self.regularization_strength * self.regularization_function()
                     total_loss += reg
 
                 total_loss.backward()
@@ -202,8 +209,9 @@ class PruneSigmaPiModel:
 
     def parameters(self):
         parameters = {"prune_limit": str(self.prune_limit), "simple_model": str(self.simple_model),
-                      "decay": str(self.decay), "number_of_epochs": str(self.number_of_epochs),
-                      "loss_function": str(self.loss_function), "regularization_func": str(self.regularization_func)}
+                      "decay": str(self.regularization_strength), "number_of_epochs": str(self.number_of_epochs),
+                      "loss_function": str(self.loss_function_enum), "regularization_func":
+                          str(self.regularization_function_enum)}
 
         return parameters
 

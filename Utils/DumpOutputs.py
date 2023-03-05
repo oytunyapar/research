@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import json
+import csv
 from pathlib import Path
 
 
@@ -36,3 +37,12 @@ def load_json(output_directory, file_name_prefix):
     f.close()
 
     return data
+
+
+def dump_csv(fields, rows, output_directory, file_name_prefix):
+    csv_file_name = output_directory + "/" + file_name_prefix + ".csv"
+
+    with open(csv_file_name, 'w') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(fields)
+        csv_writer.writerows(rows)

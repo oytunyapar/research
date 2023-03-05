@@ -1,4 +1,4 @@
-from OpenAiGym.Utils.DumpOutputs import dump_json
+from Utils.DumpOutputs import dump_json
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.EnvironmentHelperFunctions import *
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.Utils.DataHelperFunctions import *
 from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
