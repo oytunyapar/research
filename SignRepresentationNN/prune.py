@@ -3,6 +3,7 @@ import numpy
 from SignRepresentationNN.models import *
 from SignRepresentationNN.data import *
 from enum import Enum
+import copy
 
 
 class LossFunction(Enum):
@@ -14,7 +15,7 @@ class LossFunction(Enum):
 class RegularizationFunction(Enum):
     HOYER_SQUARE = 0
     L1 = 1
-    HOYER_SQUARE_AND_L1_AND = 2
+    HOYER_SQUARE_AND_L1 = 2
 
 
 class PruneSigmaPiModel:
@@ -49,7 +50,7 @@ class PruneSigmaPiModel:
             self.regularization_function = self.hoyer_square_regularization_func
         elif regularization_function == RegularizationFunction.L1:
             self.regularization_function = self.l1_regularization_func
-        elif regularization_function == RegularizationFunction.HOYER_SQUARE_AND_L1_AND:
+        elif regularization_function == RegularizationFunction.HOYER_SQUARE_AND_L1:
             self.regularization_function = self.hoyer_square_and_l1_regularization_func
         else:
             raise Exception("Unknown regularization function.")
@@ -62,26 +63,39 @@ class PruneSigmaPiModel:
         self.num_batch = numpy.ceil(len(self.data)/self.batch_size).astype(int)
 
         self.number_of_epochs = 200 * self.two_to_power_dimension
+        self.number_of_initialization_epochs = int(self.number_of_epochs/2)
         self.number_of_fine_tune_epochs = int(self.number_of_epochs/8)
 
         self.gradient_change_func = None
 
+        self.initial_regularization_strength = regularization_strength
         self.regularization_strength = regularization_strength
-
         self.log_interval = 50
-
         self.prune_limit = 0.01
+
+        self.max_number_of_weights_under_threshold = -1
+        self.saved_model = None
 
         self.debug = False
 
+
     def disable_regularization(self):
         self.set_regularization_strength(0)
+
+    def enable_regularization(self):
+        self.set_regularization_strength(self.initial_regularization_strength)
 
     def set_regularization_strength(self, regularization_strength):
         self.regularization_strength = regularization_strength
 
     def new_optimizer(self):
         self.optimizer = torch.optim.Adam(self.model.parameters())
+
+    def new_model(self):
+        if self.simple_model:
+            self.model = SigmaPiSimpleModel(self.dimension).to(self.device)
+        else:
+            self.model = SigmaPiModel(self.dimension).to(self.device)
 
     def set_regularization_func(self, function):
         self.regularization_function = function
@@ -128,8 +142,11 @@ class PruneSigmaPiModel:
     def train(self, number_of_epochs):
         self.new_optimizer()
         self.model.train()
+        self.max_number_of_weights_under_threshold = 0
+
         for epoch in range(number_of_epochs):
             loss_value = 0
+            reg_value = 0
             for batch_idx, (data, target) in enumerate(self.data_loader):
                 data, target = data.to(self.device), target.to(self.device)
                 target = target.reshape([target.size()[0], 1])
@@ -146,17 +163,27 @@ class PruneSigmaPiModel:
 
                 total_loss.backward()
 
+                if self.all_correct() and self.num_weights_under_threshold() > \
+                        self.max_number_of_weights_under_threshold:
+                    self.max_number_of_weights_under_threshold = self.num_weights_under_threshold()
+                    self.saved_model = copy.deepcopy(self.model)
+
                 if self.gradient_change_func is not None:
                     self.gradient_change_func()
 
                 self.optimizer.step()
 
-                loss_value += loss.item()
+                loss_value += total_loss.item()
+                reg_value += reg
 
             if epoch % self.log_interval == 0 and self.debug:
                 percentage = 100 * epoch / number_of_epochs
-                print(f'Train Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.3f}  '
-                      f'Reg: {reg:.3f}')
+                print(f'Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.6f}  '
+                      f'Reg: {reg_value/self.num_batch:.6f}')
+
+        if self.saved_model is not None:
+            self.model = copy.deepcopy(self.saved_model)
+            self.saved_model = None
 
     def prune(self):
         for name, p in self.model.named_parameters():
@@ -186,20 +213,38 @@ class PruneSigmaPiModel:
 
         return num_correct, num_target
 
+    def all_correct(self):
+        num_correct, num_target = self.test()
+        return num_correct == num_target
+
+    def num_weights_under_threshold(self):
+        for name, p in self.model.named_parameters():
+            if 'mask' in name:
+                continue
+            return numpy.where(abs(p.data.cpu().numpy()) < self.prune_limit)[1].size
+
     def operation(self, debug=False):
+        self.new_model()
+
         self.debug = debug
-
         self.set_gradient_change_func(None)
-        self.train(self.number_of_epochs)
-
-        self.prune()
 
         self.disable_regularization()
-        self.set_gradient_change_func(self.zero_out_gradients)
-        self.train(self.number_of_fine_tune_epochs)
+        self.train(self.number_of_initialization_epochs)
 
-        correct, target = self.test()
-        return correct == target
+        self.enable_regularization()
+        self.train(self.number_of_epochs)
+
+        if self.all_correct():
+            self.prune()
+
+            self.disable_regularization()
+            self.set_gradient_change_func(self.zero_out_gradients)
+            self.train(self.number_of_fine_tune_epochs)
+        else:
+            print("Failed training.")
+
+        return self.all_correct()
 
     def zeroed_weights(self):
         for name, p in self.model.named_parameters():
@@ -209,9 +254,8 @@ class PruneSigmaPiModel:
 
     def parameters(self):
         parameters = {"prune_limit": str(self.prune_limit), "simple_model": str(self.simple_model),
-                      "decay": str(self.regularization_strength), "number_of_epochs": str(self.number_of_epochs),
-                      "loss_function": str(self.loss_function_enum), "regularization_func":
-                          str(self.regularization_function_enum)}
+                      "reg_strength": str(self.initial_regularization_strength),
+                      "number_of_epochs": str(self.number_of_epochs), "loss_function": str(self.loss_function_enum),
+                      "regularization_func": str(self.regularization_function_enum)}
 
         return parameters
-

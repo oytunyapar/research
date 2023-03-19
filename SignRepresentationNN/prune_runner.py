@@ -7,12 +7,22 @@ import time
 import numpy
 
 
-def prune_runner(number_of_runs=1, output_dir="/home/oytun/PycharmProjects/research/Data/prune_runner/"):
-    data = {}
-    loss_function = LossFunction.RELU
+class PruneRunnerConfiguration:
+    loss_function = LossFunction.MSE
     regularization_function = RegularizationFunction.HOYER_SQUARE
     regularization_strength = 0.05
-    simple_model = True
+    simple_model = False
+
+
+def prune_runner(number_of_runs=1, prune_runner_configuration=PruneRunnerConfiguration(),
+                 output_dir="/home/oytun/PycharmProjects/research/Data/prune_runner/"):
+    data = {}
+    loss_function = prune_runner_configuration.loss_function
+    regularization_function = prune_runner_configuration.regularization_function
+    regularization_strength = prune_runner_configuration.regularization_strength
+    simple_model = prune_runner_configuration.simple_model
+
+    learning = None
 
     for dimension in BooleanFunctionsEquivalentClasses.keys():
         data[dimension] = {}
@@ -30,7 +40,6 @@ def prune_runner(number_of_runs=1, output_dir="/home/oytun/PycharmProjects/resea
             print("Dimension:", dimension, " Function:", function_counter, "/", num_functions,
                   " Elapsed time:", time.time() - time_in_seconds)
 
-    learning = PruneSigmaPiModel(4, 4, regularization_strength, simple_model, loss_function, regularization_function)
     dir_name = output_dir + str(datetime.datetime.now())
     save_data_structure(dir_name, "dictionary", data)
     dump_json(learning.parameters(), dir_name, "parameters")

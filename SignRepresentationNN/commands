@@ -1,16 +1,40 @@
 from SignRepresentationNN.prune import *
-learning = PruneSigmaPiModel(172,3, 0.05, True, LossFunction.MSE, RegularizationFunction.HOYER_SQUARE_AND_L1_AND)
+learning = PruneSigmaPiModel(9761403244881934472,6, 0.05, False, LossFunction.MSE, RegularizationFunction.HOYER_SQUARE)
 learning.operation(True)
 learning.train()
 learning.test()
 
-learning.zeroed_weights()
+learning.zeroed_weights().size
 
 learning.data.walsh_spectrum
 len(learning.zeroed_weights())
 
 from SignRepresentationNN.prune_runner import *
-x = prune_runner(10)
+
+conf = PruneRunnerConfiguration()
+conf.loss_function = LossFunction.MSE
+conf.regularization_function = RegularizationFunction.HOYER_SQUARE
+conf.regularization_strength = 0.05
+conf.simple_model = False
+
+x1 = prune_runner(10,conf)
+
+conf.loss_function = LossFunction.MSE
+conf.regularization_function = RegularizationFunction.L1
+conf.regularization_strength = 0.05
+conf.simple_model = False
+
+x2 = prune_runner(10,conf)
+
+conf.loss_function = LossFunction.MSE
+conf.regularization_function = RegularizationFunction.HOYER_SQUARE_AND_L1
+conf.regularization_strength = 0.05
+conf.simple_model = False
+
+x3 = prune_runner(10,conf)
+
+from SigmaPiFrameworkPython.Utils.DataStructureUtils import *
+data = open_data_structure("/home/oytun/PycharmProjects/research/Data/prune_runner/2023-03-01 05:59:21.352102", "dictionary")
 
 from SignRepresentationNN.prune_runner import *
 d = max_prune_runner("/home/oytun/PycharmProjects/research/Data/prune_runner", "2023-03-01 05:59:21.352102")
