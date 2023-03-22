@@ -142,7 +142,7 @@ class PruneSigmaPiModel:
     def train(self, number_of_epochs):
         self.new_optimizer()
         self.model.train()
-        self.max_number_of_weights_under_threshold = 0
+        self.max_number_of_weights_under_threshold = -1
 
         for epoch in range(number_of_epochs):
             loss_value = 0
@@ -163,11 +163,6 @@ class PruneSigmaPiModel:
 
                 total_loss.backward()
 
-                if self.all_correct() and self.num_weights_under_threshold() > \
-                        self.max_number_of_weights_under_threshold:
-                    self.max_number_of_weights_under_threshold = self.num_weights_under_threshold()
-                    self.saved_model = copy.deepcopy(self.model)
-
                 if self.gradient_change_func is not None:
                     self.gradient_change_func()
 
@@ -176,10 +171,14 @@ class PruneSigmaPiModel:
                 loss_value += total_loss.item()
                 reg_value += reg
 
-            if epoch % self.log_interval == 0 and self.debug:
+            if self.debug and epoch % self.log_interval == 0:
                 percentage = 100 * epoch / number_of_epochs
                 print(f'Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.6f}  '
                       f'Reg: {reg_value/self.num_batch:.6f}')
+
+            if self.num_weights_under_threshold() > self.max_number_of_weights_under_threshold and self.test():
+                self.max_number_of_weights_under_threshold = self.num_weights_under_threshold()
+                self.saved_model = copy.deepcopy(self.model)
 
         if self.saved_model is not None:
             self.model = copy.deepcopy(self.saved_model)
@@ -195,27 +194,18 @@ class PruneSigmaPiModel:
 
     def test(self):
         self.model.eval()
-        num_target = 0
-        num_correct = 0
+        output_array = []
+        target_array = []
         with torch.no_grad():
             for data, target in self.data_loader:
                 data = data.to(self.device)
 
-                output = self.model(data)
-                output_size = output.size()[0]
-                output = output.reshape(output_size).tolist()
-                target = target.tolist()
+                model_output = self.model(data)
+                model_output_size = model_output.size()[0]
+                output_array.extend(model_output.reshape(model_output_size).tolist())
+                target_array.extend(target.tolist())
 
-                for counter in range(output_size):
-                    if numpy.sign(output[counter]) == target[counter]:
-                        num_correct += 1
-                    num_target += 1
-
-        return num_correct, num_target
-
-    def all_correct(self):
-        num_correct, num_target = self.test()
-        return num_correct == num_target
+        return all(numpy.sign(output_array) == target_array)
 
     def num_weights_under_threshold(self):
         for name, p in self.model.named_parameters():
@@ -235,7 +225,7 @@ class PruneSigmaPiModel:
         self.enable_regularization()
         self.train(self.number_of_epochs)
 
-        if self.all_correct():
+        if self.test():
             self.prune()
 
             self.disable_regularization()
@@ -244,7 +234,7 @@ class PruneSigmaPiModel:
         else:
             print("Failed training.")
 
-        return self.all_correct()
+        return self.test()
 
     def zeroed_weights(self):
         for name, p in self.model.named_parameters():

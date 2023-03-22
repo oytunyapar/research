@@ -1,5 +1,5 @@
 from SignRepresentationNN.prune import *
-learning = PruneSigmaPiModel(9761403244881934472,6, 0.05, False, LossFunction.MSE, RegularizationFunction.HOYER_SQUARE)
+learning = PruneSigmaPiModel(172,3, 0.05, False, LossFunction.MSE, RegularizationFunction.HOYER_SQUARE)
 learning.operation(True)
 learning.train()
 learning.test()
