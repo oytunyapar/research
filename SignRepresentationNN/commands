@@ -1,5 +1,5 @@
 from SignRepresentationNN.prune import *
-learning = PruneSigmaPiModel(172,3, 0.05, False, LossFunction.MSE, RegularizationFunction.HOYER_SQUARE)
+learning = PruneSigmaPiModel(0xa8dd9b51,5, 0.05, False, LossFunction.MSE, RegularizationFunction.HOYER_SQUARE)
 learning.operation(True)
 learning.train()
 learning.test()
@@ -10,8 +10,8 @@ learning.data.walsh_spectrum
 len(learning.zeroed_weights())
 
 from SignRepresentationNN.prune_runner import *
-
 conf = PruneRunnerConfiguration()
+
 conf.loss_function = LossFunction.MSE
 conf.regularization_function = RegularizationFunction.HOYER_SQUARE
 conf.regularization_strength = 0.05
@@ -32,6 +32,14 @@ conf.regularization_strength = 0.05
 conf.simple_model = False
 
 x3 = prune_runner(10,conf)
+
+conf.loss_function = LossFunction.EXPONENTIAL
+conf.regularization_function = RegularizationFunction.HOYER_SQUARE
+conf.regularization_strength = 0.05
+conf.simple_model = True
+
+x4 = prune_runner(10,conf)
+
 
 from SigmaPiFrameworkPython.Utils.DataStructureUtils import *
 data = open_data_structure("/home/oytun/PycharmProjects/research/Data/prune_runner/2023-03-01 05:59:21.352102", "dictionary")

@@ -75,7 +75,8 @@ BooleanFunctionsEquivalentClassesDensity =\
             0x288d1b41: 9,
             0xdcfdda51: 11,
             0x68ad9b51: 9,
-            0x688ddb51: 11}
+            0x688ddb51: 11},
+        6: {}
     }
 
 BooleanFunctionsEquivalentClassesWalshSpectrum =\

@@ -62,7 +62,7 @@ class PruneSigmaPiModel:
         self.data_loader = torch.utils.data.DataLoader(self.data, batch_size=self.batch_size, shuffle=True)
         self.num_batch = numpy.ceil(len(self.data)/self.batch_size).astype(int)
 
-        self.number_of_epochs = 200 * self.two_to_power_dimension
+        self.number_of_epochs = 300 * self.two_to_power_dimension
         self.number_of_initialization_epochs = int(self.number_of_epochs/2)
         self.number_of_fine_tune_epochs = int(self.number_of_epochs/8)
 
@@ -96,6 +96,8 @@ class PruneSigmaPiModel:
             self.model = SigmaPiSimpleModel(self.dimension).to(self.device)
         else:
             self.model = SigmaPiModel(self.dimension).to(self.device)
+
+        self.saved_model = None
 
     def set_regularization_func(self, function):
         self.regularization_function = function
@@ -176,13 +178,17 @@ class PruneSigmaPiModel:
                 print(f'Epoch: {epoch} [({percentage:3.0f}%)] 'f'Loss: {loss_value/self.num_batch:.6f}  '
                       f'Reg: {reg_value/self.num_batch:.6f}')
 
-            if self.num_weights_under_threshold() > self.max_number_of_weights_under_threshold and self.test():
+            if self.regularization_strength != 0 and \
+                    self.num_weights_under_threshold() > self.max_number_of_weights_under_threshold and self.test():
                 self.max_number_of_weights_under_threshold = self.num_weights_under_threshold()
                 self.saved_model = copy.deepcopy(self.model)
 
-        if self.saved_model is not None:
-            self.model = copy.deepcopy(self.saved_model)
-            self.saved_model = None
+        if self.test():
+            if self.regularization_strength == 0:
+                self.saved_model = copy.deepcopy(self.model)
+        else:
+            if self.saved_model is not None:
+                self.model = copy.deepcopy(self.saved_model)
 
     def prune(self):
         for name, p in self.model.named_parameters():

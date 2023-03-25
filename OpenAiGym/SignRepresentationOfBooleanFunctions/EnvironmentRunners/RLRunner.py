@@ -18,8 +18,8 @@ class RLModelType(Enum):
 
 policy_kwargs_dictionary = {
     3: dict(activation_fn=th.nn.ReLU, net_arch=[16, 8]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[128, 64]),
-    5: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[32, 16]),
+    5: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
     6: dict(activation_fn=th.nn.ReLU, net_arch=[32, 16])
 }
 
@@ -139,7 +139,7 @@ def rl_runner_output_helper(root_directory, output_folder_label, env, model, par
         dump_json(training_data_performance_results, output_directory, "training_data_performance_results")
         dump_json(test_data_performance_results, output_directory, "test_data_performance_results")
 
-        if env.dimension < 6:
+        if env.dimension < 5:
             dump_json(runner_equivalence_class_performance(training_data_performance_results, env.dimension),
                       output_directory, "training_data_performance_results_equivalence_classes")
             perf_mean_train, perf_deviance_train = runner_overall_performance(training_data_performance_results)
