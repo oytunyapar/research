@@ -1,0 +1,2 @@
+from SolutionSearch.SingleFunctionSolutionSearch import *
+n = single_function_solution(172,3,SearchPolicy.RL,10000)

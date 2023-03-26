@@ -100,7 +100,7 @@ def rl_runner_functions(functions,
     rl_runner_output_helper(output_directory, output_folder_prefix, env, model, parameters_dict,
                             elapsed_time_statistics, training_data_performance_results, test_data_performance_results)
 
-    return env, model
+    return env, model, training_data_performance_results, test_data_performance_results
 
 
 def rl_runner_equivalent_functions(dimension, output_directory=None, key_type=KeyType.K_VECTOR, model=None):

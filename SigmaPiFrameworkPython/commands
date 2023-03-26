@@ -26,8 +26,8 @@ import warnings
 warnings.simplefilter("ignore", RuntimeWarning)
 from SigmaPiFrameworkPython.Applications.RandomLogicLinearProgramming import *
 dir = "/home/oytun/PycharmProjects/research/Data"
-a, b = apply_random_search_linear_programming_on_functions(0, 25000, 6,
-[10855359761657498816], dir)
+a, b = apply_random_search_linear_programming_on_functions(0, 40, 5,
+[0x88dddb71], None)
 
 a, b = apply_random_search_linear_programming_on_functions(0, 1, 6, [9761403244881934472, 10855359761657498816, 7583035861148412416, 3745489178524800608])
 

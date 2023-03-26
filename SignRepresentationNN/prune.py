@@ -248,6 +248,9 @@ class PruneSigmaPiModel:
                 continue
             return numpy.where(p.data.cpu().numpy() == 0)[1]
 
+    def num_zeroed_weights(self):
+        return len(self.zeroed_weights())
+
     def parameters(self):
         parameters = {"prune_limit": str(self.prune_limit), "simple_model": str(self.simple_model),
                       "reg_strength": str(self.initial_regularization_strength),

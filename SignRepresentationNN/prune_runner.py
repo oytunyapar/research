@@ -14,8 +14,20 @@ class PruneRunnerConfiguration:
     simple_model = False
 
 
-def prune_runner(number_of_runs=1, prune_runner_configuration=PruneRunnerConfiguration(),
-                 output_dir="/home/oytun/PycharmProjects/research/Data/prune_runner/"):
+def prune_runner_single(function, dimension, prune_runner_configuration):
+    learning = PruneSigmaPiModel(function, dimension,
+                                 prune_runner_configuration.regularization_strength,
+                                 prune_runner_configuration.simple_model,
+                                 prune_runner_configuration.loss_function,
+                                 prune_runner_configuration.regularization_function)
+    if learning.operation():
+        return learning.num_zeroed_weights()
+    else:
+        return -1
+
+
+def prune_runner_equivalence_classes(number_of_runs=1, prune_runner_configuration=PruneRunnerConfiguration(),
+                                     output_dir="/home/oytun/PycharmProjects/research/Data/prune_runner/"):
     data = {}
     loss_function = prune_runner_configuration.loss_function
     regularization_function = prune_runner_configuration.regularization_function

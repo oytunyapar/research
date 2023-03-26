@@ -13,7 +13,7 @@ import random
 training_functions = random.sample(functions, int(len(functions)*0.75))
 test_functions = list(set(functions) - set(training_functions))
 
-env,model= rl_runner_functions(training_functions,
+env,model,_,_= rl_runner_functions(training_functions,
 dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,
 test_functions=test_functions)
 
@@ -66,8 +66,8 @@ functions = [0xa8dd9b51]
 output_prefix="function_0xa8dd9b51"
 test_functions=None
 
-time_steps=40000
-env,model= rl_runner_functions(functions,
+time_steps=10000
+env,model,_,_= rl_runner_functions(functions,
 dimension, time_steps, RLModelType.RL_DQN, root_dir, output_prefix, key_type=KeyType.MONOMIAL_SET,test_functions=test_functions)
 
 from OpenAiGym.EnvironmentRunners.RLRunner.RLRunner import *

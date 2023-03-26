@@ -17,28 +17,28 @@ conf.regularization_function = RegularizationFunction.HOYER_SQUARE
 conf.regularization_strength = 0.05
 conf.simple_model = False
 
-x1 = prune_runner(10,conf)
+x1 = prune_runner_equivalence_classes(10,conf)
 
 conf.loss_function = LossFunction.MSE
 conf.regularization_function = RegularizationFunction.L1
 conf.regularization_strength = 0.05
 conf.simple_model = False
 
-x2 = prune_runner(10,conf)
+x2 = prune_runner_equivalence_classes(10,conf)
 
 conf.loss_function = LossFunction.MSE
 conf.regularization_function = RegularizationFunction.HOYER_SQUARE_AND_L1
 conf.regularization_strength = 0.05
 conf.simple_model = False
 
-x3 = prune_runner(10,conf)
+x3 = prune_runner_equivalence_classes(10,conf)
 
 conf.loss_function = LossFunction.EXPONENTIAL
 conf.regularization_function = RegularizationFunction.HOYER_SQUARE
 conf.regularization_strength = 0.05
 conf.simple_model = True
 
-x4 = prune_runner(10,conf)
+x4 = prune_runner_equivalence_classes(10,conf)
 
 
 from SigmaPiFrameworkPython.Utils.DataStructureUtils import *

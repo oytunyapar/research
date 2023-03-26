@@ -37,14 +37,14 @@ def reward_performance(env, reward, function=None):
             BooleanFunctionsWalshSpectrumNoZeroes[dimension][str(walsh_spectrum_compact(function, dimension,
                                                                                         env.d_matrix))]
 
-        return [theoretical_no_zeroes - no_zeroes, round(no_zeroes / theoretical_no_zeroes, precision)]
+        return [no_zeroes, round(no_zeroes / theoretical_no_zeroes, precision)]
     else:
         if dimension in BooleanFunctionsEquivalentClassesDensity:
             density_dic = BooleanFunctionsEquivalentClassesDensity[dimension]
             if function in density_dic:
                 theoretical_no_zeroes = 2**dimension - density_dic[function]
-                return [theoretical_no_zeroes - no_zeroes, round(no_zeroes / theoretical_no_zeroes, precision)]
-        return no_zeroes
+                return [no_zeroes, round(no_zeroes / theoretical_no_zeroes, precision)]
+        return [no_zeroes]
 
 
 def runner_overall_performance(performance):
