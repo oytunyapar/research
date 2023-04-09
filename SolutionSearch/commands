@@ -1,2 +1,5 @@
-from SolutionSearch.SingleFunctionSolutionSearch import *
-n = single_function_solution(172,3,SearchPolicy.RL,10000)
+from SolutionSearch.SolutionSearch import *
+func = {3:[172]}
+solution_search(func,SearchPolicy.RL,2,10000)
+solution_search(func,SearchPolicy.RANDOM,2)
+solution_search(func,SearchPolicy.REGULARIZATION,2)
