@@ -17,14 +17,15 @@ class RLModelType(Enum):
 
 
 policy_kwargs_dictionary = {
-    3: dict(activation_fn=th.nn.ReLU, net_arch=[16, 8]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[32, 16]),
-    5: dict(activation_fn=th.nn.ReLU, net_arch=[64, 32]),
-    6: dict(activation_fn=th.nn.ReLU, net_arch=[32, 16])
+    2: dict(activation_fn=th.nn.ReLU, net_arch=[4, 4]),
+    3: dict(activation_fn=th.nn.ReLU, net_arch=[8, 8]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[16, 16]),
+    5: dict(activation_fn=th.nn.ReLU, net_arch=[32, 32]),
+    6: dict(activation_fn=th.nn.ReLU, net_arch=[64, 64])
 }
 
 
-def rl_create_model(model_type, env):
+def rl_create_model(model_type, env, time_steps):
     batch_factor = 32
     batch_size = env.steps_in_each_epoch * batch_factor
 
@@ -33,6 +34,11 @@ def rl_create_model(model_type, env):
 
     max_learning_starts = 50000
     learning_starts = max_learning_starts if buffer_size > max_learning_starts else buffer_size
+
+    time_steps_tenth = int(time_steps/10)
+
+    if time_steps_tenth < learning_starts:
+        learning_starts = time_steps_tenth
 
     if model_type is RLModelType.RL_DQN:
         model = DQN('MlpPolicy', env,
@@ -43,7 +49,7 @@ def rl_create_model(model_type, env):
                     batch_size=batch_size,
                     buffer_size=buffer_size,
                     train_freq=4,
-                    learning_rate=0.0001,
+                    learning_rate=0.0005,
                     learning_starts=learning_starts)
     elif model_type is RLModelType.RL_PPO:
         model = PPO('MlpPolicy', make_vec_env(lambda: env, n_envs=4),
@@ -79,7 +85,7 @@ def rl_runner_functions(functions,
                                                           "functions": functions, "test_functions": test_functions}
 
     if model is None:
-        model = rl_create_model(model_type, env)
+        model = rl_create_model(model_type, env, time_steps)
     else:
         model.set_env(env)
 

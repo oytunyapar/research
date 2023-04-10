@@ -28,11 +28,19 @@ def rl_solution_search(function, dimension, time_steps):
     return training_data_performance_results[function][0]
 
 
+def get_rl_time_steps(dimension):
+    return 750 * 2 ** dimension
+
+
 def solution_search_object(search_policy, arguments=None):
     if search_policy is SearchPolicy.RANDOM:
         def func(function, dimension): return random_solution_search(function, dimension)
     elif search_policy is SearchPolicy.RL:
-        def func(function, dimension): return rl_solution_search(function, dimension, time_steps=arguments)
+        if arguments is None:
+            def func(function, dimension): return rl_solution_search(function, dimension,
+                                                                     time_steps=get_rl_time_steps(dimension))
+        else:
+            def func(function, dimension): return rl_solution_search(function, dimension, time_steps=arguments)
     elif search_policy is SearchPolicy.REGULARIZATION:
         def func(function, dimension): return prune_runner_single(function, dimension,
                                                                   prune_runner_configuration=arguments)
@@ -56,9 +64,7 @@ def solution_search_policy_string(search_policy):
 
 
 def solution_search_dump_extra(search_policy, dir_name, arguments):
-    if search_policy is SearchPolicy.RL:
-        dump_json(str(arguments), dir_name, "time_steps")
-    elif search_policy is SearchPolicy.REGULARIZATION:
+    if search_policy is SearchPolicy.REGULARIZATION:
         dump_json(prune_runner_parameters(arguments), dir_name, "parameters")
 
 

@@ -1,5 +1,9 @@
 from SolutionSearch.SolutionSearch import *
+func = {4:[0xab12]}
 func = {3:[172]}
-solution_search(func,SearchPolicy.RL,2,10000)
-solution_search(func,SearchPolicy.RANDOM,2)
-solution_search(func,SearchPolicy.REGULARIZATION,2)
+solution_search(func,SearchPolicy.RL,1)
+solution_search(func,SearchPolicy.RANDOM,10)
+solution_search(func,SearchPolicy.REGULARIZATION,1)
+
+from SolutionSearch.SolutionSearch import *
+equivalence_classes_solution_search(SearchPolicy.RL,10)
