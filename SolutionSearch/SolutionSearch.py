@@ -12,7 +12,7 @@ from enum import Enum
 
 
 class SearchPolicy(Enum):
-    RANDOM = 0,
+    GREEDY = 0,
     RL = 1,
     REGULARIZATION = 2
 
@@ -33,7 +33,7 @@ def get_rl_time_steps(dimension):
 
 
 def solution_search_object(search_policy, arguments=None):
-    if search_policy is SearchPolicy.RANDOM:
+    if search_policy is SearchPolicy.GREEDY:
         def func(function, dimension): return random_solution_search(function, dimension)
     elif search_policy is SearchPolicy.RL:
         if arguments is None:
@@ -51,8 +51,8 @@ def solution_search_object(search_policy, arguments=None):
 
 
 def solution_search_policy_string(search_policy):
-    if search_policy is SearchPolicy.RANDOM:
-        string = str("RANDOM")
+    if search_policy is SearchPolicy.GREEDY:
+        string = str("GREEDY")
     elif search_policy is SearchPolicy.RL:
         string = str("RL")
     elif search_policy is SearchPolicy.REGULARIZATION:
