@@ -29,7 +29,7 @@ def rl_solution_search(function, dimension, time_steps):
 
 
 def get_rl_time_steps(dimension):
-    return 750 * 2 ** dimension
+    return 800 * 2 ** dimension
 
 
 def solution_search_object(search_policy, arguments=None):

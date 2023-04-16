@@ -110,7 +110,7 @@ class PruneSigmaPiModel:
         return error.clone()
 
     def relu_error(self, output, target):
-        error = torch.relu(torch.tensor(1).to(self.device) - (output * target).sum())
+        error = torch.relu(torch.tensor(1).to(self.device) - (output * target)).sum()
         return error.clone()
 
     def hoyer_square_regularization_func(self):
