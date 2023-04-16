@@ -107,13 +107,13 @@ def solution_search(functions_in_dimensions, search_policy, number_of_runs=1, ar
 
 def equivalence_classes_solution_search(search_policy, number_of_runs=1, arguments=None,
                                         output_dir="/home/oytun/PycharmProjects/research/Data/solution_search/"):
-    solution_search(BooleanFunctionsEquivalentClasses, search_policy, number_of_runs, arguments, output_dir)
+    return solution_search(BooleanFunctionsEquivalentClasses, search_policy, number_of_runs, arguments, output_dir)
 
 
 def dimension_solution_search(search_policy, dimension, number_of_runs=1, arguments=None,
                               output_dir="/home/oytun/PycharmProjects/research/Data/solution_search/"):
     functions = {dimension: BooleanFunctionsEquivalentClasses[dimension]}
-    solution_search(functions, search_policy, number_of_runs, arguments, output_dir)
+    return solution_search(functions, search_policy, number_of_runs, arguments, output_dir)
 
 
 def data_average_std(data):
