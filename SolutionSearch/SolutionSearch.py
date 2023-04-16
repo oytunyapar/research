@@ -90,10 +90,17 @@ def solution_search(functions_in_dimensions, search_policy, number_of_runs=1, ar
     save_data_structure(dir_name, "dictionary", data)
     solution_search_dump_extra(search_policy, dir_name, arguments)
 
-    max_data = max_number_of_zeros_in_data(data=data)
+    max_data, _ = process_search_data(process_policy=numpy.max, data=data)
     for dimension in max_data.keys():
-        rows = max_data_dict_to_rows(max_data[dimension])
-        dump_csv(["function", "value"], rows, dir_name, "dimension_" + str(dimension))
+        rows = processed_data_dict_to_rows(max_data[dimension])
+        dump_csv(["function", "max"], rows, dir_name, "max_dimension_" + str(dimension))
+
+    average_data, compared_data = process_search_data(process_policy=data_average_std, data=data)
+    for dimension in average_data.keys():
+        rows = processed_data_dict_to_rows(average_data[dimension])
+        dump_csv(["function", "average", "std"], rows, dir_name, "average_dimension_" + str(dimension))
+        rows = processed_data_dict_to_rows(compared_data[dimension])
+        dump_csv(["function", "ratio"], rows, dir_name, "theoretical_compare_dimension_" + str(dimension))
 
     return data
 
@@ -103,28 +110,57 @@ def equivalence_classes_solution_search(search_policy, number_of_runs=1, argumen
     solution_search(BooleanFunctionsEquivalentClasses, search_policy, number_of_runs, arguments, output_dir)
 
 
-def max_number_of_zeros_in_data(directory=None, file=None, data=None):
+def dimension_solution_search(search_policy, dimension, number_of_runs=1, arguments=None,
+                              output_dir="/home/oytun/PycharmProjects/research/Data/solution_search/"):
+    functions = {dimension: BooleanFunctionsEquivalentClasses[dimension]}
+    solution_search(functions, search_policy, number_of_runs, arguments, output_dir)
+
+
+def data_average_std(data):
+    precision = 2
+    return [round(numpy.average(data), precision), round(numpy.std(data), precision)]
+
+
+def process_search_data(process_policy, directory=None, file=None, data=None):
     if data is None:
         data = open_data_structure(directory, file)
 
-    max_data = {}
+    processed_data = {}
+    compared_data = {}
+
     for dimension in data.keys():
         current_functions = data[dimension]
-        max_data[dimension] = {}
+        processed_data[dimension] = {}
+        compared_data[dimension] = {}
+
         for function in current_functions.keys():
             values = current_functions[function]
             if len(values) > 0:
-                max_data[dimension][hex(function)] = numpy.max(values)
+                process_result = process_policy(values)
+                processed_data[dimension][hex(function)] = process_result
+
+                if isinstance(process_result, list):
+                    value = process_result[0]
+                else:
+                    value = process_result
+
+                compared_data[dimension][hex(function)] = \
+                    round(value/(2**dimension - BooleanFunctionsEquivalentClassesDensity[dimension][function]), 2)
             else:
-                max_data[dimension][hex(function)] = None
+                processed_data[dimension][hex(function)] = None
 
-    return max_data
+    return processed_data, compared_data
 
 
-def max_data_dict_to_rows(max_data_for_a_dimension):
+def processed_data_dict_to_rows(max_data_for_a_dimension):
     rows = []
     for key, value in max_data_for_a_dimension.items():
-        rows.append([key, value])
+        if isinstance(value, list):
+            row = [key]
+            row.extend(value)
+            rows.append(row)
+        else:
+            rows.append([key, value])
 
     return rows
 
