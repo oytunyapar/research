@@ -9,10 +9,11 @@ data = solution_search(func,SearchPolicy.REGULARIZATION,1)
 
 
 from SolutionSearch.SolutionSearch import *
-equivalence_classes_solution_search(SearchPolicy.GREEDY,10)
+equivalence_classes_solution_search(SearchPolicy.RL,10)
 
 from SolutionSearch.SolutionSearch import *
-dimension_solution_search(SearchPolicy.GREEDY,4,10)
+equivalence_classes_solution_search(SearchPolicy.GREEDY,1000)
+
 
 from SolutionSearch.SolutionSearch import *
 data = dimension_solution_search(SearchPolicy.REGULARIZATION,4,10)
@@ -29,7 +30,12 @@ configurations = [
 [LossFunction.RELU, RegularizationFunction.HOYER_SQUARE_AND_L1, True],
 [LossFunction.EXPONENTIAL, RegularizationFunction.HOYER_SQUARE, True],
 [LossFunction.EXPONENTIAL, RegularizationFunction.L1, True],
-[LossFunction.EXPONENTIAL, RegularizationFunction.HOYER_SQUARE_AND_L1, True],
+[LossFunction.EXPONENTIAL, RegularizationFunction.HOYER_SQUARE_AND_L1, True]
+]
+
+configurations = [
+[LossFunction.MSE, RegularizationFunction.HOYER_SQUARE, False],
+[LossFunction.RELU, RegularizationFunction.HOYER_SQUARE, True]
 ]
 
 for configuration in configurations:
@@ -38,8 +44,11 @@ for configuration in configurations:
     conf.regularization_function = configuration[1]
     conf.regularization_strength = 0.05
     conf.simple_model = configuration[2]
-    dimension_solution_search(SearchPolicy.REGULARIZATION,4,10,arguments=conf)
+    dimension_solution_search(SearchPolicy.REGULARIZATION,5,10,arguments=conf)
 
+from SolutionSearch.SolutionSearch import *
+dir="/home/oytun/PycharmProjects/research/Data/solution_search/RL/2023-04-18 11:26:32.687699"
+process_data(output_dir=dir, data_dir=dir, data_name="dictionary")
 
 [configurations[3]]
 func = {4:[0xab12]}

@@ -90,19 +90,29 @@ def solution_search(functions_in_dimensions, search_policy, number_of_runs=1, ar
     save_data_structure(dir_name, "dictionary", data)
     solution_search_dump_extra(search_policy, dir_name, arguments)
 
+    process_data(output_dir=dir_name, data=data)
+
+    return data
+
+
+def process_data(output_dir, data=None, data_dir=None, data_name=None):
+    if data is None:
+        if data_dir is not None and data_name is not None:
+            data = open_data_structure(data_dir, data_name)
+        else:
+            raise Exception("Process data failed.")
+
     max_data, _ = process_search_data(process_policy=numpy.max, data=data)
     for dimension in max_data.keys():
         rows = processed_data_dict_to_rows(max_data[dimension])
-        dump_csv(["function", "max"], rows, dir_name, "max_dimension_" + str(dimension))
+        dump_csv(["function", "max"], rows, output_dir, "max_dimension_" + str(dimension))
 
     average_data, compared_data = process_search_data(process_policy=data_average_std, data=data)
     for dimension in average_data.keys():
         rows = processed_data_dict_to_rows(average_data[dimension])
-        dump_csv(["function", "average", "std"], rows, dir_name, "average_dimension_" + str(dimension))
+        dump_csv(["function", "average", "std"], rows, output_dir, "average_dimension_" + str(dimension))
         rows = processed_data_dict_to_rows(compared_data[dimension])
-        dump_csv(["function", "ratio"], rows, dir_name, "theoretical_compare_dimension_" + str(dimension))
-
-    return data
+        dump_csv(["function", "ratio"], rows, output_dir, "theoretical_compare_dimension_" + str(dimension))
 
 
 def equivalence_classes_solution_search(search_policy, number_of_runs=1, arguments=None,
@@ -144,8 +154,11 @@ def process_search_data(process_policy, directory=None, file=None, data=None):
                 else:
                     value = process_result
 
-                compared_data[dimension][hex(function)] = \
-                    round(value/(2**dimension - BooleanFunctionsEquivalentClassesDensity[dimension][function]), 2)
+                try:
+                    compared_data[dimension][hex(function)] = \
+                        round(value/(2**dimension - BooleanFunctionsEquivalentClassesDensity[dimension][function]), 2)
+                except:
+                    print("process_search_data:key error.")
             else:
                 processed_data[dimension][hex(function)] = None
 
