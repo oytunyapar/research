@@ -45,7 +45,6 @@ def load_csv(output_directory, file_name_prefix):
 
     with open(csv_file_name, mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
-        next(csv_reader, None)
 
         lines = []
 

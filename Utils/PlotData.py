@@ -71,7 +71,7 @@ def plot_bar(y_data, graph_labels, graph_group_names, y_data_std=None, title="gr
         for x, y, y_err, graph_label in zip(x_data, y_data, y_data_std, graph_labels):
             plt.bar(x, y, width=bar_width, label=graph_label)
             if y_err:
-                plt.errorbar(x, y, fmt="k_", yerr=y_err, ecolor="black", elinewidth=bar_width*5, barsabove=True)
+                plt.errorbar(x, y, fmt="k_", yerr=y_err, ecolor="black", elinewidth=bar_width*5, capsize=bar_width*10)
 
         enable_legend(plt)
 
@@ -86,7 +86,7 @@ def plot_bar(y_data, graph_labels, graph_group_names, y_data_std=None, title="gr
 
 
 def enable_legend(plot):
-    plot.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize="small")
+    plot.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize="x-small")
     plot.tight_layout()
 
 

@@ -65,7 +65,7 @@ def solution_search_policy_string(search_policy):
 
 def solution_search_dump_extra(search_policy, dir_name, arguments):
     if search_policy is SearchPolicy.REGULARIZATION:
-        dump_json(prune_runner_parameters(arguments), dir_name, "parameters")
+        dump_json(prune_runner_parameters(arguments), dir_name, regularization_parameters_file_name())
 
 
 def solution_search(functions_in_dimensions, search_policy, number_of_runs=1, arguments=None,
@@ -93,6 +93,10 @@ def solution_search(functions_in_dimensions, search_policy, number_of_runs=1, ar
     process_data(output_dir=dir_name, data=data)
 
     return data
+
+
+def regularization_parameters_file_name():
+    return "parameters"
 
 
 def max_csv_file_name(dimension):

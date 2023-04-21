@@ -18,6 +18,41 @@ class RegularizationFunction(Enum):
     HOYER_SQUARE_AND_L1 = 2
 
 
+def loss_function_string(loss_function):
+    if loss_function is LossFunction.MSE or loss_function == "LossFunction.MSE":
+        string = str("MSE")
+    elif loss_function is LossFunction.RELU or loss_function == "LossFunction.RELU":
+        string = str("RELU")
+    elif loss_function is LossFunction.EXPONENTIAL or loss_function == "LossFunction.EXPONENTIAL":
+        string = str("EXP")
+    else:
+        raise Exception("Unknown loss function.")
+
+    return string
+
+
+def regularization_function_string(regularization_function):
+    if regularization_function is RegularizationFunction.HOYER_SQUARE or \
+            regularization_function == "RegularizationFunction.HOYER_SQUARE":
+        string = str("HS")
+    elif regularization_function is RegularizationFunction.L1 or regularization_function == "RegularizationFunction.L1":
+        string = str("L1")
+    elif regularization_function is RegularizationFunction.HOYER_SQUARE_AND_L1 or \
+            regularization_function == "RegularizationFunction.HOYER_SQUARE_AND_L1":
+        string = str("HS_L1")
+    else:
+        raise Exception("Unknown regularization function.")
+
+    return string
+
+
+def activation_function_string(simple_model):
+    if simple_model is True or simple_model == "True":
+        return "N/A"
+    else:
+        return "TANH"
+
+
 class PruneSigmaPiModel:
     def __init__(self, function, dimension, regularization_strength=0.05, simple_model=False,
                  loss_function=LossFunction.MSE, regularization_function=RegularizationFunction.HOYER_SQUARE):
