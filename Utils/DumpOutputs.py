@@ -1,21 +1,13 @@
-import matplotlib.pyplot as plt
 import json
 import csv
 from pathlib import Path
 
+from Utils.PlotData import plot_2d
+
 
 def dump_outputs(data, output_directory, file_name_prefix):
-    dump_png(data, output_directory, file_name_prefix)
+    plot_2d([data], output_directory=output_directory, file_name_prefix=file_name_prefix)
     dump_json(data, output_directory, file_name_prefix)
-
-
-def dump_png(data, output_directory, file_name_prefix):
-    if not Path(output_directory).is_dir():
-        Path(output_directory).mkdir(parents=True)
-
-    plt.plot(data)
-    plt.savefig(output_directory + "/" + file_name_prefix + ".png")
-    plt.clf()
 
 
 def dump_json(data, output_directory, file_name_prefix):
@@ -46,3 +38,18 @@ def dump_csv(fields, rows, output_directory, file_name_prefix):
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow(fields)
         csv_writer.writerows(rows)
+
+
+def load_csv(output_directory, file_name_prefix):
+    csv_file_name = output_directory + "/" + file_name_prefix + ".csv"
+
+    with open(csv_file_name, mode='r') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        next(csv_reader, None)
+
+        lines = []
+
+        for row in csv_reader:
+            lines.append(list(row.values()))
+
+        return lines

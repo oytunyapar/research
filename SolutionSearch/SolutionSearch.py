@@ -95,6 +95,30 @@ def solution_search(functions_in_dimensions, search_policy, number_of_runs=1, ar
     return data
 
 
+def max_csv_file_name(dimension):
+    return "max_dimension_" + str(dimension)
+
+
+def max_csv_field_names():
+    return ["function", "max"]
+
+
+def average_csv_file_name(dimension):
+    return "average_dimension_" + str(dimension)
+
+
+def average_csv_field_names():
+    return ["function", "average", "std"]
+
+
+def theoretical_compare_csv_file_name(dimension):
+    return "theoretical_compare_dimension_" + str(dimension)
+
+
+def theoretical_compare_field_names():
+    return ["function", "ratio"]
+
+
 def process_data(output_dir, data=None, data_dir=None, data_name=None):
     if data is None:
         if data_dir is not None and data_name is not None:
@@ -105,14 +129,14 @@ def process_data(output_dir, data=None, data_dir=None, data_name=None):
     max_data, _ = process_search_data(process_policy=numpy.max, data=data)
     for dimension in max_data.keys():
         rows = processed_data_dict_to_rows(max_data[dimension])
-        dump_csv(["function", "max"], rows, output_dir, "max_dimension_" + str(dimension))
+        dump_csv(max_csv_field_names(), rows, output_dir, max_csv_file_name(dimension))
 
     average_data, compared_data = process_search_data(process_policy=data_average_std, data=data)
     for dimension in average_data.keys():
         rows = processed_data_dict_to_rows(average_data[dimension])
-        dump_csv(["function", "average", "std"], rows, output_dir, "average_dimension_" + str(dimension))
+        dump_csv(average_csv_field_names(), rows, output_dir, average_csv_file_name(dimension))
         rows = processed_data_dict_to_rows(compared_data[dimension])
-        dump_csv(["function", "ratio"], rows, output_dir, "theoretical_compare_dimension_" + str(dimension))
+        dump_csv(theoretical_compare_field_names(), rows, output_dir, theoretical_compare_csv_file_name(dimension))
 
 
 def equivalence_classes_solution_search(search_policy, number_of_runs=1, arguments=None,

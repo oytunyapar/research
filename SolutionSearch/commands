@@ -44,7 +44,7 @@ for configuration in configurations:
     conf.regularization_function = configuration[1]
     conf.regularization_strength = 0.05
     conf.simple_model = configuration[2]
-    dimension_solution_search(SearchPolicy.REGULARIZATION,5,10,arguments=conf)
+    dimension_solution_search(SearchPolicy.REGULARIZATION,6,10,arguments=conf)
 
 from SolutionSearch.SolutionSearch import *
 dir="/home/oytun/PycharmProjects/research/Data/solution_search/RL/2023-04-18 11:26:32.687699"
@@ -53,3 +53,8 @@ process_data(output_dir=dir, data_dir=dir, data_name="dictionary")
 [configurations[3]]
 func = {4:[0xab12]}
 data = solution_search(func,SearchPolicy.REGULARIZATION,10,arguments=conf)
+
+dir="/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-19 03:37:28.026865"
+from SolutionSearch.SolutionSearch import *
+from Utils.DumpOutputs import load_csv
+x = load_csv(dir, max_csv_file_name(6))
