@@ -33,6 +33,7 @@ def plot_2d(y_data, x_data=None, y_data_std=None, title="graph", x_label="x", y_
                 y_plus.append(data + error)
             plt.fill_between(x, y_minus, y_plus, alpha=.3)
 
+        #plt.xticks(rotation=45, fontsize=5)
         if no_legend is False:
             enable_legend(plt)
 
@@ -117,4 +118,5 @@ def dump_png(plot, output_directory, file_name_prefix):
     if output_directory and file_name_prefix:
         if not Path(output_directory).is_dir():
             Path(output_directory).mkdir(parents=True)
+        plot.figure(dpi=600)
         plot.savefig(output_directory + "/" + file_name_prefix + ".png")

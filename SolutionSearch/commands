@@ -70,9 +70,18 @@ dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATIO
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 20:11:42.163708',
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 20:38:37.056752',
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 21:15:13.772229']
+compare_theoretical_2d(4,dirs,None, AnalysisPolicy.AVERAGE)
+regularization_compare(4,dirs, AnalysisPolicy.THEORETICAL_COMPARE, True)
+regularization_compare(4,dirs, AnalysisPolicy.MAX,True)
 
 regularization_compare(4,dirs, AnalysisPolicy.AVERAGE)
 
+from SolutionSearch.AnalysisPlots import *
+
+dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 11:07:14.720637',
+'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 22:01:55.656421']
+
+compare_theoretical_2d(5,dirs,None, AnalysisPolicy.AVERAGE)
 
 x = plot_2d([[1,2,3],[4,5,6],[7,8,9]],[["a","b","c"],["a","b","c"],["a","b","c"]],[[0.1,0.2,0.3],[0.2,0.3,0.4],[0.1,0.2,0.3]],graph_labels=["asd","asd","asd"],show=True)
 plot_bar([list(range(0,2)),list(range(5,7)),list(range(5,7))],["asd\nasd\nasd"]* 3, ["vvv"]*2,show=True)
