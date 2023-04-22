@@ -25,7 +25,7 @@ def analysis_policy_file_prefix(analysis_policy, dimension):
     return string
 
 
-def regularization_compare(dimension, directories, analysis_policy=AnalysisPolicy.AVERAGE):
+def regularization_compare(dimension, directories, analysis_policy=AnalysisPolicy.AVERAGE, compact=False):
     graph_labels = []
     graph_group_names = []
     y_data = []

@@ -71,4 +71,9 @@ dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATIO
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 20:38:37.056752',
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 21:15:13.772229']
 
-regularization_compare(4,dirs, AnalysisPolicy.THEORETICAL_COMPARE)
+regularization_compare(4,dirs, AnalysisPolicy.AVERAGE)
+
+
+x = plot_2d([[1,2,3],[4,5,6],[7,8,9]],[["a","b","c"],["a","b","c"],["a","b","c"]],[[0.1,0.2,0.3],[0.2,0.3,0.4],[0.1,0.2,0.3]],graph_labels=["asd","asd","asd"],show=True)
+plot_bar([list(range(0,2)),list(range(5,7)),list(range(5,7))],["asd\nasd\nasd"]* 3, ["vvv"]*2,show=True)
+plot_bar([list(range(0,2)),list(range(5,7)),list(range(5,7)),list(range(5,7))],["asd\nasd\nasd"]* 4, ["vvv"]*2,show=True)
