@@ -33,14 +33,21 @@ def plot_2d(y_data, x_data=None, y_data_std=None, title="graph", x_label="x", y_
                 y_plus.append(data + error)
             plt.fill_between(x, y_minus, y_plus, alpha=.3)
 
-        #plt.xticks(rotation=45, fontsize=5)
+        if len(x_data[0]) > 15:
+            plt.xticks(rotation=45, fontsize=10)
+        if len(x_data[0]) > 30:
+            plt.xticks(rotation=90, fontsize=5)
+
         if no_legend is False:
             enable_legend(plt)
 
-        if show:
-            plt.show()
+        if file_name_prefix is None:
+            file_name_prefix = title
 
         dump_png(plt, output_directory, file_name_prefix)
+
+        if show:
+            plt.show()
 
         return plt
     except Exception as e:
@@ -83,10 +90,14 @@ def plot_bar(y_data, graph_labels, graph_group_names, y_data_std=None, title="gr
 
         plt.xticks(data_groups_coordinates, graph_group_names, fontsize=font_size(data_number_of_groups))
 
+        if file_name_prefix is None:
+            file_name_prefix = title
+
+        dump_png(plt, output_directory, file_name_prefix)
+
         if show:
             plt.show()
 
-        dump_png(plt, output_directory, file_name_prefix)
     except Exception as e:
         print("plot_bar error:", e)
 
@@ -118,5 +129,4 @@ def dump_png(plot, output_directory, file_name_prefix):
     if output_directory and file_name_prefix:
         if not Path(output_directory).is_dir():
             Path(output_directory).mkdir(parents=True)
-        plot.figure(dpi=600)
-        plot.savefig(output_directory + "/" + file_name_prefix + ".png")
+        plot.savefig(output_directory + "/" + file_name_prefix + ".png", dpi=600)

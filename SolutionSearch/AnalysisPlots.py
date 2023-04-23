@@ -91,14 +91,19 @@ def get_regularization_labels(directories):
     return graph_labels
 
 
-def regularization_compare(dimension, directories, analysis_policy=AnalysisPolicy.AVERAGE, compact=False):
-    y_data, y_data_std, graph_group_names = extract_data(dimension, directories, analysis_policy, compact)
-    title = get_graph_title(analysis_policy, dimension, compact, "Regularization Methods'")
-
+def regularization_compare_bar(dimension, directories, analysis_policy=AnalysisPolicy.AVERAGE, compact=False,
+                               output_directory=None, file_name_prefix=None):
     graph_labels = get_regularization_labels(directories)
+    title = get_graph_title(analysis_policy, dimension, compact, "Regularization Methods'")
+    compare_bar(dimension, directories, graph_labels, analysis_policy=analysis_policy, compact=compact, title=title,
+                output_directory=output_directory, file_name_prefix=file_name_prefix)
 
-    plot_bar(y_data=y_data, graph_labels=graph_labels, graph_group_names=graph_group_names, y_data_std=y_data_std,
-             y_label="Number of zeros", x_label="Equivalence classes", title=title, show=True)
+
+def regularization_compare_2d(dimension, directories, analysis_policy=AnalysisPolicy.AVERAGE,
+                              output_directory=None, file_name_prefix=None):
+    graph_labels = get_regularization_labels(directories)
+    compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy, output_directory=output_directory,
+                           file_name_prefix=file_name_prefix)
 
 
 def density_order(dimension, equivalence_classes):
@@ -118,7 +123,20 @@ def density_order(dimension, equivalence_classes):
     return new_order, densities_converted[new_order]
 
 
-def compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy=AnalysisPolicy.AVERAGE):
+def compare_bar(dimension, directories, graph_labels, analysis_policy=AnalysisPolicy.AVERAGE, compact=False,
+                title=None, output_directory=None, file_name_prefix=None):
+    y_data, y_data_std, graph_group_names = extract_data(dimension, directories, analysis_policy, compact)
+
+    if title is None:
+        title = get_graph_title(analysis_policy, dimension, compact)
+
+    plot_bar(y_data=y_data, graph_labels=graph_labels, graph_group_names=graph_group_names, y_data_std=y_data_std,
+             y_label="Number of zeros", x_label="Equivalence classes", title=title, show=True,
+             output_directory=output_directory, file_name_prefix=file_name_prefix)
+
+
+def compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy=AnalysisPolicy.AVERAGE,
+                           output_directory=None, file_name_prefix=None,):
     if analysis_policy is AnalysisPolicy.THEORETICAL_COMPARE:
         print("AnalysisPolicy.THEORETICAL_COMPARE is not valid for this function")
         return
@@ -143,6 +161,9 @@ def compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy
     if y_data_std is not None:
         y_data_std.insert(0, [0]*len(y_data_std[0]))
 
+    if graph_labels is not None:
+        graph_labels.insert(0, "Theoretical\nlimit")
+
     plot_2d(y_data=y_data, x_data=x_data, y_data_std=y_data_std, title=title,
             y_label="Number of zeros", x_label="Equivalence classes", graph_labels=graph_labels,
-            show=True)
+            show=True, output_directory=output_directory, file_name_prefix=file_name_prefix)

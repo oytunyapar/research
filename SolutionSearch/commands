@@ -12,7 +12,7 @@ from SolutionSearch.SolutionSearch import *
 equivalence_classes_solution_search(SearchPolicy.RL,10)
 
 from SolutionSearch.SolutionSearch import *
-equivalence_classes_solution_search(SearchPolicy.GREEDY,1000)
+equivalence_classes_solution_search(SearchPolicy.GREEDY,10)
 
 
 from SolutionSearch.SolutionSearch import *
@@ -34,8 +34,7 @@ configurations = [
 ]
 
 configurations = [
-[LossFunction.MSE, RegularizationFunction.HOYER_SQUARE, False],
-[LossFunction.RELU, RegularizationFunction.HOYER_SQUARE, True]
+[LossFunction.RELU, RegularizationFunction.HOYER_SQUARE_AND_L1, True]
 ]
 
 for configuration in configurations:
@@ -44,6 +43,7 @@ for configuration in configurations:
     conf.regularization_function = configuration[1]
     conf.regularization_strength = 0.05
     conf.simple_model = configuration[2]
+    dimension_solution_search(SearchPolicy.REGULARIZATION,5,10,arguments=conf)
     dimension_solution_search(SearchPolicy.REGULARIZATION,6,10,arguments=conf)
 
 from SolutionSearch.SolutionSearch import *
@@ -70,18 +70,50 @@ dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATIO
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 20:11:42.163708',
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 20:38:37.056752',
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 21:15:13.772229']
-compare_theoretical_2d(4,dirs,None, AnalysisPolicy.AVERAGE)
-regularization_compare(4,dirs, AnalysisPolicy.THEORETICAL_COMPARE, True)
-regularization_compare(4,dirs, AnalysisPolicy.MAX,True)
+compare_theoretical_2d(4,dirs,None, AnalysisPolicy.AVERAGE, True)
+regularization_compare_bar(4,dirs, AnalysisPolicy.THEORETICAL_COMPARE, True)
+regularization_compare_bar(4,dirs, AnalysisPolicy.MAX,True)
 
-regularization_compare(4,dirs, AnalysisPolicy.AVERAGE)
+regularization_compare(4,dirs, AnalysisPolicy.AVERAGE, True)
+
 
 from SolutionSearch.AnalysisPlots import *
 
 dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 11:07:14.720637',
-'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 22:01:55.656421']
+'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 22:01:55.656421',
+'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-23 13:11:12.025469']
+regularization_compare_2d(5,dirs, AnalysisPolicy.AVERAGE,
+output_directory="/home/oytun/PycharmProjects/research/Data/solution_search", file_name_prefix="fig")
+regularization_compare_bar(5,dirs, AnalysisPolicy.AVERAGE, True)
+regularization_compare_bar(5,dirs, AnalysisPolicy.MAX, True)
 
-compare_theoretical_2d(5,dirs,None, AnalysisPolicy.AVERAGE)
+
+from SolutionSearch.AnalysisPlots import *
+
+dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-19 03:37:28.026865',
+'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-19 06:29:00.802358',
+'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-23 16:25:23.364819']
+regularization_compare_bar(6,dirs, AnalysisPolicy.AVERAGE)
+regularization_compare_bar(6,dirs, AnalysisPolicy.AVERAGE, True)
+regularization_compare_bar(6,dirs, AnalysisPolicy.MAX, True)
+
+
+from SolutionSearch.AnalysisPlots import *
+graph_labels=["REG", "RL", "GREEDY"]
+dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 11:07:14.720637',
+'/home/oytun/PycharmProjects/research/Data/solution_search/RL/2023-04-18 11:26:32.687699',
+'/home/oytun/PycharmProjects/research/Data/solution_search/GREEDY/2023-04-23 22:51:31.942845']
+compare_theoretical_2d(5,dirs, graph_labels.copy(), AnalysisPolicy.AVERAGE,
+output_directory="/home/oytun/PycharmProjects/research/Data/solution_search",
+file_name_prefix=None)
+
+compare_bar(5,dirs, graph_labels, AnalysisPolicy.AVERAGE, True,
+output_directory="/home/oytun/PycharmProjects/research/Data/solution_search")
+compare_bar(5,dirs, graph_labels, AnalysisPolicy.MAX, True,
+output_directory="/home/oytun/PycharmProjects/research/Data/solution_search")
+
+
+
 
 x = plot_2d([[1,2,3],[4,5,6],[7,8,9]],[["a","b","c"],["a","b","c"],["a","b","c"]],[[0.1,0.2,0.3],[0.2,0.3,0.4],[0.1,0.2,0.3]],graph_labels=["asd","asd","asd"],show=True)
 plot_bar([list(range(0,2)),list(range(5,7)),list(range(5,7))],["asd\nasd\nasd"]* 3, ["vvv"]*2,show=True)
