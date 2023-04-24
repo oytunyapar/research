@@ -13,6 +13,28 @@ class AnalysisPolicy(Enum):
     THEORETICAL_COMPARE = 2
 
 
+def x_label_font_size_rotation(dimension, number_of_data_points):
+    font_power_coefficient = 1.4
+    full_x_label_size = 36 * (11 ** font_power_coefficient) #digit * square(font_size)
+    number_of_digits = 2 ** (dimension - 2)
+    hex_overhead = 2
+
+    total_number_of_digits = (number_of_digits + hex_overhead) * number_of_data_points
+
+    f_size = (full_x_label_size / total_number_of_digits) ** (1/font_power_coefficient)
+
+    if f_size <= 4:
+        full_x_label_size_vertical = 3 * (6 ** 2)
+        total_number_of_digits = number_of_digits + hex_overhead
+        rotation = 90
+
+        f_size = (full_x_label_size_vertical / total_number_of_digits) ** (1 / font_power_coefficient)
+    else:
+        rotation = 0
+
+    return f_size, rotation
+
+
 def analysis_policy_file_prefix(analysis_policy, dimension):
     if analysis_policy is AnalysisPolicy.MAX:
         string = max_csv_file_name(dimension)
@@ -130,9 +152,12 @@ def compare_bar(dimension, directories, graph_labels, analysis_policy=AnalysisPo
     if title is None:
         title = get_graph_title(analysis_policy, dimension, compact)
 
+    x_font_size, x_rotation = x_label_font_size_rotation(dimension, len(graph_group_names))
+
     plot_bar(y_data=y_data, graph_labels=graph_labels, graph_group_names=graph_group_names, y_data_std=y_data_std,
              y_label="Number of zeros", x_label="Equivalence classes", title=title, show=True,
-             output_directory=output_directory, file_name_prefix=file_name_prefix)
+             output_directory=output_directory, file_name_prefix=file_name_prefix, x_font_size=x_font_size,
+             x_rotation=x_rotation)
 
 
 def compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy=AnalysisPolicy.AVERAGE,
@@ -142,6 +167,7 @@ def compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy
         return
 
     y_data, y_data_std, x_data = extract_data(dimension, directories, analysis_policy, False)
+    num_data_points = len(x_data)
     title = get_graph_title(analysis_policy, dimension, False)
 
     new_order, densities_converted = density_order(dimension, x_data)
@@ -164,6 +190,9 @@ def compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy
     if graph_labels is not None:
         graph_labels.insert(0, "Theoretical\nlimit")
 
+    x_font_size, x_rotation = x_label_font_size_rotation(dimension, num_data_points)
+
     plot_2d(y_data=y_data, x_data=x_data, y_data_std=y_data_std, title=title,
             y_label="Number of zeros", x_label="Equivalence classes", graph_labels=graph_labels,
-            show=True, output_directory=output_directory, file_name_prefix=file_name_prefix)
+            show=True, output_directory=output_directory, file_name_prefix=file_name_prefix,
+            x_font_size=x_font_size, x_rotation=x_rotation)

@@ -18,7 +18,7 @@ class SearchPolicy(Enum):
 
 
 def random_solution_search(function, dimension):
-    data, _ = apply_random_search_linear_programming_on_functions(0, 1, dimension, [function])
+    data, _ = apply_random_search_linear_programming_on_functions(0, 1, dimension, [function], debug=False)
     return data[function][0]
 
 

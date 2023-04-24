@@ -3,7 +3,8 @@ from matplotlib import pyplot as plt
 
 
 def plot_2d(y_data, x_data=None, y_data_std=None, title="graph", x_label="x", y_label="y",
-            graph_labels=None, output_directory=None, file_name_prefix=None, show=False):
+            graph_labels=None, output_directory=None, file_name_prefix=None, show=False,
+            x_font_size=8, x_rotation=0):
     try:
         init_graph(plt, title, x_label, y_label)
 
@@ -33,10 +34,7 @@ def plot_2d(y_data, x_data=None, y_data_std=None, title="graph", x_label="x", y_
                 y_plus.append(data + error)
             plt.fill_between(x, y_minus, y_plus, alpha=.3)
 
-        if len(x_data[0]) > 15:
-            plt.xticks(rotation=45, fontsize=10)
-        if len(x_data[0]) > 30:
-            plt.xticks(rotation=90, fontsize=5)
+        plt.xticks(fontsize=x_font_size, rotation=x_rotation)
 
         if no_legend is False:
             enable_legend(plt)
@@ -55,7 +53,7 @@ def plot_2d(y_data, x_data=None, y_data_std=None, title="graph", x_label="x", y_
 
 
 def plot_bar(y_data, graph_labels, graph_group_names, y_data_std=None, title="graph", x_label="x", y_label="y",
-             output_directory=None, file_name_prefix=None, show=False):
+             output_directory=None, file_name_prefix=None, show=False, x_font_size=8, x_rotation=0):
     try:
         init_graph(plt, title, x_label, y_label)
 
@@ -79,16 +77,17 @@ def plot_bar(y_data, graph_labels, graph_group_names, y_data_std=None, title="gr
         for x, y, y_err, graph_label in zip(x_data, y_data, y_data_std, graph_labels):
             plt.bar(x, y, width=bar_width, label=graph_label)
             if y_err:
-                plt.errorbar(x, y, fmt="k_", yerr=y_err, ecolor="black", elinewidth=bar_width*5, capsize=bar_width*10)
+                plt.errorbar(x, y, fmt="k_", markersize=bar_width*25, yerr=y_err, ecolor="black",
+                             elinewidth=bar_width*5, capsize=bar_width*10)
 
-        enable_legend(plt, font_size(data_number_of_configurations))
+        enable_legend(plt, legend_font_size(data_number_of_configurations))
 
         if data_number_of_configurations % 2 == 1:
             data_groups_coordinates = x_data[round(data_number_of_configurations/2 + 0.01) - 1]
         else:
             data_groups_coordinates = [x + bar_width/2 for x in x_data[round(data_number_of_configurations / 2) - 1]]
 
-        plt.xticks(data_groups_coordinates, graph_group_names, fontsize=font_size(data_number_of_groups))
+        plt.xticks(data_groups_coordinates, graph_group_names, fontsize=x_font_size, rotation=x_rotation)
 
         if file_name_prefix is None:
             file_name_prefix = title
@@ -102,7 +101,7 @@ def plot_bar(y_data, graph_labels, graph_group_names, y_data_std=None, title="gr
         print("plot_bar error:", e)
 
 
-def font_size(points):
+def legend_font_size(points):
     if points <= 4:
         return "medium"
     elif points <= 8:

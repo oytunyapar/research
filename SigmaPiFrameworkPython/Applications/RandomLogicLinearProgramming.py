@@ -9,7 +9,8 @@ def apply_random_search_linear_programming_on_functions(number_of_functions,
                                                         number_of_iterations,
                                                         dimension,
                                                         specific_functions=None,
-                                                        save_dir=None):
+                                                        save_dir=None,
+                                                        debug=True):
     functions = []
 
     for i in range(0, number_of_functions):
@@ -33,10 +34,11 @@ def apply_random_search_linear_programming_on_functions(number_of_functions,
         function_zeroes[function] = []
         for i in range(0, number_of_iterations):
             function_zeroes[function].append(monomial_exclusion_iterative(function, dimension).size)
-            if i % 500 == 0:
+            if debug is True and i % 500 == 0:
                 print("apply_random_search_linear_programming_on_functions iteration:" + str(i) + "/" + str(number_of_iterations))
 
-        print("apply_random_search_linear_programming_on_functions function:" + str(counter) + "/" + str(number_of_functions))
+        if debug is True:
+            print("apply_random_search_linear_programming_on_functions function:" + str(counter) + "/" + str(number_of_functions))
 
     function_zeroes_average_std = {}
     for key in function_zeroes.keys():
