@@ -13,6 +13,40 @@ class AnalysisPolicy(Enum):
     THEORETICAL_COMPARE = 2
 
 
+def compare_data(data):
+    data_converted = numpy.array(data)
+
+    num_compared = data_converted.shape[0]
+    max_indexes_dict = {m: 0 for m in range(num_compared)}
+
+    num_data = data_converted.shape[1]
+
+    for counter in range(num_data):
+        row = data_converted[:, counter]
+        max_indexes = numpy.where(row == numpy.max(row))[0].tolist()
+        for index in max_indexes:
+            max_indexes_dict[index] += 1
+
+    return max_indexes_dict, num_data
+
+
+def add_compare_data_to_graph_label_impl(max_indexes_dict, num_data, graph_labels):
+    keys = list(max_indexes_dict.keys())
+    graph_labels_size = len(graph_labels)
+
+    if len(keys) != graph_labels_size:
+        print("compare_data_add_to_graph_label: Data inconsistency")
+        return
+
+    for key in keys:
+        graph_labels[key] += "\n" + str(max_indexes_dict[key]) + "/" + str(num_data)
+
+
+def add_compare_data_to_graph_label(data, graph_labels):
+    max_indexes, num_data = compare_data(data)
+    add_compare_data_to_graph_label_impl(max_indexes, num_data, graph_labels)
+
+
 def x_label_font_size_rotation(dimension, number_of_data_points):
     font_power_coefficient = 1.4
     full_x_label_size = 36 * (11 ** font_power_coefficient) #digit * square(font_size)
@@ -31,6 +65,9 @@ def x_label_font_size_rotation(dimension, number_of_data_points):
         f_size = (full_x_label_size_vertical / total_number_of_digits) ** (1 / font_power_coefficient)
     else:
         rotation = 0
+
+    if f_size > 10:
+        f_size = 10
 
     return f_size, rotation
 
@@ -149,6 +186,8 @@ def compare_bar(dimension, directories, graph_labels, analysis_policy=AnalysisPo
                 title=None, output_directory=None, file_name_prefix=None):
     y_data, y_data_std, graph_group_names = extract_data(dimension, directories, analysis_policy, compact)
 
+    add_compare_data_to_graph_label(y_data, graph_labels)
+
     if title is None:
         title = get_graph_title(analysis_policy, dimension, compact)
 
@@ -167,6 +206,9 @@ def compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy
         return
 
     y_data, y_data_std, x_data = extract_data(dimension, directories, analysis_policy, False)
+
+    add_compare_data_to_graph_label(y_data, graph_labels)
+
     num_data_points = len(x_data)
     title = get_graph_title(analysis_policy, dimension, False)
 

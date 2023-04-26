@@ -100,10 +100,11 @@ regularization_compare_bar(6,dirs, AnalysisPolicy.MAX, True)
 
 
 from SolutionSearch.AnalysisPlots import *
-graph_labels=["REG", "RL", "GREEDY"]
+graph_labels=["REG", "RL", "GDY_10", "GDY_1000"]
 dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 11:07:14.720637',
 '/home/oytun/PycharmProjects/research/Data/solution_search/RL/2023-04-18 11:26:32.687699',
-'/home/oytun/PycharmProjects/research/Data/solution_search/GREEDY/2023-04-23 22:51:31.942845']
+'/home/oytun/PycharmProjects/research/Data/solution_search/GREEDY/2023-04-23 22:51:31.942845',
+'/home/oytun/PycharmProjects/research/Data/solution_search/GREEDY/2023-04-24 02:00:54.343614']
 compare_theoretical_2d(5,dirs, graph_labels.copy(), AnalysisPolicy.AVERAGE)
 compare_theoretical_2d(5,dirs, graph_labels.copy(), AnalysisPolicy.AVERAGE,
 output_directory="/home/oytun/PycharmProjects/research/Data/solution_search",

@@ -102,12 +102,12 @@ def plot_bar(y_data, graph_labels, graph_group_names, y_data_std=None, title="gr
 
 
 def legend_font_size(points):
-    if points <= 4:
-        return "medium"
-    elif points <= 8:
+    if points <= 3:
         return "small"
-    elif points <= 12:
+    elif points <= 6:
         return "x-small"
+    elif points <= 9:
+        return "xx-small"
     else:
         return "xx-small"
 

@@ -19,7 +19,7 @@ class RLModelType(Enum):
 policy_kwargs_dictionary = {
     2: dict(activation_fn=th.nn.ReLU, net_arch=[4, 4]),
     3: dict(activation_fn=th.nn.ReLU, net_arch=[8, 8]),
-    4: dict(activation_fn=th.nn.ReLU, net_arch=[16, 16]),
+    4: dict(activation_fn=th.nn.ReLU, net_arch=[256, 128]),
     5: dict(activation_fn=th.nn.ReLU, net_arch=[32, 32]),
     6: dict(activation_fn=th.nn.ReLU, net_arch=[64, 64])
 }
