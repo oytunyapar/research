@@ -48,7 +48,7 @@ from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import *
 dimension = 4
 test_functions = get_complement_function_list(dimension, functions)
 root_dir="/home/oytun/PycharmProjects/research"
-time_steps=24000000
+time_steps=72000000
 from OpenAiGym.SignRepresentationOfBooleanFunctions.EnvironmentRunners.RLRunner import *
 
 env,model,_,_= rl_runner_functions(functions,

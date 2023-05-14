@@ -142,3 +142,12 @@ def create_truth_table_output(dimension, boolean_function_callback):
         counter += 1
 
     return result
+
+
+def get_densities(dimension, equivalence_classes):
+    dimension_densities = BooleanFunctionsEquivalentClassesDensity[dimension]
+    return [dimension_densities[equivalence_class] for equivalence_class in equivalence_classes]
+
+
+def get_theoretical_number_of_zeroes(dimension, equivalence_classes):
+    return [2 ** dimension - density for density in get_densities(dimension, equivalence_classes)]

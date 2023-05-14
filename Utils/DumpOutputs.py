@@ -6,7 +6,7 @@ from Utils.PlotData import plot_2d
 
 
 def dump_outputs(data, output_directory, file_name_prefix):
-    plot_2d([data], output_directory=output_directory, file_name_prefix=file_name_prefix)
+    #plot_2d([data], output_directory=output_directory, file_name_prefix=file_name_prefix)
     dump_json(data, output_directory, file_name_prefix)
 
 

@@ -76,10 +76,10 @@ BooleanFunctionsEquivalentClassesDensity =\
             0xdcfdda51: 11,
             0x68ad9b51: 9,
             0x688ddb51: 11},
-        6: {9761403244881934472: 26,
-            10855359761657498816: 24,
-            7583035861148412416: 24,
-            3745489178524800608: 24}
+        6: {0x8777788878887888: 26,
+            0x96a5fc3066aa0cc0: 24,
+            0x693c5af066ccaa00: 24,
+            0x33faa6903c0a5660: 24}
     }
 
 BooleanFunctionsEquivalentClassesWalshSpectrum =\

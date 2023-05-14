@@ -1,6 +1,7 @@
 from Utils.PlotData import *
 from SolutionSearch.SolutionSearch import *
 from Utils.DumpOutputs import *
+from SigmaPiFrameworkPython.Utils.BooleanFunctionUtils import get_theoretical_number_of_zeroes
 import numpy
 from BooleanFunctionsEquivalentClasses.BooleanFunctionsEquivalentClasses import *
 
@@ -142,9 +143,9 @@ def get_regularization_labels(directories):
     graph_labels = []
     for directory in directories:
         parameters = load_json(directory, regularization_parameters_file_name())
-        graph_label = "LF:" + loss_function_string(parameters["loss_function"]) + "\n" +\
-                      "RF:" + regularization_function_string(parameters["regularization_func"]) + "\n" +\
-                      "AF:" + activation_function_string(parameters["simple_model"])
+        graph_label = "AF:" + activation_function_string(parameters["simple_model"]) + "\n" +\
+                      "LF:" + loss_function_string(parameters["loss_function"]) + "\n" +\
+                      "RF:" + regularization_function_string(parameters["regularization_func"])
         graph_labels.append(graph_label)
 
     return graph_labels
@@ -161,14 +162,15 @@ def regularization_compare_bar(dimension, directories, analysis_policy=AnalysisP
 def regularization_compare_2d(dimension, directories, analysis_policy=AnalysisPolicy.AVERAGE,
                               output_directory=None, file_name_prefix=None):
     graph_labels = get_regularization_labels(directories)
+    title = get_graph_title(analysis_policy, dimension, False, "Regularization Methods'")
     compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy, output_directory=output_directory,
-                           file_name_prefix=file_name_prefix)
+                           title=title, file_name_prefix=file_name_prefix)
 
 
 def density_order(dimension, equivalence_classes):
     densities = BooleanFunctionsEquivalentClassesDensity[dimension]
 
-    densities_converted = numpy.ndarray([len(equivalence_classes), 2], dtype=int)
+    densities_converted = numpy.ndarray([len(equivalence_classes), 2], dtype=numpy.uint64)
     counter = 0
 
     for equivalence_class in equivalence_classes:
@@ -183,10 +185,17 @@ def density_order(dimension, equivalence_classes):
 
 
 def compare_bar(dimension, directories, graph_labels, analysis_policy=AnalysisPolicy.AVERAGE, compact=False,
-                title=None, output_directory=None, file_name_prefix=None):
+                title=None, output_directory=None, file_name_prefix=None, add_theoretical=False):
     y_data, y_data_std, graph_group_names = extract_data(dimension, directories, analysis_policy, compact)
 
     add_compare_data_to_graph_label(y_data, graph_labels)
+
+    if add_theoretical:
+        graph_labels.insert(0, "Theoretical\nlimit")
+        y_data.insert(0, get_theoretical_number_of_zeroes(dimension,
+                                                          [int(eq_class, 16) for eq_class in graph_group_names]))
+        if y_data_std is not None:
+            y_data_std.insert(0, [0] * len(y_data_std[0]))
 
     if title is None:
         title = get_graph_title(analysis_policy, dimension, compact)
@@ -200,7 +209,7 @@ def compare_bar(dimension, directories, graph_labels, analysis_policy=AnalysisPo
 
 
 def compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy=AnalysisPolicy.AVERAGE,
-                           output_directory=None, file_name_prefix=None,):
+                           title=None, output_directory=None, file_name_prefix=None,):
     if analysis_policy is AnalysisPolicy.THEORETICAL_COMPARE:
         print("AnalysisPolicy.THEORETICAL_COMPARE is not valid for this function")
         return
@@ -210,7 +219,8 @@ def compare_theoretical_2d(dimension, directories, graph_labels, analysis_policy
     add_compare_data_to_graph_label(y_data, graph_labels)
 
     num_data_points = len(x_data)
-    title = get_graph_title(analysis_policy, dimension, False)
+    if title is None:
+        title = get_graph_title(analysis_policy, dimension, False)
 
     new_order, densities_converted = density_order(dimension, x_data)
 

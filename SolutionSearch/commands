@@ -34,7 +34,7 @@ configurations = [
 ]
 
 configurations = [
-[LossFunction.RELU, RegularizationFunction.HOYER_SQUARE_AND_L1, True]
+[LossFunction.MSE, RegularizationFunction.HOYER_SQUARE_AND_L1, False]
 ]
 
 for configuration in configurations:
@@ -44,7 +44,6 @@ for configuration in configurations:
     conf.regularization_strength = 0.05
     conf.simple_model = configuration[2]
     dimension_solution_search(SearchPolicy.REGULARIZATION,5,10,arguments=conf)
-    dimension_solution_search(SearchPolicy.REGULARIZATION,6,10,arguments=conf)
 
 from SolutionSearch.SolutionSearch import *
 dir="/home/oytun/PycharmProjects/research/Data/solution_search/RL/2023-04-18 11:26:32.687699"
@@ -70,21 +69,25 @@ dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATIO
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 20:11:42.163708',
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 20:38:37.056752',
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-16 21:15:13.772229']
-regularization_compare_bar(4,dirs, AnalysisPolicy.AVERAGE)
+regularization_compare_bar(4,dirs, AnalysisPolicy.AVERAGE, output_directory="/home/oytun/PycharmProjects/research/Data/solution_search",
+file_name_prefix=None)
 compare_theoretical_2d(4,dirs,None, AnalysisPolicy.AVERAGE, True)
-regularization_compare_bar(4,dirs, AnalysisPolicy.THEORETICAL_COMPARE, True)
+regularization_compare_bar(4,dirs, AnalysisPolicy.AVERAGE, True)
 regularization_compare_bar(4,dirs, AnalysisPolicy.MAX,True)
 
-regularization_compare_bar(4,dirs, AnalysisPolicy.AVERAGE, True)
+regularization_compare_bar(4,dirs, AnalysisPolicy.AVERAGE, True, output_directory="/home/oytun/PycharmProjects/research/Data/solution_search",
+file_name_prefix=None)
 
 
 from SolutionSearch.AnalysisPlots import *
 
 dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 11:07:14.720637',
+'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-05-02 11:41:00.168222',
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 22:01:55.656421',
-'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-23 13:11:12.025469']
+'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-23 13:11:12.025469'
+]
 regularization_compare_2d(5,dirs, AnalysisPolicy.AVERAGE,
-output_directory="/home/oytun/PycharmProjects/research/Data/solution_search", file_name_prefix="fig")
+output_directory="/home/oytun/PycharmProjects/research/Data/solution_search")
 regularization_compare_bar(5,dirs, AnalysisPolicy.AVERAGE, True)
 regularization_compare_bar(5,dirs, AnalysisPolicy.MAX, True)
 
@@ -92,15 +95,16 @@ regularization_compare_bar(5,dirs, AnalysisPolicy.MAX, True)
 from SolutionSearch.AnalysisPlots import *
 
 dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-19 03:37:28.026865',
-'/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-19 06:29:00.802358',
 '/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-23 16:25:23.364819']
-regularization_compare_bar(6,dirs, AnalysisPolicy.AVERAGE)
-regularization_compare_bar(6,dirs, AnalysisPolicy.AVERAGE, True)
+regularization_compare_bar(6,dirs, AnalysisPolicy.AVERAGE,output_directory="/home/oytun/PycharmProjects/research/Data/solution_search",
+file_name_prefix=None)
+regularization_compare_bar(6,dirs, AnalysisPolicy.AVERAGE, False)
 regularization_compare_bar(6,dirs, AnalysisPolicy.MAX, True)
 
 
 from SolutionSearch.AnalysisPlots import *
 graph_labels=["REG", "RL", "GDY_10", "GDY_1000"]
+
 dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-17 11:07:14.720637',
 '/home/oytun/PycharmProjects/research/Data/solution_search/RL/2023-04-18 11:26:32.687699',
 '/home/oytun/PycharmProjects/research/Data/solution_search/GREEDY/2023-04-23 22:51:31.942845',
@@ -108,7 +112,26 @@ dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATIO
 compare_theoretical_2d(5,dirs, graph_labels.copy(), AnalysisPolicy.AVERAGE)
 compare_theoretical_2d(5,dirs, graph_labels.copy(), AnalysisPolicy.AVERAGE,
 output_directory="/home/oytun/PycharmProjects/research/Data/solution_search",
-file_name_prefix=None)
+title="Reg, RL and Greedy Comparison of Average in Dim 5")
+
+compare_theoretical_2d(5,dirs, graph_labels.copy(), AnalysisPolicy.MAX,
+output_directory="/home/oytun/PycharmProjects/research/Data/solution_search",
+title="Reg, RL and Greedy Comparison of Max in Dim 5")
+
+
+from SolutionSearch.AnalysisPlots import *
+graph_labels=["REG", "RL", "GDY_10", "GDY_1000"]
+dirs = ['/home/oytun/PycharmProjects/research/Data/solution_search/REGULARIZATION/2023-04-19 03:37:28.026865',
+'/home/oytun/PycharmProjects/research/Data/solution_search/RL/2023-04-18 11:26:32.687699',
+'/home/oytun/PycharmProjects/research/Data/solution_search/GREEDY/2023-04-23 22:51:31.942845',
+'/home/oytun/PycharmProjects/research/Data/solution_search/GREEDY/2023-04-24 02:00:54.343614']
+compare_bar(6,dirs, graph_labels.copy(), AnalysisPolicy.AVERAGE, add_theoretical=True,
+output_directory="/home/oytun/PycharmProjects/research/Data/solution_search",
+title="Reg, RL and Greedy Comparison of Average in Dim 6")
+
+compare_bar(6,dirs, graph_labels.copy(), AnalysisPolicy.MAX, add_theoretical=True,
+output_directory="/home/oytun/PycharmProjects/research/Data/solution_search",
+title="Reg, RL and Greedy Comparison of Max in Dim 6")
 
 compare_bar(5,dirs, graph_labels, AnalysisPolicy.AVERAGE, True,
 output_directory="/home/oytun/PycharmProjects/research/Data/solution_search")
